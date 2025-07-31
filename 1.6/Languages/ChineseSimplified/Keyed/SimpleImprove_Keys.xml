@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>指定改良</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>标记物品由熟练工人提升质量</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>取消改良</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>取消改良命令并返还储存的材料</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>物品无法改良</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>已标记为改良</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>物品没有质量</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>已达到最高质量</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>物品无法建造</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>改良失败！({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>改良至{0}！</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>警告：没有殖民者能改良这个{0}（需要建造技能{1}，或有灵感时{2}）。</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>警告：没有殖民者能改良这个{0}（需要建造技能{1}，或有灵感/生产专家角色时{2}）。</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>标记此物品进行质量改良</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>改良到各质量等级所需的最低技能要求：</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>质量分布计算器：</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>成功几率阈值：</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>计算技能要求</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

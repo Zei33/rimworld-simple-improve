@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>Назначить для улучшения</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>Отметить предметы для улучшения качества квалифицированными рабочими</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>Отменить улучшение</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>Отменить приказы на улучшение и вернуть сохранённые материалы</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>Предмет нельзя улучшить</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>Уже отмечен для улучшения</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>У предмета нет качества</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>Уже максимального качества</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>Предмет нельзя построить</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>Улучшение провалилось! ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>Улучшено до {0}!</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>Предупреждение: Ни один колонист не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Предупреждение: Ни один колонист не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением/производственной ролью).</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>Улучшить</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>Отметить этот предмет для улучшения качества</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>Минимальные требования к навыкам для улучшения до каждого уровня качества:</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>Калькулятор Распределения Качества:</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>Порог шанса успеха:</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>Рассчитать Требования к Навыкам</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

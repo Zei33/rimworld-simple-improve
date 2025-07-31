@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageInfo>
+  <friendlyNameNative>Polski</friendlyNameNative>
+  <friendlyNameEnglish>Polish</friendlyNameEnglish>
+  <canBeTiny>true</canBeTiny>
+  <languageWorkerClass>LanguageWorker_English</languageWorkerClass>
+  <credits>
+    <li Class="CreditRecord_Role">
+      <roleKey>Author</roleKey>
+      <creditee>Zespół SimpleImprove</creditee>
+    </li>
+  </credits>
+</LanguageInfo>

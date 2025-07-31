@@ -19,8 +19,8 @@ namespace SimpleImprove.Designators
         /// </summary>
         public Designator_CancelImprovement()
         {
-            defaultLabel = "Cancel improvement";
-            defaultDesc = "Cancel improvement orders and return any stored materials";
+            defaultLabel = "SimpleImprove_CancelImprovement".Translate();
+            defaultDesc = "SimpleImprove_CancelImprovementDesc".Translate();
             icon = ContentFinder<Texture2D>.Get("UI/Designators/CancelImprove");
             soundDragSustain = SoundDefOf.Designate_DragStandard;
             soundDragChanged = SoundDefOf.Designate_DragStandard_Changed;

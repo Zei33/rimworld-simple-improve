@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <WorkType_Improving.labelShort>改良</WorkType_Improving.labelShort>
+  <WorkType_Improving.pawnLabel>改良工</WorkType_Improving.pawnLabel>
+  <WorkType_Improving.gerundLabel>改良中</WorkType_Improving.gerundLabel>
+  <WorkType_Improving.description>使用额外材料改善家具和其他建造物品的质量。</WorkType_Improving.description>
+  <WorkType_Improving.verb>改良</WorkType_Improving.verb>
+  
+</LanguageData>

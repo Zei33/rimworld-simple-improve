@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>Designar para mejora</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>Marcar objetos para que trabajadores especializados mejoren su calidad</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>Cancelar mejora</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>Cancelar órdenes de mejora y devolver materiales almacenados</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>El objeto no puede ser mejorado</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>Ya está marcado para mejora</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>El objeto no tiene calidad</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>Ya está en la calidad máxima</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>El objeto no puede ser construido</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>¡Mejora falló! ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>¡Mejorado a {0}!</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>Advertencia: Ningún colono puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Advertencia: Ningún colono puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>Mejorar</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>Marcar este objeto para mejora de calidad</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>Requisitos mínimos de habilidad para mejorar a cada nivel de calidad:</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>Calculadora de Distribución de Calidad:</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>Umbral de probabilidad de éxito:</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>Calcular Requisitos de Habilidad</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

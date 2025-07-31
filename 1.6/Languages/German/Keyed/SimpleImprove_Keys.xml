@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>Zur Verbesserung markieren</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>Gegenstände markieren, damit geschickte Arbeiter ihre Qualität verbessern</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>Verbesserung abbrechen</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>Verbesserungsaufträge abbrechen und gelagerte Materialien zurückgeben</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>Gegenstand kann nicht verbessert werden</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>Bereits zur Verbesserung markiert</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>Gegenstand hat keine Qualität</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>Bereits bei maximaler Qualität</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>Gegenstand kann nicht gebaut werden</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>Verbesserung fehlgeschlagen! ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>Verbessert zu {0}!</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>Warnung: Kein Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Warnung: Kein Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration/Produktionsrolle).</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>Verbessern</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>Diesen Gegenstand zur Qualitätsverbesserung markieren</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>Mindestfertigkeitsanforderungen zur Verbesserung auf jede Qualitätsstufe:</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>Qualitätsverteilungsrechner:</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>Erfolgschancenschwelle:</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>Fertigkeitsanforderungen Berechnen</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

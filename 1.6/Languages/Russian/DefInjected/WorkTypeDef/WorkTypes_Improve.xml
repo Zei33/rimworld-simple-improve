@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <WorkType_Improving.labelShort>Улучшение</WorkType_Improving.labelShort>
+  <WorkType_Improving.pawnLabel>Улучшитель</WorkType_Improving.pawnLabel>
+  <WorkType_Improving.gerundLabel>улучшая</WorkType_Improving.gerundLabel>
+  <WorkType_Improving.description>Улучшение качества мебели и других построенных предметов с использованием дополнительных материалов.</WorkType_Improving.description>
+  <WorkType_Improving.verb>Улучшить</WorkType_Improving.verb>
+  
+</LanguageData>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>Désigner pour amélioration</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>Marquer les objets pour que des ouvriers qualifiés améliorent leur qualité</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>Annuler l'amélioration</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>Annuler les ordres d'amélioration et retourner les matériaux stockés</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>L'objet ne peut pas être amélioré</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>Déjà marqué pour amélioration</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>L'objet n'a pas de qualité</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>Déjà à la qualité maximale</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>L'objet ne peut pas être construit</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>Amélioration échouée ! ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>Amélioré en {0} !</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>Améliorer</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>Marquer cet objet pour amélioration de qualité</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>Exigences minimales de compétence pour améliorer à chaque niveau de qualité :</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>Calculateur de Distribution de Qualité :</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>Seuil de chance de succès :</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>Calculer les Exigences de Compétence</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

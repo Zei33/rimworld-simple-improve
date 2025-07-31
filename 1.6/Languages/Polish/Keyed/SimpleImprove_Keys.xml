@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>Oznacz do ulepszenia</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>Oznacz przedmioty do poprawy jakości przez wykwalifikowanych pracowników</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>Anuluj ulepszenie</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>Anuluj polecenia ulepszenia i zwróć przechowywane materiały</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>Przedmiot nie może być ulepszony</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>Już oznaczony do ulepszenia</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>Przedmiot nie ma jakości</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>Już w maksymalnej jakości</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>Przedmiot nie może być zbudowany</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>Ulepszenie nieudane! ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>Ulepszono do {0}!</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>Ulepsz</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>Oznacz ten przedmiot do ulepszenia jakości</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>Minimalne wymagania umiejętności do ulepszenia na każdy poziom jakości:</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>Kalkulator Rozkładu Jakości:</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>Próg szansy powodzenia:</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>Oblicz Wymagania Umiejętności</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

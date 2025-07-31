@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>Designate for improvement</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>Mark items to have their quality improved by skilled workers</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>Cancel improvement</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>Cancel improvement orders and return any stored materials</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>Item cannot be improved</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>Already marked for improvement</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>Item has no quality</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>Already at maximum quality</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>Item cannot be constructed</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>Improvement failed! ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>Improved to {0}!</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>Warning: No colonist can improve this {0} (requires Construction {1}, or {2} with inspiration).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Warning: No colonist can improve this {0} (requires Construction {1}, or {2} with inspiration/production role).</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>Improve</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>Mark this item for quality improvement</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>Minimum skill requirements to improve to each quality level:</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>Quality Distribution Calculator:</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>Success chance threshold:</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>Calculate Skill Requirements</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

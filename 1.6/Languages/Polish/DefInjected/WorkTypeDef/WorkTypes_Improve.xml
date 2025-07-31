@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <WorkType_Improving.labelShort>Ulepszanie</WorkType_Improving.labelShort>
+  <WorkType_Improving.pawnLabel>Ulepszacz</WorkType_Improving.pawnLabel>
+  <WorkType_Improving.gerundLabel>ulepszając</WorkType_Improving.gerundLabel>
+  <WorkType_Improving.description>Ulepszanie jakości mebli i innych skonstruowanych przedmiotów przy użyciu dodatkowych materiałów.</WorkType_Improving.description>
+  <WorkType_Improving.verb>Ulepsz</WorkType_Improving.verb>
+  
+</LanguageData>

@@ -41,7 +41,7 @@ namespace SimpleImprove
         /// Gets the category name for this mod in the settings menu.
         /// </summary>
         /// <returns>The display name for the mod's settings category.</returns>
-        public override string SettingsCategory() => "Simple Improve";
+        public override string SettingsCategory() => "SimpleImprove_SettingsCategory".Translate();
 
         /// <summary>
         /// Renders the mod settings window content.

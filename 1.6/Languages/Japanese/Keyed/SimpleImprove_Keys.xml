@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Designator Labels and Descriptions -->
+  <SimpleImprove_DesignateForImprovement>改良指定</SimpleImprove_DesignateForImprovement>
+  <SimpleImprove_DesignateForImprovementDesc>熟練労働者による品質改良のためにアイテムをマークする</SimpleImprove_DesignateForImprovementDesc>
+  <SimpleImprove_CancelImprovement>改良をキャンセル</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementDesc>改良命令をキャンセルし、保管された材料を返却する</SimpleImprove_CancelImprovementDesc>
+  
+  <!-- Acceptance Report Messages -->
+  <SimpleImprove_CannotImprove>アイテムは改良できません</SimpleImprove_CannotImprove>
+  <SimpleImprove_AlreadyMarked>すでに改良対象として指定されています</SimpleImprove_AlreadyMarked>
+  <SimpleImprove_NoQuality>アイテムに品質がありません</SimpleImprove_NoQuality>
+  <SimpleImprove_MaxQuality>すでに最高品質です</SimpleImprove_MaxQuality>
+  <SimpleImprove_CannotConstruct>アイテムは建設できません</SimpleImprove_CannotConstruct>
+  
+  <!-- Success and Failure Messages -->
+  <SimpleImprove_ImprovementFailed>改良失敗！ ({0})</SimpleImprove_ImprovementFailed>
+  <SimpleImprove_ImprovedTo>{0}に改良されました！</SimpleImprove_ImprovedTo>
+  
+  <!-- Skill Warning Messages -->
+  <SimpleImprove_SkillWarning>警告：この{0}を改良できる入植者がいません（建設スキル{1}、またはインスピレーション時{2}が必要）。</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>警告：この{0}を改良できる入植者がいません（建設スキル{1}、またはインスピレーション/生産専門役職時{2}が必要）。</SimpleImprove_SkillWarningIdeology>
+  
+  <!-- Gizmo Labels and Tooltips -->
+  <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoTooltip>このアイテムの品質改良をマークする</SimpleImprove_GizmoTooltip>
+  
+  <!-- Settings Menu -->
+  <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
+  <SimpleImprove_SettingsSkillHeader>各品質レベルへの改良に必要な最低スキル要件：</SimpleImprove_SettingsSkillHeader>
+  <SimpleImprove_SettingsCalculatorHeader>品質分布計算機：</SimpleImprove_SettingsCalculatorHeader>
+  <SimpleImprove_SettingsSuccessThreshold>成功確率の閾値：</SimpleImprove_SettingsSuccessThreshold>
+  <SimpleImprove_SettingsCalculateButton>スキル要件を計算</SimpleImprove_SettingsCalculateButton>
+  
+</LanguageData>

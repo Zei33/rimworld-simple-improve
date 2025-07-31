@@ -2,11 +2,6 @@
 <Defs>
   <WorkTypeDef>
     <defName>WorkType_Improving</defName>
-    <labelShort>Improve</labelShort>
-    <pawnLabel>Improver</pawnLabel>
-    <gerundLabel>improving</gerundLabel>
-    <description>Improve the quality of furniture and other constructed items using additional materials.</description>
-    <verb>Improve</verb>
     <naturalPriority>500</naturalPriority>
     <relevantSkills>
       <li>Construction</li>

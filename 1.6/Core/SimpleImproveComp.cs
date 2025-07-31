@@ -218,8 +218,8 @@ namespace SimpleImprove.Core
             if (newQuality <= compQuality.Quality)
             {
                 // Improvement failed
-                MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
-                    $"Improvement failed! ({newQuality.GetLabel()})", 6f);
+                            MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
+                "SimpleImprove_ImprovementFailed".Translate(newQuality.GetLabel()), 6f);
                 return;
             }
             
@@ -239,7 +239,7 @@ namespace SimpleImprove.Core
             }
             
             MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
-                $"Improved to {newQuality.GetLabel()}!", 6f);
+                "SimpleImprove_ImprovedTo".Translate(newQuality.GetLabel()), 6f);
             
             // Clear the improvement flag directly and remove designation without triggering setter
             // to avoid double-clearing materials that were already destroyed above
@@ -353,8 +353,8 @@ namespace SimpleImprove.Core
             
             yield return new Command_Toggle
             {
-                defaultLabel = "Improve",
-                defaultDesc = "Mark this item for quality improvement",
+                defaultLabel = "SimpleImprove_GizmoLabel".Translate(),
+                defaultDesc = "SimpleImprove_GizmoTooltip".Translate(),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/Improve", true),
                 isActive = () => isMarkedForImprovement,
                 toggleAction = () => IsMarkedForImprovement = !isMarkedForImprovement

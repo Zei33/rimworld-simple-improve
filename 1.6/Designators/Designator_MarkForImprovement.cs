@@ -19,8 +19,8 @@ namespace SimpleImprove.Designators
         /// </summary>
         public Designator_MarkForImprovement()
         {
-            defaultLabel = "Designate for improvement";
-            defaultDesc = "Mark items to have their quality improved by skilled workers";
+            defaultLabel = "SimpleImprove_DesignateForImprovement".Translate();
+            defaultDesc = "SimpleImprove_DesignateForImprovementDesc".Translate();
             icon = ContentFinder<Texture2D>.Get("UI/Designators/Upgrade");
             soundDragSustain = SoundDefOf.Designate_DragStandard;
             soundDragChanged = SoundDefOf.Designate_DragStandard_Changed;
@@ -77,20 +77,20 @@ namespace SimpleImprove.Designators
         {
             var improveComp = thing.TryGetComp<SimpleImproveComp>();
             if (improveComp == null)
-                return "Item cannot be improved";
+                return "SimpleImprove_CannotImprove".Translate();
 
             if (improveComp.IsMarkedForImprovement)
-                return "Already marked for improvement";
+                return "SimpleImprove_AlreadyMarked".Translate();
 
             var qualityComp = thing.TryGetComp<CompQuality>();
             if (qualityComp == null)
-                return "Item has no quality";
+                return "SimpleImprove_NoQuality".Translate();
 
             if (qualityComp.Quality == QualityCategory.Legendary)
-                return "Already at maximum quality";
+                return "SimpleImprove_MaxQuality".Translate();
 
             if (thing.def.blueprintDef == null)
-                return "Item cannot be constructed";
+                return "SimpleImprove_CannotConstruct".Translate();
 
             return AcceptanceReport.WasAccepted;
         }
@@ -138,11 +138,11 @@ namespace SimpleImprove.Designators
                 
                 if (ModsConfig.IdeologyActive)
                 {
-                    message = $"Warning: No colonist can improve this {thing.def.label} (requires Construction {requiredSkill}, or {baseRequiredSkill} with inspiration/production role).";
+                    message = "SimpleImprove_SkillWarningIdeology".Translate(thing.def.label, requiredSkill, baseRequiredSkill);
                 }
                 else
                 {
-                    message = $"Warning: No colonist can improve this {thing.def.label} (requires Construction {requiredSkill}, or {baseRequiredSkill} with inspiration).";
+                    message = "SimpleImprove_SkillWarning".Translate(thing.def.label, requiredSkill, baseRequiredSkill);
                 }
                 
                 Messages.Message(message, thing, MessageTypeDefOf.CautionInput);

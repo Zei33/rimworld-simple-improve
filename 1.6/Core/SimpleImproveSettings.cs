@@ -130,7 +130,7 @@ namespace SimpleImprove.Core
             var listing = new Listing_Standard { ColumnWidth = 300f };
             listing.Begin(inRect);
 
-            listing.Label("Minimum skill requirements to improve to each quality level:");
+            listing.Label("SimpleImprove_SettingsSkillHeader".Translate());
             listing.Gap(12);
 
             foreach (var quality in Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>())
@@ -154,16 +154,16 @@ namespace SimpleImprove.Core
             }
 
             listing.Gap(20);
-            listing.Label("Quality Distribution Calculator:");
+            listing.Label("SimpleImprove_SettingsCalculatorHeader".Translate());
             listing.TextFieldNumericLabeled(
-                "Success chance threshold:",
+                "SimpleImprove_SettingsSuccessThreshold".Translate(),
                 ref trialCutoff,
                 ref trialCutoffBuffer,
                 0f,
                 1f
             );
 
-            if (listing.ButtonText("Calculate Skill Requirements"))
+            if (listing.ButtonText("SimpleImprove_SettingsCalculateButton".Translate()))
             {
                 CalculateSkillRequirements(trialCutoff);
             }
