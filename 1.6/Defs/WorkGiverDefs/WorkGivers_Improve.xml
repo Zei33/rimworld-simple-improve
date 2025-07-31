@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <WorkGiverDef>
+    <defName>WorkGiver_Improve</defName>
+    <label>improve quality</label>
+    <giverClass>SimpleImprove.Jobs.WorkGiver_Improve</giverClass>
+    <workType>WorkType_Improving</workType>
+    <priorityInType>10</priorityInType>
+    <verb>improve</verb>
+    <gerund>improving</gerund>
+    <requiredCapacities>
+      <li>Manipulation</li>
+    </requiredCapacities>
+  </WorkGiverDef>
+</Defs>

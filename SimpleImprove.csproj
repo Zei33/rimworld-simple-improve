@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ◻️  Compile for the exact framework RimWorld embeds -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <OutputPath>1.6/Assemblies</OutputPath>
+
+    <!-- C# convenience flags -->
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- ◻️  Tell dotnet *where* to find the 4.7.2 API set on macOS/Linux -->
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <FrameworkPathOverride>
+      /opt/homebrew/opt/mono/lib/mono/4.7.2-api
+    </FrameworkPathOverride>
+  </PropertyGroup>
+
+  <!-- ◻️  Reference the game + Unity assemblies -->
+  <ItemGroup>
+    <!-- Assembly-CSharp (all RimWorld game code) -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/Assembly-CSharp.dll</HintPath>
+    </Reference>
+
+    <!-- Core Unity module (needed for most things) -->
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+
+    <!-- Optional: pull in all the other UnityEngine.* DLLs automatically -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/$(Filename)$(Extension)</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- If you patch with Harmony, reference YOUR copy of 0Harmony.dll here -->
+	<Reference Include="0Harmony">
+		<HintPath>1.6/Libraries/0Harmony.dll</HintPath>
+		<Private>false</Private>
+	</Reference>
+
+    <!-- Use RimWorld's netstandard for ValueType compatibility with Mono 6.12 -->
+    <Reference Include="netstandard">
+      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/netstandard.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+  </ItemGroup>
+
+
+
+</Project>

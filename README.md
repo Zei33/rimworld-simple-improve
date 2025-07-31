@@ -1,1 +1,205 @@
-# rimworld-simple-improve
+# Simple Improve
+
+A RimWorld mod that allows players to improve the quality of buildings with construction skill. Mark buildings for improvement and watch skilled pawns enhance their quality using the same resources required for initial construction.
+
+![RimWorld Version](https://img.shields.io/badge/RimWorld-1.6-brightgreen.svg)
+![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
+
+## Overview
+
+Simple Improve adds a new construction system to RimWorld that lets you upgrade the quality of furniture and other constructed items. Instead of being stuck with normal-quality furniture forever, you can now invest materials and skilled labor to improve them over time.
+
+## Features
+
+### 🔧 Quality Improvement System
+- **Mark any furniture or constructed item** with quality for improvement
+- **Skill-based outcomes** - Higher construction skill increases success chances
+- **Material investment** - Requires the same materials as initial construction
+- **Smart failure handling** - Failed improvements consume materials but preserve the item
+
+### 🎯 Flexible Skill Requirements
+- **Configurable thresholds** for each quality tier
+- **Default settings** based on 5% success chance:
+  - Normal: Construction 4
+  - Good: Construction 10  
+  - Excellent: Construction 14
+  - Masterwork: Construction 18
+- **Pawn modifiers** supported:
+  - **Inspired Creativity** (+2 quality tiers)
+  - **Production Specialist** (+1 quality tier)
+  - Modifiers can stack to enable Legendary quality
+
+### 🎨 Intuitive User Interface
+- **Drag-select designators** for marking multiple items at once
+- **Individual item toggles** via building gizmos
+- **Visual feedback** with success/failure messages
+- **Settings menu** with quality distribution calculator
+
+### ⚙️ Seamless Integration  
+- **New "Improving" work type** with separate priority from construction
+- **Automatic material hauling** - Pawns gather resources automatically
+- **Experience gain** - Construction skill improves while working
+- **Mod compatibility** - Works with any items that have quality
+
+## Installation
+
+### Steam Workshop
+1. Subscribe to the mod on Steam Workshop
+2. Ensure **Harmony** is installed (required dependency)
+3. Enable the mod in your mod list
+4. Start or reload your save
+
+### Manual Installation
+1. Download the latest release from the [releases page]
+2. Extract to your RimWorld `Mods` folder
+3. Install [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) if not already installed
+4. Enable both mods in your mod list
+
+## Usage
+
+### Marking Items for Improvement
+
+1. **Using Designators**:
+   - Open the Architect menu → Improve tab
+   - Select "Mark for Improvement" 
+   - Click on items or drag to select multiple
+   - Use "Cancel Improvement" to remove designations
+
+2. **Using Item Buttons**:
+   - Select any improvable item
+   - Click the improvement toggle button in the item's gizmo bar
+
+### How Improvement Works
+
+1. **Designation**: Mark items for improvement using the designator or item button
+2. **Material Hauling**: Pawns with "Improving" work enabled will gather required materials
+3. **Construction Work**: Pawns perform improvement work based on their construction skill
+4. **Quality Roll**: New quality is determined using RimWorld's standard quality system
+5. **Result**: If quality improves, the new quality is applied; otherwise materials are consumed and the process can retry
+
+### Understanding Success Rates
+
+Quality improvement uses RimWorld's standard construction quality system. Higher construction skill dramatically improves your chances:
+
+| Construction Skill | Good+ Chance | Excellent+ Chance | Masterwork+ Chance |
+|-------------------|--------------|-------------------|-------------------|
+| 8                 | 40.1%        | 6.6%              | 0.15%             |
+| 10                | 56.5%        | 12.7%             | 0.45%             |
+| 12                | 74.4%        | 21.8%             | 1.19%             |
+| 16                | 90.6%        | 38.2%             | 3.67%             |
+| 20                | 97.5%        | 60.1%             | 9.58%             |
+
+Compatible with mods that increase skills above 20.
+
+## Configuration
+
+### Mod Settings
+
+Access the mod settings through:
+**Options → Mod Settings → Simple Improve**
+
+- **Skill Requirements**: Adjust minimum construction skill needed for each quality tier
+- **Quality Calculator**: Test different success rates and skill requirements
+- **Success Thresholds**: Set desired success percentages to automatically calculate skill requirements
+
+### Recommended Settings
+
+For balanced gameplay, the default settings provide roughly 5% base success chance for each quality tier improvement, requiring significant skill investment but making improvements achievable with dedicated training.
+
+## Technical Details
+
+### Architecture
+
+The mod uses clean, modular architecture with minimal Harmony patches for maximum compatibility:
+
+- **Component System**: Uses RimWorld's ThingComp system for item state management
+- **Job System**: Integrates with RimWorld's work system for natural pawn behavior  
+- **Material Storage**: Custom storage system restricts hauling to required materials only
+- **Settings Framework**: Persistent configuration with runtime updates
+
+### Compatibility
+
+- **Harmony Requirement**: Uses Harmony 2.3.6 for compatibility patches
+- **Mod Support**: Automatically works with modded items that have quality
+- **Save Compatibility**: Safe to add to existing saves; removes cleanly when disabled
+
+### Performance
+
+- **Efficient Caching**: Caches calculations and lookups where possible
+- **Minimal Patches**: Only patches designation removal for clean integration
+- **Standard Systems**: Uses RimWorld's built-in systems for work, hauling, and quality
+
+## Building from Source
+
+### Prerequisites
+- .NET Framework 4.7.2
+- RimWorld 1.6 assemblies
+- MonoBleedingEdge 6.12.x
+
+### Build Steps
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/rimworld-simple-improve.git
+cd rimworld-simple-improve
+
+# Build using the provided script
+./build.sh
+
+# Or build manually
+dotnet build SimpleImprove.csproj
+```
+
+The built mod will be in the `1.6/Assemblies/` directory.
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow C# coding conventions
+- Add XML documentation for public APIs
+- Test with multiple RimWorld scenarios
+- Ensure compatibility with popular mods
+
+## Frequently Asked Questions
+
+**Q: Can I improve items to Legendary quality?**
+A: Only with pawn modifiers like Inspired Creativity or Production Specialist roles. The base system caps at Masterwork.
+
+**Q: What happens if improvement fails?**
+A: Materials are consumed but the item keeps its original quality. If materials remain, the improvement can be retried.
+
+**Q: Does this work with modded furniture?**
+A: Yes! Any item with a quality stat and proper blueprint definition will work automatically.
+
+**Q: Can I adjust the difficulty?**
+A: Absolutely. Use the mod settings to configure skill requirements for each quality tier.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Credits
+
+- **Author**: Zei33
+- **Original Concept**: Inspired by Improve This by [Hex](https://steamcommunity.com/sharedfiles/filedetails/?id=2785022023)
+- **Quality System**: Uses RimWorld's standard construction quality algorithms
+- **Special Thanks**: To the RimWorld modding community for tools and documentation
+
+## Support
+
+- **Issues**: Report bugs via GitHub Issues
+- **Discussions**: Join the conversation on Steam Workshop
+- **Updates**: Watch this repository for new releases and features
+
+---
+
+*Enhance your colony's infrastructure one improvement at a time! 🔨*

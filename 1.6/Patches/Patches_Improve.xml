@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+  <!-- Add SimpleImprove component to all things with quality -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThingDef[comps/li/compClass[text()='CompQuality'] and not(comps/li[@Class='SimpleImprove.Core.CompProperties_SimpleImprove'])]/comps</xpath>
+    <value>
+      <li Class="SimpleImprove.Core.CompProperties_SimpleImprove" />
+    </value>
+  </Operation>
+</Patch>

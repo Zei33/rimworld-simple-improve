@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>Job_HaulToImprove</defName>
+    <driverClass>SimpleImprove.Jobs.JobDriver_HaulToImprove</driverClass>
+    <reportString>hauling materials for improvement.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+  <JobDef>
+    <defName>Job_Improve</defName>
+    <driverClass>SimpleImprove.Jobs.JobDriver_Improve</driverClass>
+    <reportString>improving TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <suspendable>true</suspendable>
+  </JobDef>
+</Defs>

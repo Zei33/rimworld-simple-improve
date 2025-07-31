@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <DesignationDef>
+    <defName>Designation_Improve</defName>
+    <texturePath>UI/Designators/Upgrade</texturePath>
+    <targetType>Thing</targetType>
+  </DesignationDef>
+</Defs>
