@@ -20,10 +20,10 @@
 - Default values based on 5% success chance:
   - Awful: 0
   - Poor: 0  
-  - Normal: 3
-  - Good: 8
-  - Excellent: 18
-  - Masterwork: 21
+  - Normal: 4
+  - Good: 10
+  - Excellent: 14
+  - Masterwork: 18
 - Legendary quality cannot be achieved through normal improvement
 
 ### Pawn Modifiers
