@@ -33,14 +33,31 @@
 
 ## User Interface
 
+### Multi-Building Selection
+- **Intelligent Grouping**: When multiple buildings are selected, they are automatically grouped by improvement state:
+  - **Unmarked Buildings**: All buildings not yet marked for improvement
+  - **Same Target Quality**: Buildings marked for the same quality target (e.g., all targeting "Excellent")
+  - **Different Target Quality**: Separate groups for each different quality target
+- **Consolidated Controls**: Instead of showing duplicate buttons, one representative button appears per group
+- **Smart Quality Options**: Available quality targets are filtered based on selection composition:
+  - When mixing marked and unmarked buildings, options for unmarked buildings are limited to qualities higher than the highest-quality building in that group
+  - When selecting from existing quality target groups, choosing a new quality applies to ALL selected buildings
+  - Buildings at or above the selected target quality are automatically excluded from marking
+- **Visual Indicators**: Button labels show the number of buildings in each group (e.g., "Improve (3)")
+
 ### Designators
 - **Mark for Improvement**: Select items to queue for quality improvement
 - **Cancel Improvement**: Remove items from the improvement queue
 - Both support drag selection for multiple items
 
 ### Item Gizmos
-- Toggle button on each improvable item for quick marking/unmarking
-- Shows current improvement status
+- **Smart Consolidated Buttons**: When multiple buildings are selected, the mod intelligently groups them and shows consolidated improvement buttons instead of duplicates
+- **Quality Target Selection**: Dropdown menu allows choosing specific quality targets (Poor, Normal, Good, Excellent, Masterwork) or "Any improvement"
+- **Context-Aware Options**: Available quality options adapt based on selection:
+  - **All Unmarked**: Shows all quality options above each building's current quality
+  - **Mixed Selection**: Unmarked buildings show limited options based on highest quality in selection
+  - **Different Targets**: Separate buttons for each target quality group, with cross-group quality setting affecting all selected buildings
+- Shows current improvement status and target quality
 
 ### Settings Menu
 - Adjust minimum skill requirements for each quality level

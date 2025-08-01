@@ -21,6 +21,7 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>警告：この{0}を改良できる入植者がいません（建設スキル{1}、またはインスピレーション時{2}が必要）。</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>警告：この{0}を改良できる入植者がいません（建設スキル{1}、またはインスピレーション/生産専門役職時{2}が必要）。</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_LegendaryWarning>伝説品質の改良にはインスピレーションやイデオロギー専門役職などの特別な状況が必要です。</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>

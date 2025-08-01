@@ -21,6 +21,7 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Aviso: Nenhum colonista pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Aviso: Nenhum colonista pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_LegendaryWarning>Melhorias lendárias requerem circunstâncias especiais como inspirações ou funções especialistas ideológicas.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>Melhorar</SimpleImprove_GizmoLabel>

@@ -25,7 +25,8 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 │   └── MaterialStorage.cs           # Custom material container
 ├── Patches/                # Harmony patches
 │   ├── DesignationCancelPatch.cs    # Handles designation removal
-│   └── Patches_Improve.xml          # XML patches
+│   ├── DynamicComponentPatch.cs     # Runtime component addition for mod compatibility
+│   └── Patches_Improve.xml          # XML patches (deprecated)
 └── Defs/                   # XML definitions
     ├── DesignationDefs/
     ├── JobDefs/
@@ -41,10 +42,23 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Manages mod settings
 
 ### SimpleImproveComp
-- ThingComp attached to all items with quality
-- Manages improvement state
-- Handles material storage
+- ThingComp dynamically attached to all items with quality
+- Manages improvement state and target quality settings
+- Handles material storage via custom MaterialStorage class
 - Implements IConstructible interface
+- **Intelligent Gizmo Consolidation**: Analyzes current selection to group buildings by improvement state
+- **Multi-Building Selection Support**: Provides consolidated UI controls when multiple buildings are selected
+- **Context-Aware Quality Options**: Filters available quality targets based on complex selection rules
+
+### Dynamic Component Addition
+- Uses optimized Harmony patch on GetGizmos with intelligent caching
+- Each building processed exactly once using thingIDNumber cache
+- Multiple early exits minimize overhead for irrelevant objects
+- Adds SimpleImproveComp on-demand when first accessing building UI
+- Ensures compatibility with mods that add CompQuality after our patches
+- Automatically detects and enhances any building with quality
+- Performance monitoring in dev mode with periodic statistics
+- No per-mod compatibility patches needed
 
 ### Settings System
 - Configurable skill requirements per quality level
@@ -60,6 +74,18 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Custom MaterialStorage class restricts what can be stored
 - Only accepts materials needed for improvement
 - Automatically drops materials when improvement is cancelled
+
+### Gizmo Consolidation System
+- **ImproveGroup Class**: Represents a collection of buildings with similar improvement states
+- **Selection Analysis**: `AnalyzeSelection()` method groups buildings by:
+  - Improvement marking status (marked vs unmarked)
+  - Target quality settings (groups buildings with same target quality)
+- **Representative Gizmos**: Only the first component in each group yields a gizmo, preventing duplicates
+- **Quality Option Filtering**: `GetAvailableQualityOptions()` implements complex rules:
+  - For unmarked buildings in mixed selections: limits options based on highest current quality
+  - For marked buildings: shows options above lowest quality in group
+  - Cross-group actions apply quality settings to all selected buildings
+- **Group Actions**: `ApplyQualityTargetToGroup()` handles both single-group and cross-group operations
 
 ## Design Patterns
 
@@ -85,3 +111,6 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 4. **Modern C# Features**: Uses properties, LINQ, and pattern matching
 5. **Fixed UI Labels**: Quality tiers now match their actual names
 6. **Improved Performance**: Caches calculations where possible
+7. **Smart Multi-Selection**: Consolidated gizmos prevent UI clutter when selecting multiple buildings
+8. **Advanced Quality Targeting**: Complex quality selection rules for mixed building selections
+9. **Cross-Group Operations**: Quality settings can be applied to all selected buildings simultaneously

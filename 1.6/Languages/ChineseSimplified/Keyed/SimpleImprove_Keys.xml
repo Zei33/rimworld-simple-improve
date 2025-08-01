@@ -21,6 +21,7 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>警告：没有殖民者能改良这个{0}（需要建造技能{1}，或有灵感时{2}）。</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>警告：没有殖民者能改良这个{0}（需要建造技能{1}，或有灵感/生产专家角色时{2}）。</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_LegendaryWarning>传奇品质改良需要特殊情况，如灵感或意识形态专家角色。</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>

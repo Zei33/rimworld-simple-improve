@@ -11,6 +11,21 @@ using SimpleImprove.Utils;
 namespace SimpleImprove.Core
 {
     /// <summary>
+    /// Represents a group of buildings with similar improvement states for consolidated gizmo display.
+    /// </summary>
+    public class ImproveGroup
+    {
+        public List<SimpleImproveComp> Comps { get; set; } = new List<SimpleImproveComp>();
+        public bool IsMarked { get; set; }
+        public QualityCategory? TargetQuality { get; set; }
+        public SimpleImproveComp Representative { get; set; }
+        public string GroupKey { get; set; }
+        
+        public QualityCategory HighestCurrentQuality => Comps.Max(c => c.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal);
+        public QualityCategory LowestCurrentQuality => Comps.Min(c => c.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal);
+    }
+
+    /// <summary>
     /// Main component for the SimpleImprove mod functionality.
     /// Handles marking items for improvement, material storage, work tracking, and quality enhancement.
     /// Implements <see cref="IConstructible"/> to integrate with RimWorld's construction system.
@@ -404,8 +419,141 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
+        /// Gets all selected things that have SimpleImproveComp and are eligible for improvement.
+        /// </summary>
+        /// <returns>List of SimpleImproveComp components from selected buildings.</returns>
+        private List<SimpleImproveComp> GetSelectedImproveComps()
+        {
+            return Find.Selector.SelectedObjects.OfType<Thing>()
+                .Where(t => t.Faction == Faction.OfPlayer && 
+                           t.TryGetComp<CompQuality>() != null && 
+                           t.TryGetComp<CompQuality>().Quality != QualityCategory.Legendary &&
+                           t.def.blueprintDef != null)
+                .Select(t => t.TryGetComp<SimpleImproveComp>())
+                .Where(c => c != null)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Analyzes the current selection and groups buildings by their improvement state.
+        /// Implements the grouping rules for consolidated gizmo display.
+        /// </summary>
+        /// <returns>List of improvement groups.</returns>
+        private List<ImproveGroup> AnalyzeSelection()
+        {
+            var selectedComps = GetSelectedImproveComps();
+            if (!selectedComps.Any()) return new List<ImproveGroup>();
+
+            var groups = new List<ImproveGroup>();
+
+            // Group unmarked buildings
+            var unmarkedComps = selectedComps.Where(c => !c.IsMarkedForImprovement).ToList();
+            if (unmarkedComps.Any())
+            {
+                groups.Add(new ImproveGroup
+                {
+                    Comps = unmarkedComps,
+                    IsMarked = false,
+                    TargetQuality = null,
+                    Representative = unmarkedComps.First(),
+                    GroupKey = "unmarked"
+                });
+            }
+
+            // Group marked buildings by target quality
+            var markedComps = selectedComps.Where(c => c.IsMarkedForImprovement).ToList();
+            var markedGroups = markedComps
+                .GroupBy(c => c.TargetQuality?.ToString() ?? "any")
+                .Select(g => new ImproveGroup
+                {
+                    Comps = g.ToList(),
+                    IsMarked = true,
+                    TargetQuality = g.First().TargetQuality,
+                    Representative = g.First(),
+                    GroupKey = $"marked_{g.Key}"
+                })
+                .ToList();
+
+            groups.AddRange(markedGroups);
+
+            return groups;
+        }
+
+        /// <summary>
+        /// Gets the available quality options for a group based on the selection rules.
+        /// </summary>
+        /// <param name="group">The improvement group to get options for.</param>
+        /// <param name="allGroups">All groups in the current selection for context.</param>
+        /// <returns>List of available quality categories.</returns>
+        private List<QualityCategory> GetAvailableQualityOptions(ImproveGroup group, List<ImproveGroup> allGroups)
+        {
+            var options = new List<QualityCategory>();
+            
+            if (!group.IsMarked)
+            {
+                // For unmarked buildings, show options based on highest quality building
+                var hasMarkedBuildings = allGroups.Any(g => g.IsMarked);
+                if (hasMarkedBuildings)
+                {
+                    // When some buildings are marked, limit options for unmarked based on highest quality
+                    var highestQuality = group.HighestCurrentQuality;
+                    
+                    // Only show qualities higher than the highest current quality
+                    var qualityTargets = new[]
+                    {
+                        QualityCategory.Poor,
+                        QualityCategory.Normal, 
+                        QualityCategory.Good,
+                        QualityCategory.Excellent,
+                        QualityCategory.Masterwork,
+                        QualityCategory.Legendary
+                    };
+                    
+                    options.AddRange(qualityTargets.Where(q => q > highestQuality));
+                }
+                else
+                {
+                    // All buildings unmarked - show all options above current for each building
+                    var allQualities = group.Comps.SelectMany(c =>
+                    {
+                        var currentQuality = c.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
+                        return new[]
+                        {
+                            QualityCategory.Poor,
+                            QualityCategory.Normal, 
+                            QualityCategory.Good,
+                            QualityCategory.Excellent,
+                            QualityCategory.Masterwork,
+                            QualityCategory.Legendary
+                        }.Where(q => q > currentQuality);
+                    }).Distinct().OrderBy(q => q);
+                    
+                    options.AddRange(allQualities);
+                }
+            }
+            else
+            {
+                // For marked buildings, show all options above the lowest current quality in the group
+                var lowestQuality = group.LowestCurrentQuality;
+                var qualityTargets = new[]
+                {
+                    QualityCategory.Poor,
+                    QualityCategory.Normal, 
+                    QualityCategory.Good,
+                    QualityCategory.Excellent,
+                    QualityCategory.Masterwork,
+                    QualityCategory.Legendary
+                };
+                
+                options.AddRange(qualityTargets.Where(q => q > lowestQuality));
+            }
+
+            return options;
+        }
+
+        /// <summary>
         /// Provides UI gizmos (buttons) for the player interface.
-        /// Shows the "Improve" dropdown button for eligible items.
+        /// Shows consolidated "Improve" dropdown buttons based on selection grouping.
         /// </summary>
         /// <returns>An enumerable of gizmos to display in the UI.</returns>
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -417,13 +565,84 @@ namespace SimpleImprove.Core
             
             if (parent.def.blueprintDef == null) yield break; // Items without blueprints can't be improved
             
-            yield return new Command_Action
+            var groups = AnalyzeSelection();
+            
+            // Only yield gizmos if this comp is the representative for its group
+            foreach (var group in groups)
             {
-                defaultLabel = GetImproveGizmoLabel(),
-                defaultDesc = "SimpleImprove_GizmoTooltip".Translate(),
+                if (group.Representative == this)
+                {
+                    yield return CreateGroupGizmo(group, groups);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a gizmo for a group of buildings with similar improvement state.
+        /// </summary>
+        /// <param name="group">The improvement group to create a gizmo for.</param>
+        /// <param name="allGroups">All groups in the selection for context.</param>
+        /// <returns>A command gizmo for the group.</returns>
+        private Command_Action CreateGroupGizmo(ImproveGroup group, List<ImproveGroup> allGroups)
+        {
+            return new Command_Action
+            {
+                defaultLabel = GetGroupGizmoLabel(group),
+                defaultDesc = GetGroupGizmoDesc(group),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/Improve", true),
-                action = () => ShowQualityTargetFloatMenu()
+                action = () => ShowGroupQualityTargetFloatMenu(group, allGroups),
+                groupKey = GetGroupGizmoKey(group)
             };
+        }
+
+        /// <summary>
+        /// Gets the label for a group gizmo based on the group's state.
+        /// </summary>
+        /// <param name="group">The improvement group.</param>
+        /// <returns>The label text for the gizmo.</returns>
+        private string GetGroupGizmoLabel(ImproveGroup group)
+        {
+            var count = group.Comps.Count;
+            var countText = count > 1 ? $" ({count})" : "";
+
+            if (!group.IsMarked)
+            {
+                return "SimpleImprove_GizmoLabel".Translate() + countText;
+            }
+            
+            if (group.TargetQuality.HasValue)
+            {
+                return "SimpleImprove_GizmoLabelWithTarget".Translate(group.TargetQuality.Value.GetLabel()) + countText;
+            }
+            
+            return "SimpleImprove_GizmoLabelAny".Translate() + countText;
+        }
+
+        /// <summary>
+        /// Gets the description for a group gizmo.
+        /// </summary>
+        /// <param name="group">The improvement group.</param>
+        /// <returns>The description text for the gizmo.</returns>
+        private string GetGroupGizmoDesc(ImproveGroup group)
+        {
+            var count = group.Comps.Count;
+            if (count == 1)
+            {
+                return "SimpleImprove_GizmoTooltip".Translate();
+            }
+            
+            return "SimpleImprove_GizmoTooltip".Translate() + $" ({count} items)";
+        }
+
+        /// <summary>
+        /// Gets the group key for gizmo grouping.
+        /// </summary>
+        /// <param name="group">The improvement group.</param>
+        /// <returns>The group key for the gizmo.</returns>
+        private int GetGroupGizmoKey(ImproveGroup group)
+        {
+            // Use a base key and add variation based on group type
+            return 2003114091 + group.GroupKey.GetHashCode();
         }
         
         /// <summary>
@@ -446,7 +665,118 @@ namespace SimpleImprove.Core
         }
         
         /// <summary>
-        /// Shows the float menu for selecting quality targets.
+        /// Shows the float menu for selecting quality targets for a group of buildings.
+        /// </summary>
+        /// <param name="group">The improvement group to show options for.</param>
+        /// <param name="allGroups">All groups in the selection for context.</param>
+        private void ShowGroupQualityTargetFloatMenu(ImproveGroup group, List<ImproveGroup> allGroups)
+        {
+            var options = new List<FloatMenuOption>();
+
+            // Add "Cancel improvement" option if any buildings in group are marked
+            if (group.IsMarked)
+            {
+                options.Add(new FloatMenuOption("SimpleImprove_CancelImprovement".Translate(), () =>
+                {
+                    foreach (var comp in group.Comps)
+                    {
+                        comp.IsMarkedForImprovement = false;
+                    }
+                }));
+            }
+
+            // Add "Any improvement" option
+            var anyLabel = "SimpleImprove_TargetAny".Translate();
+            if (group.IsMarked && group.TargetQuality == null)
+            {
+                anyLabel += " ✓";
+            }
+            options.Add(new FloatMenuOption(anyLabel, () =>
+            {
+                ApplyQualityTargetToGroup(group, allGroups, null);
+            }));
+
+            // Add specific quality targets based on the complex rules
+            var availableQualities = GetAvailableQualityOptions(group, allGroups);
+            
+            foreach (var quality in availableQualities)
+            {
+                var label = quality.GetLabel().CapitalizeFirst();
+                if (group.IsMarked && group.TargetQuality == quality)
+                {
+                    label += " ✓";
+                }
+                
+                options.Add(new FloatMenuOption(label, () =>
+                {
+                    ApplyQualityTargetToGroup(group, allGroups, quality);
+                }));
+            }
+
+            if (options.Count > (group.IsMarked ? 2 : 1)) // More than just "Any" option
+            {
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+            else if (!group.IsMarked)
+            {
+                // No valid targets, just mark for any improvement
+                ApplyQualityTargetToGroup(group, allGroups, null);
+            }
+        }
+
+        /// <summary>
+        /// Applies a quality target to a group of buildings, implementing the complex selection rules.
+        /// </summary>
+        /// <param name="group">The group being modified.</param>
+        /// <param name="allGroups">All groups for context.</param>
+        /// <param name="targetQuality">The target quality to apply.</param>
+        private void ApplyQualityTargetToGroup(ImproveGroup group, List<ImproveGroup> allGroups, QualityCategory? targetQuality)
+        {
+            // Show warning if Legendary quality is selected
+            if (targetQuality == QualityCategory.Legendary)
+            {
+                Messages.Message("SimpleImprove_LegendaryWarning".Translate(), MessageTypeDefOf.CautionInput);
+            }
+            
+            // Special case: if this action comes from a marked group and we're setting a new quality,
+            // apply to ALL selected buildings, not just the group
+            if (group.IsMarked && allGroups.Count > 1)
+            {
+                // Apply to all buildings in all groups
+                foreach (var g in allGroups)
+                {
+                    foreach (var comp in g.Comps)
+                    {
+                        var currentQuality = comp.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
+                        
+                        // Only mark buildings that can achieve the target quality
+                        if (targetQuality == null || currentQuality < targetQuality.Value)
+                        {
+                            comp.targetQuality = targetQuality;
+                            comp.IsMarkedForImprovement = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Apply only to the specific group
+                foreach (var comp in group.Comps)
+                {
+                    var currentQuality = comp.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
+                    
+                    // Only mark buildings that can achieve the target quality
+                    if (targetQuality == null || currentQuality < targetQuality.Value)
+                    {
+                        comp.targetQuality = targetQuality;
+                        comp.IsMarkedForImprovement = true;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Shows the float menu for selecting quality targets (legacy single-building method).
         /// </summary>
         private void ShowQualityTargetFloatMenu()
         {
@@ -482,7 +812,8 @@ namespace SimpleImprove.Core
                 QualityCategory.Normal, 
                 QualityCategory.Good,
                 QualityCategory.Excellent,
-                QualityCategory.Masterwork
+                QualityCategory.Masterwork,
+                QualityCategory.Legendary
             };
             
             foreach (var quality in qualityTargets)
@@ -497,6 +828,12 @@ namespace SimpleImprove.Core
                 
                 options.Add(new FloatMenuOption(label, () =>
                 {
+                    // Show warning if Legendary quality is selected
+                    if (quality == QualityCategory.Legendary)
+                    {
+                        Messages.Message("SimpleImprove_LegendaryWarning".Translate(), MessageTypeDefOf.CautionInput);
+                    }
+                    
                     targetQuality = quality;
                     IsMarkedForImprovement = true;
                 }));

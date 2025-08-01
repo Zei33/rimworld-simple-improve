@@ -31,6 +31,9 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 
 ### 🎨 Intuitive User Interface
 - **Drag-select designators** for marking multiple items at once
+- **Smart multi-building selection** with consolidated controls - no more duplicate buttons!
+- **Intelligent quality targeting** with context-aware options based on your selection
+- **Cross-group operations** - set quality targets for all selected buildings at once
 - **Individual item toggles** via building gizmos
 - **Visual feedback** with success/failure messages
 - **Settings menu** with quality distribution calculator
@@ -39,7 +42,8 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 - **New "Improving" work type** with separate priority from construction
 - **Automatic material hauling** - Pawns gather resources automatically
 - **Experience gain** - Construction skill improves while working
-- **Mod compatibility** - Works with any items that have quality
+- **Universal mod compatibility** - Works with any mod that adds quality to buildings
+- **Optimized performance** - Intelligent caching prevents UI slowdowns
 
 ## Installation
 
@@ -66,8 +70,10 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
    - Use "Cancel Improvement" to remove designations
 
 2. **Using Item Buttons**:
-   - Select any improvable item
+   - Select any improvable item (or multiple items)
    - Click the improvement toggle button in the item's gizmo bar
+   - When multiple buildings are selected, the mod shows consolidated buttons grouped by improvement state
+   - Choose quality targets from the dropdown menu - options adapt based on your selection
 
 ### How Improvement Works
 

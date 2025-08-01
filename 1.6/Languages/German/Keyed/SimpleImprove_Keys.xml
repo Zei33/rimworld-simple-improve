@@ -21,6 +21,7 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Warnung: Kein Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Warnung: Kein Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration/Produktionsrolle).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_LegendaryWarning>Legendäre Verbesserungen erfordern besondere Umstände wie Inspirationen oder ideologische Spezialistenrollen.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>Verbessern</SimpleImprove_GizmoLabel>

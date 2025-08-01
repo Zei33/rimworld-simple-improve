@@ -21,6 +21,7 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_LegendaryWarning>Les améliorations légendaires nécessitent des circonstances spéciales comme des inspirations ou des rôles de spécialistes idéologiques.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>Améliorer</SimpleImprove_GizmoLabel>

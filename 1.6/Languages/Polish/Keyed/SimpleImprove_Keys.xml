@@ -21,6 +21,7 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_LegendaryWarning>Legendarne ulepszenia wymagają specjalnych okoliczności takich jak inspiracje lub ideologiczne role specjalistów.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>Ulepsz</SimpleImprove_GizmoLabel>

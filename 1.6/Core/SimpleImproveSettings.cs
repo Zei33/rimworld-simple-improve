@@ -24,7 +24,8 @@ namespace SimpleImprove.Core
             { QualityCategory.Normal, 4 },
             { QualityCategory.Good, 10 },
             { QualityCategory.Excellent, 14 },
-            { QualityCategory.Masterwork, 18 }
+            { QualityCategory.Masterwork, 18 },
+            { QualityCategory.Legendary, 20 }
         };
 
         /// <summary>
@@ -135,7 +136,7 @@ namespace SimpleImprove.Core
 
             foreach (var quality in Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>())
             {
-                if (quality == QualityCategory.Legendary) continue; // Can't improve to Legendary normally
+                // Include all quality levels, including Legendary
 
                 if (!skillEntryBuffers.ContainsKey(quality))
                     skillEntryBuffers[quality] = skillRequirements[quality].ToString();
@@ -255,7 +256,8 @@ namespace SimpleImprove.Core
                     { QualityCategory.Normal, 4 },
                     { QualityCategory.Good, 10 },
                     { QualityCategory.Excellent, 14 },
-                    { QualityCategory.Masterwork, 18 }
+                    { QualityCategory.Masterwork, 18 },
+                    { QualityCategory.Legendary, 20 }
                 };
             }
 
