@@ -24,7 +24,13 @@
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoLabelAny>改良（任意）</SimpleImprove_GizmoLabelAny>
+  <SimpleImprove_GizmoLabelWithTarget>改良（{0}）</SimpleImprove_GizmoLabelWithTarget>
   <SimpleImprove_GizmoTooltip>このアイテムの品質改良をマークする</SimpleImprove_GizmoTooltip>
+  
+  <!-- Target Quality Options -->
+  <SimpleImprove_TargetAny>任意の改良</SimpleImprove_TargetAny>
+  <SimpleImprove_TargetQuality>目標品質: {0}</SimpleImprove_TargetQuality>
   
   <!-- Settings Menu -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>

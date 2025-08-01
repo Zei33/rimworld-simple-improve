@@ -36,7 +36,13 @@ namespace SimpleImprove.Core
         /// Cached list of materials needed for improvement to avoid repeated calculations.
         /// </summary>
         private List<ThingDefCountClass> cachedMaterialsNeeded = new List<ThingDefCountClass>();
-
+        
+        /// <summary>
+        /// The target quality level that the improvement should aim for.
+        /// If null, any improvement is acceptable (original behavior).
+        /// </summary>
+        private QualityCategory? targetQuality;
+	
         /// <summary>
         /// Gets or sets whether this item is marked for improvement.
         /// Setting this property will automatically handle designation management and material cleanup.
@@ -103,6 +109,17 @@ namespace SimpleImprove.Core
         /// </summary>
         /// <value>The remaining work in work units.</value>
         public float WorkLeft => WorkToBuild - workDone;
+        
+        /// <summary>
+        /// Gets or sets the target quality level for improvement.
+        /// If null, any improvement is acceptable (original behavior).
+        /// </summary>
+        /// <value>The target quality category, or null for any improvement.</value>
+        public QualityCategory? TargetQuality
+        {
+            get => targetQuality;
+            set => targetQuality = value;
+        }
 
         /// <summary>
         /// Gets the material container for storing improvement materials.
@@ -199,6 +216,7 @@ namespace SimpleImprove.Core
         /// <summary>
         /// Completes the improvement process for the item.
         /// Generates a new quality based on the worker's skill and applies it if it's better than the current quality.
+        /// If a target quality is set, continues improving until the target is reached.
         /// </summary>
         /// <param name="worker">The pawn performing the improvement work.</param>
         public void CompleteImprovement(Pawn worker)
@@ -213,17 +231,29 @@ namespace SimpleImprove.Core
                 return;
             }
             
+            var currentQuality = compQuality.Quality;
             var newQuality = QualityUtility.GenerateQualityCreatedByPawn(worker, SkillDefOf.Construction);
             
-            if (newQuality <= compQuality.Quality)
+            if (newQuality <= currentQuality)
             {
-                // Improvement failed
-                            MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
-                "SimpleImprove_ImprovementFailed".Translate(newQuality.GetLabel()), 6f);
-                return;
+                // Improvement failed - show failure message and continue trying if target not met
+                MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
+                    "SimpleImprove_ImprovementFailed".Translate(newQuality.GetLabel()), 6f);
+                
+                // Check if we should continue improving based on target quality
+                if (ShouldContinueImproving(currentQuality))
+                {
+                    return; // Keep trying - don't clear the improvement flag
+                }
+                else
+                {
+                    // No target set or target already met - stop improving
+                    ClearImprovementAndFinish();
+                    return;
+                }
             }
             
-            // Improvement succeeded
+            // Improvement succeeded - apply the new quality
             compQuality.SetQuality(newQuality, ArtGenerationContext.Colony);
             QualityUtility.SendCraftNotification(parent, worker);
             
@@ -241,6 +271,36 @@ namespace SimpleImprove.Core
             MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
                 "SimpleImprove_ImprovedTo".Translate(newQuality.GetLabel()), 6f);
             
+            // Check if we should continue improving based on target quality
+            if (ShouldContinueImproving(newQuality))
+            {
+                return; // Keep improving - don't clear the improvement flag
+            }
+            
+            // Target reached or no target set - finish improvement
+            ClearImprovementAndFinish();
+        }
+        
+        /// <summary>
+        /// Determines whether improvement should continue based on the target quality setting.
+        /// </summary>
+        /// <param name="currentQuality">The current quality level of the item.</param>
+        /// <returns>True if improvement should continue, false if it should stop.</returns>
+        private bool ShouldContinueImproving(QualityCategory currentQuality)
+        {
+            // If no target is set, stop after any improvement (original behavior)
+            if (targetQuality == null)
+                return false;
+                
+            // If current quality is below target, continue improving
+            return currentQuality < targetQuality.Value;
+        }
+        
+        /// <summary>
+        /// Clears the improvement flag and removes the designation to finish the improvement process.
+        /// </summary>
+        private void ClearImprovementAndFinish()
+        {
             // Clear the improvement flag directly and remove designation without triggering setter
             // to avoid double-clearing materials that were already destroyed above
             isMarkedForImprovement = false;
@@ -274,6 +334,7 @@ namespace SimpleImprove.Core
             base.PostExposeData();
             Scribe_Values.Look(ref isMarkedForImprovement, "isMarkedForImprovement", false);
             Scribe_Values.Look(ref workDone, "workDone", 0f);
+            Scribe_Values.Look(ref targetQuality, "targetQuality", null);
             Scribe_Deep.Look(ref materialContainer, "materialContainer", this);
         }
 
@@ -332,6 +393,11 @@ namespace SimpleImprove.Core
                 {
                     sb.AppendLine($"Minimum skill required: {skillReq}");
                 }
+                
+                if (targetQuality.HasValue)
+                {
+                    sb.AppendLine($"SimpleImprove_TargetQuality".Translate(targetQuality.Value.GetLabel()));
+                }
             }
             
             return sb.ToString().TrimEnd();
@@ -339,7 +405,7 @@ namespace SimpleImprove.Core
 
         /// <summary>
         /// Provides UI gizmos (buttons) for the player interface.
-        /// Shows the "Improve" toggle button for eligible items.
+        /// Shows the "Improve" dropdown button for eligible items.
         /// </summary>
         /// <returns>An enumerable of gizmos to display in the UI.</returns>
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -351,14 +417,101 @@ namespace SimpleImprove.Core
             
             if (parent.def.blueprintDef == null) yield break; // Items without blueprints can't be improved
             
-            yield return new Command_Toggle
+            yield return new Command_Action
             {
-                defaultLabel = "SimpleImprove_GizmoLabel".Translate(),
+                defaultLabel = GetImproveGizmoLabel(),
                 defaultDesc = "SimpleImprove_GizmoTooltip".Translate(),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/Improve", true),
-                isActive = () => isMarkedForImprovement,
-                toggleAction = () => IsMarkedForImprovement = !isMarkedForImprovement
+                action = () => ShowQualityTargetFloatMenu()
             };
+        }
+        
+        /// <summary>
+        /// Gets the label for the improve gizmo based on current state.
+        /// </summary>
+        /// <returns>The label text for the gizmo.</returns>
+        private string GetImproveGizmoLabel()
+        {
+            if (!isMarkedForImprovement)
+            {
+                return "SimpleImprove_GizmoLabel".Translate();
+            }
+            
+            if (targetQuality.HasValue)
+            {
+                return "SimpleImprove_GizmoLabelWithTarget".Translate(targetQuality.Value.GetLabel());
+            }
+            
+            return "SimpleImprove_GizmoLabelAny".Translate();
+        }
+        
+        /// <summary>
+        /// Shows the float menu for selecting quality targets.
+        /// </summary>
+        private void ShowQualityTargetFloatMenu()
+        {
+            var options = new List<FloatMenuOption>();
+            
+            var currentQuality = parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
+            
+            // Add "Cancel improvement" option if already marked
+            if (isMarkedForImprovement)
+            {
+                options.Add(new FloatMenuOption("SimpleImprove_CancelImprovement".Translate(), () =>
+                {
+                    IsMarkedForImprovement = false;
+                }));
+            }
+            
+            // Add "Any improvement" option
+            var anyLabel = "SimpleImprove_TargetAny".Translate();
+            if (targetQuality == null && isMarkedForImprovement)
+            {
+                anyLabel += " ✓";
+            }
+            options.Add(new FloatMenuOption(anyLabel, () =>
+            {
+                targetQuality = null;
+                IsMarkedForImprovement = true;
+            }));
+            
+            // Add specific quality targets (only those higher than current)
+            var qualityTargets = new[]
+            {
+                QualityCategory.Poor,
+                QualityCategory.Normal, 
+                QualityCategory.Good,
+                QualityCategory.Excellent,
+                QualityCategory.Masterwork
+            };
+            
+            foreach (var quality in qualityTargets)
+            {
+                if (quality <= currentQuality) continue; // Can't target lower quality
+                
+                var label = quality.GetLabel().CapitalizeFirst();
+                if (targetQuality == quality && isMarkedForImprovement)
+                {
+                    label += " ✓";
+                }
+                
+                options.Add(new FloatMenuOption(label, () =>
+                {
+                    targetQuality = quality;
+                    IsMarkedForImprovement = true;
+                }));
+            }
+            
+            if (options.Count > (isMarkedForImprovement ? 2 : 1)) // More than just "Any" option
+            {
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+            else if (!isMarkedForImprovement)
+            {
+                // No valid targets, just mark for any improvement
+                targetQuality = null;
+                IsMarkedForImprovement = true;
+            }
         }
 
         /// <summary>

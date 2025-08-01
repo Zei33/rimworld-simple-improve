@@ -2,7 +2,7 @@
 <ModMetaData>
   <name>Simple Improve</name>
   <author>Zei33</author>
-  <modVersion>1.0.2</modVersion>
+  <modVersion>1.0.3</modVersion>
   <packageId>Zei33.SimpleImprove</packageId>
   <description>A RimWorld mod that allows players to improve the quality of buildings with construction skill. Mark buildings for improvement and watch skilled pawns enhance their quality using the same resources required for initial construction.</description>
   <supportedVersions>

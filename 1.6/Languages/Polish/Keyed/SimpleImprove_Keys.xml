@@ -24,7 +24,13 @@
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>Ulepsz</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoLabelAny>Ulepsz (Dowolne)</SimpleImprove_GizmoLabelAny>
+  <SimpleImprove_GizmoLabelWithTarget>Ulepsz ({0})</SimpleImprove_GizmoLabelWithTarget>
   <SimpleImprove_GizmoTooltip>Oznacz ten przedmiot do ulepszenia jakości</SimpleImprove_GizmoTooltip>
+  
+  <!-- Target Quality Options -->
+  <SimpleImprove_TargetAny>Dowolne ulepszenie</SimpleImprove_TargetAny>
+  <SimpleImprove_TargetQuality>Docelowa jakość: {0}</SimpleImprove_TargetQuality>
   
   <!-- Settings Menu -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>

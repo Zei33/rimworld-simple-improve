@@ -14,3 +14,4 @@ rm release/1.6/Libraries/0Harmony.dll
 
 rm -Rf "${RimWorldDir}/Mods/SimpleImprove"
 cp -r release "${RimWorldDir}/Mods/SimpleImprove"
+rm -Rf release

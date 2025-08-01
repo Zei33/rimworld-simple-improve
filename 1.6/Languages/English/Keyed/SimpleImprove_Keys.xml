@@ -24,7 +24,13 @@
   
   <!-- Gizmo Labels and Tooltips -->
   <SimpleImprove_GizmoLabel>Improve</SimpleImprove_GizmoLabel>
+  <SimpleImprove_GizmoLabelAny>Improve (Any)</SimpleImprove_GizmoLabelAny>
+  <SimpleImprove_GizmoLabelWithTarget>Improve ({0})</SimpleImprove_GizmoLabelWithTarget>
   <SimpleImprove_GizmoTooltip>Mark this item for quality improvement</SimpleImprove_GizmoTooltip>
+  
+  <!-- Target Quality Options -->
+  <SimpleImprove_TargetAny>Any improvement</SimpleImprove_TargetAny>
+  <SimpleImprove_TargetQuality>Target quality: {0}</SimpleImprove_TargetQuality>
   
   <!-- Settings Menu -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
