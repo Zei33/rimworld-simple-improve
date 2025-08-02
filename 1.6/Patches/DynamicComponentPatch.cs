@@ -16,7 +16,6 @@ namespace SimpleImprove.Patches
     /// - Multiple early exits minimize processing for irrelevant objects  
     /// - Adds components only when GetGizmos is first called (on-demand)
     /// - Cache prevents repeated expensive component checks
-    /// - Performance monitoring in dev mode with periodic stats
     /// </summary>
     [HarmonyPatch(typeof(ThingWithComps), "GetGizmos")]
     public static class DynamicComponentPatch
@@ -28,12 +27,6 @@ namespace SimpleImprove.Patches
         private static readonly HashSet<int> processedThings = new HashSet<int>();
 
         /// <summary>
-        /// Performance statistics for monitoring (dev mode only)
-        /// </summary>
-        private static int totalCalls = 0;
-        private static int componentsAdded = 0;
-
-        /// <summary>
         /// Highly optimized prefix patch that adds SimpleImproveComp only once per thing.
         /// Multiple early exits ensure minimal performance impact.
         /// </summary>
@@ -41,12 +34,6 @@ namespace SimpleImprove.Patches
         /// <returns>Always true to continue with original method.</returns>
         public static bool Prefix(ThingWithComps __instance)
         {
-            // Performance tracking (dev mode only)
-            if (Prefs.DevMode && ++totalCalls % 1000 == 0)
-            {
-                Log.Message($"[SimpleImprove] GetGizmos calls: {totalCalls}, Components added: {componentsAdded}");
-            }
-
             // Early exit: Only process player-owned things
             if (__instance.Faction != Faction.OfPlayer)
                 return true;
@@ -78,12 +65,6 @@ namespace SimpleImprove.Patches
 
             // Add the improvement component
             AddSimpleImproveComp(__instance);
-
-            // Update performance stats (dev mode only)
-            if (Prefs.DevMode)
-            {
-                componentsAdded++;
-            }
 
             return true; // Continue with original GetGizmos method
         }
@@ -138,8 +119,6 @@ namespace SimpleImprove.Patches
             public static void Postfix()
             {
                 processedThings.Clear();
-                totalCalls = 0;
-                componentsAdded = 0;
                 
                 if (Prefs.DevMode)
                 {
@@ -148,15 +127,6 @@ namespace SimpleImprove.Patches
             }
         }
 
-        /// <summary>
-        /// Provides performance statistics for debugging (dev mode only).
-        /// </summary>
-        public static void LogPerformanceStats()
-        {
-            if (Prefs.DevMode)
-            {
-                Log.Message($"[SimpleImprove] Performance Stats - Total calls: {totalCalls}, Components added: {componentsAdded}, Cached things: {processedThings.Count}");
-            }
-        }
+
     }
 }

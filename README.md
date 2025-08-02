@@ -197,8 +197,6 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - **Author**: Zei33
 - **Original Concept**: Inspired by Improve This by [Hex](https://steamcommunity.com/sharedfiles/filedetails/?id=2785022023)
-- **Quality System**: Uses RimWorld's standard construction quality algorithms
-- **Special Thanks**: To the RimWorld modding community for tools and documentation
 
 ## Support
 
