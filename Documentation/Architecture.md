@@ -12,6 +12,7 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 ├── Core/                    # Core functionality
 │   ├── SimpleImproveSettings.cs      # Mod settings and configuration
 │   ├── SimpleImproveComp.cs         # Component attached to improvable items
+│   ├── SimpleImproveMapComponent.cs # Map-level persistent storage for target quality data
 │   ├── CompProperties_SimpleImprove.cs # Component properties
 │   └── SimpleImproveDefOf.cs        # Def references
 ├── Designators/            # UI designators for marking items
@@ -43,12 +44,22 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 
 ### SimpleImproveComp
 - ThingComp dynamically attached to all items with quality
-- Manages improvement state and target quality settings
+- Manages improvement state and work tracking
 - Handles material storage via custom MaterialStorage class
 - Implements IConstructible interface
 - **Intelligent Gizmo Consolidation**: Analyzes current selection to group buildings by improvement state
 - **Multi-Building Selection Support**: Provides consolidated UI controls when multiple buildings are selected
 - **Context-Aware Quality Options**: Filters available quality targets based on complex selection rules
+- **Persistent Target Quality**: Reads target quality settings from SimpleImproveMapComponent for cross-save persistence
+
+### SimpleImproveMapComponent
+- **Map-Level Persistent Storage**: Stores target quality data that survives save/load cycles
+- **Dictionary-Based Storage**: Uses `Dictionary<int, QualityCategory>` mapping thing IDs to target qualities
+- **Automatic Save/Load**: Integrates with RimWorld's native `ExposeData()` system for seamless persistence
+- **Memory Management**: Periodic cleanup every 2 hours removes orphaned entries for destroyed items
+- **Data Integrity**: Validates and cleans up entries on map finalization and component destruction
+- **Performance Optimized**: Efficient O(1) lookups by thing ID with minimal memory overhead
+- **Mod Safety**: Graceful degradation if mod is disabled - no save corruption or data loss
 
 ### Dynamic Component Addition
 - Uses optimized Harmony patch on GetGizmos with intelligent caching
@@ -59,6 +70,9 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Automatically detects and enhances any building with quality
 - Performance monitoring in dev mode with periodic statistics
 - No per-mod compatibility patches needed
+- **Enhanced Restoration**: `RestoreComponentsAfterLoad()` automatically restores target quality settings from MapComponent after save/load
+- **Data Validation**: Cross-references designation data with MapComponent storage for consistency
+- **Comprehensive Logging**: Debug messages track component restoration and data integrity
 
 ### Settings System
 - Configurable skill requirements per quality level
@@ -74,6 +88,15 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Custom MaterialStorage class restricts what can be stored
 - Only accepts materials needed for improvement
 - Automatically drops materials when improvement is cancelled
+
+### Persistent Storage System
+- **Target Quality Persistence**: Target quality settings survive save/load cycles without data loss
+- **Separation of Concerns**: Volatile improvement state (work progress, materials) stored in dynamic components, persistent data (target quality) stored in MapComponent
+- **Automatic Cleanup**: Orphaned entries automatically removed when items are destroyed or maps are unloaded
+- **Data Integrity**: Validation ensures consistency between designations and stored target quality data
+- **Compatibility**: Works seamlessly with save files created before this system was implemented
+- **Performance**: Minimal memory footprint with efficient cleanup cycles
+- **Robustness**: Handles edge cases like mid-save thing destruction and map transitions
 
 ### Gizmo Consolidation System
 - **ImproveGroup Class**: Represents a collection of buildings with similar improvement states
@@ -91,7 +114,15 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 
 ### Component Pattern
 - Uses RimWorld's component system to attach functionality to existing items
-- Components are added via XML patches to all items with quality
+- Dynamic components added via Harmony patches for maximum mod compatibility
+- Separation between volatile state (ThingComp) and persistent data (MapComponent)
+
+### MapComponent Pattern
+- **Persistent Storage**: Uses RimWorld's native MapComponent system for reliable save/load
+- **Centralized Data**: Single source of truth for target quality settings per map
+- **Automatic Lifecycle**: RimWorld manages creation, saving, loading, and cleanup
+- **Performance Optimized**: Dictionary-based storage with O(1) access times
+- **Memory Safe**: Automatic cleanup prevents memory leaks from destroyed items
 
 ### Job Driver Pattern
 - Follows RimWorld's job system architecture
@@ -102,6 +133,12 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Centralized settings management
 - Persistent storage via RimWorld's settings system
 - Runtime modifiable without restarts
+
+### Dual-Storage Pattern
+- **Dynamic Components**: Handle volatile state (work progress, materials, UI state)
+- **MapComponent**: Handles persistent state (target quality settings)
+- **Automatic Synchronization**: Components read from MapComponent on-demand
+- **Clean Separation**: No coupling between storage layers
 
 ## Improvements Over Original
 
@@ -114,3 +151,6 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 7. **Smart Multi-Selection**: Consolidated gizmos prevent UI clutter when selecting multiple buildings
 8. **Advanced Quality Targeting**: Complex quality selection rules for mixed building selections
 9. **Cross-Group Operations**: Quality settings can be applied to all selected buildings simultaneously
+11. **Robust Data Management**: Automatic cleanup and validation prevent data corruption and memory leaks
+12. **Enhanced Mod Compatibility**: Dual-storage pattern provides better compatibility with other mods
+13. **Save File Integrity**: Clean separation ensures saves remain valid even if mod is disabled

@@ -111,6 +111,7 @@ namespace SimpleImprove.Patches
 
         /// <summary>
         /// Clears caches when a new game starts or loads to prevent issues with reused thing IDs.
+        /// Also handles restoration of SimpleImproveComp for buildings with improvement designations after loading.
         /// </summary>
         [HarmonyPatch(typeof(Game), "InitNewGame")]
         [HarmonyPatch(typeof(Game), "LoadGame")]
@@ -120,9 +121,94 @@ namespace SimpleImprove.Patches
             {
                 processedThings.Clear();
                 
+                // After loading a game, we need to restore SimpleImproveComp to buildings that have improvement designations
+                // but are missing the component (since they were added dynamically and not saved properly)
+                RestoreComponentsAfterLoad();
+                
                 if (Prefs.DevMode)
                 {
                     Log.Message("[SimpleImprove] Cleared caches for new game/load");
+                }
+            }
+            
+            /// <summary>
+            /// Restores SimpleImproveComp to buildings that have improvement designations but are missing the component.
+            /// This handles the case where components were lost during save/load because they were added dynamically.
+            /// Also restores target quality settings from the MapComponent if available.
+            /// </summary>
+            private static void RestoreComponentsAfterLoad()
+            {
+                if (Current.Game?.Maps == null) return;
+                
+                foreach (var map in Current.Game.Maps)
+                {
+                    if (map?.designationManager?.AllDesignations == null) continue;
+                    
+                    // Get the SimpleImproveMapComponent for this map
+                    var mapComponent = map.GetComponent<SimpleImproveMapComponent>();
+                    
+                    // Find all improvement designations
+                    var improvementDesignations = map.designationManager.AllDesignations
+                        .Where(d => d.def == SimpleImproveDefOf.Designation_Improve && d.target.HasThing)
+                        .ToList();
+                    
+                    foreach (var designation in improvementDesignations)
+                    {
+                        var thing = designation.target.Thing as ThingWithComps;
+                        if (thing == null) continue;
+                        
+                        // Check if the thing is missing the SimpleImproveComp
+                        var improveComp = thing.TryGetComp<SimpleImproveComp>();
+                        if (improveComp == null)
+                        {
+                            // Add the component - this will restore it to a marked state
+                            AddSimpleImproveComp(thing);
+                            
+                            // Get the newly added component and mark it for improvement
+                            improveComp = thing.TryGetComp<SimpleImproveComp>();
+                            if (improveComp != null)
+                            {
+                                // Set marked for improvement directly to avoid re-adding the designation
+                                improveComp.SetMarkedForImprovementDirect(true);
+                                
+                                // Restore target quality from MapComponent if available
+                                // Note: The component will automatically read from MapComponent when accessed
+                                // but this ensures the data is available immediately
+                                var savedTargetQuality = mapComponent?.GetTargetQuality(thing.thingIDNumber);
+                                if (savedTargetQuality.HasValue)
+                                {
+                                    // Target quality is automatically restored via the TargetQuality property
+                                    // which reads from the MapComponent, so no additional action needed
+                                    
+                                    if (Prefs.DevMode)
+                                    {
+                                        Log.Message($"[SimpleImprove] Restored component to {thing.def.defName} with target quality {savedTargetQuality.Value} after load");
+                                    }
+                                }
+                                else
+                                {
+                                    if (Prefs.DevMode)
+                                    {
+                                        Log.Message($"[SimpleImprove] Restored component to {thing.def.defName} after load");
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Component exists but might need target quality validation
+                            var savedTargetQuality = mapComponent?.GetTargetQuality(thing.thingIDNumber);
+                            if (savedTargetQuality.HasValue && improveComp.TargetQuality != savedTargetQuality.Value)
+                            {
+                                // This shouldn't happen, but if it does, log it for debugging
+                                if (Prefs.DevMode)
+                                {
+                                    Log.Warning($"[SimpleImprove] Target quality mismatch for {thing.def.defName}: " +
+                                              $"Component={improveComp.TargetQuality}, MapComponent={savedTargetQuality.Value}");
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

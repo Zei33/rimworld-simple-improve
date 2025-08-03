@@ -55,8 +55,9 @@ namespace SimpleImprove.Core
         /// <summary>
         /// The target quality level that the improvement should aim for.
         /// If null, any improvement is acceptable (original behavior).
+        /// Note: This is now stored in the MapComponent for persistence across save/load.
         /// </summary>
-        private QualityCategory? targetQuality;
+        // Removed private field - now uses MapComponent storage
 	
         /// <summary>
         /// Gets or sets whether this item is marked for improvement.
@@ -132,8 +133,26 @@ namespace SimpleImprove.Core
         /// <value>The target quality category, or null for any improvement.</value>
         public QualityCategory? TargetQuality
         {
-            get => targetQuality;
-            set => targetQuality = value;
+            get
+            {
+                var mapComp = GetSimpleImproveMapComponent();
+                return mapComp?.GetTargetQuality(parent.thingIDNumber);
+            }
+            set
+            {
+                var mapComp = GetSimpleImproveMapComponent();
+                mapComp?.SetTargetQuality(parent.thingIDNumber, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the SimpleImproveMapComponent for this map.
+        /// This component handles persistent storage of target quality data.
+        /// </summary>
+        /// <returns>The SimpleImproveMapComponent, or null if not available.</returns>
+        private SimpleImproveMapComponent GetSimpleImproveMapComponent()
+        {
+            return parent?.Map?.GetComponent<SimpleImproveMapComponent>();
         }
 
         /// <summary>
@@ -256,44 +275,44 @@ namespace SimpleImprove.Core
                     "SimpleImprove_ImprovementFailed".Translate(newQuality.GetLabel()), 6f);
                 
                 // Check if we should continue improving based on target quality
-                if (ShouldContinueImproving(currentQuality))
-                {
-                    return; // Keep trying - don't clear the improvement flag
-                }
-                else
-                {
-                    // No target set or target already met - stop improving
-                    ClearImprovementAndFinish();
-                    return;
-                }
-            }
-            
-            // Improvement succeeded - apply the new quality
-            compQuality.SetQuality(newQuality, ArtGenerationContext.Colony);
-            QualityUtility.SendCraftNotification(parent, worker);
-            
-            // Handle art generation if applicable (excellent quality and above becomes art)
-            var compArt = parent.TryGetComp<CompArt>();
-            if (compArt != null && compArt.CanShowArt)
-            {
-                if (!compArt.Active)
-                {
-                    compArt.InitializeArt(ArtGenerationContext.Colony);
-                }
-                compArt.JustCreatedBy(worker);
-            }
-            
-            MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
-                "SimpleImprove_ImprovedTo".Translate(newQuality.GetLabel()), 6f);
-            
-            // Check if we should continue improving based on target quality
-            if (ShouldContinueImproving(newQuality))
-            {
-                return; // Keep improving - don't clear the improvement flag
-            }
-            
-            // Target reached or no target set - finish improvement
-            ClearImprovementAndFinish();
+                // if (ShouldContinueImproving(currentQuality))
+                // {
+                //     return; // Keep trying - don't clear the improvement flag
+                // }
+                // else
+                // {
+                //     // No target set or target already met - stop improving
+                //     ClearImprovementAndFinish();
+                //     return;
+                // }
+            } else {
+				// Check if we should continue improving based on target quality
+				if (ShouldContinueImproving(newQuality))
+				{
+					return; // Keep improving - don't clear the improvement flag
+				}
+
+				// Improvement succeeded - apply the new quality
+				compQuality.SetQuality(newQuality, ArtGenerationContext.Colony);
+				QualityUtility.SendCraftNotification(parent, worker);
+				
+				// Handle art generation if applicable (excellent quality and above becomes art)
+				var compArt = parent.TryGetComp<CompArt>();
+				if (compArt != null && compArt.CanShowArt)
+				{
+					if (!compArt.Active)
+					{
+						compArt.InitializeArt(ArtGenerationContext.Colony);
+					}
+					compArt.JustCreatedBy(worker);
+				}
+				
+				MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
+					"SimpleImprove_ImprovedTo".Translate(newQuality.GetLabel()), 6f);
+				
+				// Target reached or no target set - finish improvement
+				ClearImprovementAndFinish();
+			}
         }
         
         /// <summary>
@@ -304,11 +323,11 @@ namespace SimpleImprove.Core
         private bool ShouldContinueImproving(QualityCategory currentQuality)
         {
             // If no target is set, stop after any improvement (original behavior)
-            if (targetQuality == null)
+            if (TargetQuality == null)
                 return false;
                 
             // If current quality is below target, continue improving
-            return currentQuality < targetQuality.Value;
+            return currentQuality < TargetQuality.Value;
         }
         
         /// <summary>
@@ -343,29 +362,35 @@ namespace SimpleImprove.Core
 
         /// <summary>
         /// Saves and loads component data for game save files.
+        /// Note: Target quality is now stored in SimpleImproveMapComponent for persistence.
         /// </summary>
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Values.Look(ref isMarkedForImprovement, "isMarkedForImprovement", false);
             Scribe_Values.Look(ref workDone, "workDone", 0f);
-            Scribe_Values.Look(ref targetQuality, "targetQuality", null);
+            // Note: targetQuality is now stored in SimpleImproveMapComponent
             Scribe_Deep.Look(ref materialContainer, "materialContainer", this);
         }
 
         /// <summary>
         /// Called when the parent thing is destroyed.
-        /// Drops any stored materials if the item is being deconstructed.
+        /// Drops any stored materials if the item is being deconstructed and cleans up target quality data.
         /// </summary>
         /// <param name="mode">The mode of destruction.</param>
         /// <param name="previousMap">The map the thing was on before destruction.</param>
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
             base.PostDestroy(mode, previousMap);
+            
             if (mode == DestroyMode.Deconstruct)
             {
                 GetMaterialContainer().TryDropAll(parent.Position, previousMap, ThingPlaceMode.Near);
             }
+            
+            // Clean up target quality data from the MapComponent
+            var mapComp = previousMap?.GetComponent<SimpleImproveMapComponent>();
+            mapComp?.RemoveTargetQuality(parent.thingIDNumber);
         }
 
         /// <summary>
@@ -409,9 +434,9 @@ namespace SimpleImprove.Core
                     sb.AppendLine($"Minimum skill required: {skillReq}");
                 }
                 
-                if (targetQuality.HasValue)
+                if (TargetQuality.HasValue)
                 {
-                    sb.AppendLine($"SimpleImprove_TargetQuality".Translate(targetQuality.Value.GetLabel()));
+                    sb.AppendLine($"SimpleImprove_TargetQuality".Translate(TargetQuality.Value.GetLabel()));
                 }
             }
             
@@ -656,9 +681,9 @@ namespace SimpleImprove.Core
                 return "SimpleImprove_GizmoLabel".Translate();
             }
             
-            if (targetQuality.HasValue)
+            if (TargetQuality.HasValue)
             {
-                return "SimpleImprove_GizmoLabelWithTarget".Translate(targetQuality.Value.GetLabel());
+                return "SimpleImprove_GizmoLabelWithTarget".Translate(TargetQuality.Value.GetLabel());
             }
             
             return "SimpleImprove_GizmoLabelAny".Translate();
@@ -752,7 +777,7 @@ namespace SimpleImprove.Core
                         // Only mark buildings that can achieve the target quality
                         if (targetQuality == null || currentQuality < targetQuality.Value)
                         {
-                            comp.targetQuality = targetQuality;
+                            comp.TargetQuality = targetQuality;
                             comp.IsMarkedForImprovement = true;
                         }
                     }
@@ -768,7 +793,7 @@ namespace SimpleImprove.Core
                     // Only mark buildings that can achieve the target quality
                     if (targetQuality == null || currentQuality < targetQuality.Value)
                     {
-                        comp.targetQuality = targetQuality;
+                        comp.TargetQuality = targetQuality;
                         comp.IsMarkedForImprovement = true;
                     }
                 }
@@ -795,13 +820,13 @@ namespace SimpleImprove.Core
             
             // Add "Any improvement" option
             var anyLabel = "SimpleImprove_TargetAny".Translate();
-            if (targetQuality == null && isMarkedForImprovement)
+            if (TargetQuality == null && isMarkedForImprovement)
             {
                 anyLabel += " ✓";
             }
             options.Add(new FloatMenuOption(anyLabel, () =>
             {
-                targetQuality = null;
+                TargetQuality = null;
                 IsMarkedForImprovement = true;
             }));
             
@@ -821,7 +846,7 @@ namespace SimpleImprove.Core
                 if (quality <= currentQuality) continue; // Can't target lower quality
                 
                 var label = quality.GetLabel().CapitalizeFirst();
-                if (targetQuality == quality && isMarkedForImprovement)
+                if (TargetQuality == quality && isMarkedForImprovement)
                 {
                     label += " ✓";
                 }
@@ -834,7 +859,7 @@ namespace SimpleImprove.Core
                         Messages.Message("SimpleImprove_LegendaryWarning".Translate(), MessageTypeDefOf.CautionInput);
                     }
                     
-                    targetQuality = quality;
+                    TargetQuality = quality;
                     IsMarkedForImprovement = true;
                 }));
             }
@@ -846,7 +871,7 @@ namespace SimpleImprove.Core
             else if (!isMarkedForImprovement)
             {
                 // No valid targets, just mark for any improvement
-                targetQuality = null;
+                TargetQuality = null;
                 IsMarkedForImprovement = true;
             }
         }

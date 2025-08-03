@@ -26,6 +26,15 @@
   - Masterwork: 18
 - Legendary quality cannot be achieved through normal improvement
 
+### Target Quality Persistence
+- **Cross-Save Persistence**: Target quality settings automatically survive save/load cycles
+- **MapComponent Storage**: Uses RimWorld's native save system for reliable data persistence
+- **Automatic Restoration**: Target qualities restored when loading saves with improvement designations
+- **Data Integrity**: Automatic validation and cleanup prevent corruption from destroyed items
+- **Mod Safety**: Save files remain valid and uncorrupted even if mod is disabled/uninstalled
+- **Performance Optimized**: Efficient storage with minimal memory footprint and periodic cleanup
+- **Backward Compatibility**: Works seamlessly with saves created before this persistence system
+
 ### Pawn Modifiers
 - **Inspired Creativity**: Boosts quality roll by 2 tiers
 - **Production Specialist Role** (Ideology DLC): Boosts quality roll by 1 tier
@@ -93,13 +102,22 @@
 
 ### Harmony Patches
 - Minimal patches for maximum compatibility
-- Only patches designation removal notifications
+- Only patches designation removal notifications and component restoration
 - All other functionality uses standard RimWorld systems
+- Enhanced component restoration ensures data consistency after save/load
+
+### Save File Integrity
+- **MapComponent Storage**: Uses RimWorld's native save system for maximum compatibility
+- **Clean Separation**: Persistent data stored separately from dynamic components
+- **Graceful Degradation**: Save files remain valid if mod is disabled or uninstalled
+- **No Save Corruption**: Robust cleanup prevents orphaned data from causing issues
+- **Version Tolerance**: Works with saves created across different mod versions
 
 ### Mod Support
 - Automatically works with any modded items that have quality
 - Respects custom material costs
 - Compatible with modded inspirations and roles
+- Enhanced dynamic component system works with mods that add quality to items post-load
 
 ## Limitations
 
@@ -107,3 +125,10 @@
 - Cannot improve items already at Legendary quality
 - Quality can never decrease (worst case: materials wasted)
 - Requires pawns to have manipulation capacity
+
+## Known Issues Resolved
+
+- **Target Quality Persistence**: ✅ **FIXED** - Target quality settings now persist correctly across save/load cycles
+  - Previous issue: Target quality would reset to "Any" after loading a save
+  - Solution: MapComponent-based persistent storage system ensures settings survive save/load
+  - Impact: Players can now set specific quality targets and have them maintained between game sessions
