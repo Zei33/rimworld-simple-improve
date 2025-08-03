@@ -21,6 +21,8 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>警告：没有殖民者能改良这个{0}（需要建造技能{1}，或有灵感时{2}）。</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>警告：没有殖民者能改良这个{0}（需要建造技能{1}，或有灵感/生产专家角色时{2}）。</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>警告：没有殖民者能达到{0}品质（需要建造技能{1}，或有灵感时{2}）。</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>警告：没有殖民者能达到{0}品质（需要建造技能{1}，或有灵感/生产专家角色时{2}）。</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>传奇品质改良需要特殊情况，如灵感或意识形态专家角色。</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
@@ -39,5 +41,49 @@
   <SimpleImprove_SettingsCalculatorHeader>质量分布计算器：</SimpleImprove_SettingsCalculatorHeader>
   <SimpleImprove_SettingsSuccessThreshold>成功几率阈值：</SimpleImprove_SettingsSuccessThreshold>
   <SimpleImprove_SettingsCalculateButton>计算技能要求</SimpleImprove_SettingsCalculateButton>
+  
+  
+  <!-- New Settings Menu (Version 2) - Chinese Simplified translations -->
+  <SimpleImprove_SettingsTitle>Simple Improve - 配置</SimpleImprove_SettingsTitle>
+  <SimpleImprove_CurrentQualityStandards>当前品质标准：{0}</SimpleImprove_CurrentQualityStandards>
+  
+  <!-- Preset System -->
+  <SimpleImprove_PresetsHeader>难度预设</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>非常简单</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>简单</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>普通</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>困难</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>专家</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetCustom>自定义</SimpleImprove_PresetCustom>
+  
+  <!-- Preset Tooltips -->
+  <SimpleImprove_PresetVeryEasyTooltip>宽松的技能要求以尝试改进。</SimpleImprove_PresetVeryEasyTooltip>
+  <SimpleImprove_PresetEasyTooltip>较低的技能要求以尝试改进。</SimpleImprove_PresetEasyTooltip>
+  <SimpleImprove_PresetNormalTooltip>平衡的技能要求以尝试改进。</SimpleImprove_PresetNormalTooltip>
+  <SimpleImprove_PresetHardTooltip>较高的技能要求以尝试改进。</SimpleImprove_PresetHardTooltip>
+  <SimpleImprove_PresetExpertTooltip>严格的技能要求以尝试改进。</SimpleImprove_PresetExpertTooltip>
+  <SimpleImprove_PresetCustomTooltip>自定义配置。允许您设置个别技能要求。</SimpleImprove_PresetCustomTooltip>
+  
+  <!-- Skill Requirements Section -->
+  <SimpleImprove_SkillRequirementsHeader>自定义技能要求</SimpleImprove_SkillRequirementsHeader>
+  <SimpleImprove_PresetPreviewHeader>当前技能要求</SimpleImprove_PresetPreviewHeader>
+  <SimpleImprove_SkillRequirementTooltip>尝试改进到{0}品质的最低建造技能。</SimpleImprove_SkillRequirementTooltip>
+  <SimpleImprove_SkillSuccessRate>技能{0}: {1}%成功率\n</SimpleImprove_SkillSuccessRate>
+  
+  <!-- Advanced Settings -->
+  <SimpleImprove_AdvancedSettings>高级设置</SimpleImprove_AdvancedSettings>
+  <SimpleImprove_RequireMaterials>改进需要材料</SimpleImprove_RequireMaterials>
+  <SimpleImprove_RequireMaterialsTooltip>启用时，改进需要像正常建造一样的材料。禁用时，改进只需要工作。</SimpleImprove_RequireMaterialsTooltip>
+  <SimpleImprove_MaterialCostMultiplier>材料成本倍数</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>材料成本的倍数（0.1x到2.0x）。较低的值使改进更便宜。</SimpleImprove_MaterialCostMultiplierTooltip>
+  
+  <!-- Success Rate Preview -->
+  <SimpleImprove_ShowSuccessRates>显示成功率预览</SimpleImprove_ShowSuccessRates>
+  <SimpleImprove_ShowSuccessRatesTooltip>显示不同技能水平和品质的成功率表格。</SimpleImprove_ShowSuccessRatesTooltip>
+  <SimpleImprove_SuccessRatePreview>成功率预览</SimpleImprove_SuccessRatePreview>
+  <SimpleImprove_SkillLevel>技能</SimpleImprove_SkillLevel>
+  
+  <!-- Buttons and Actions -->
+  <SimpleImprove_ResetToDefaults>重置为默认值</SimpleImprove_ResetToDefaults>
   
 </LanguageData>

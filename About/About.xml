@@ -1,10 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Simple Improve</name>
+  <name>Simple Improve [1.6]</name>
   <author>Zei33</author>
-  <modVersion>1.0.6</modVersion>
+  <modVersion>1.0.7</modVersion>
   <packageId>Zei33.SimpleImprove</packageId>
-  <description>Provides pawns with a way to improve the quality of buildings with construction skill. Mark buildings for improvement and watch skilled pawns enhance their quality using the same resources required for initial construction.</description>
+  <description>Transform your colony's infrastructure over time! Simple Improve lets you upgrade the quality of furniture and other buildings with quality through skilled construction work.
+
+CORE FEATURES:
+• Mark any furniture or building with quality for improvement
+• Pawns use construction skill to enhance buildings from Awful to Masterwork quality
+• Smart multi-building selection with consolidated controls
+• Configurable skill requirements with 5 quality standards presets
+
+FUNCTIONALITY:
+• Makes use of Rimworld's built-in quality system
+• The chances of success are exactly the same as if you were constructing the building fresh
+• All improvements are kept, even if they don't meet the target quality
+
+QUALITY STANDARDS PRESETS:
+• Apprentice: Loose skill requirements (high failure rates, but any assigned pawn can make attempts)
+• Novice: Low skill requirements (moderate success rates, and most pawns can make attempts)
+• Default: Balanced requirements (reasonable success rates for all tiers)
+• Master: High skill requirements (higher success rate, only well prepared pawns can make attempts)
+• Artisan: Tight skill requirements (minimal waste, only pawns with a high likelihood of success can make attempts)
+• Custom: Set your own skill thresholds (full control over skill requirements for each quality tier)
+
+FLEXIBLE GAMEPLAY:
+• Traditional mode: Requires materials like normal construction (default)
+• Labor-only mode: Improvements cost only time and skill
+• Works with any modded furniture or building that has quality
+• New "Improving" work type with separate priority from construction (for pawns that are working on improving items)
+
+ENHANCED INTERFACE:
+• Drag-select multiple items for batch improvement
+• Helpful settings menu</description>
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>

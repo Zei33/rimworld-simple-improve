@@ -21,6 +21,8 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>警告：この{0}を改良できる入植者がいません（建設スキル{1}、またはインスピレーション時{2}が必要）。</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>警告：この{0}を改良できる入植者がいません（建設スキル{1}、またはインスピレーション/生産専門役職時{2}が必要）。</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>警告：{0}品質を達成できる入植者がいません（建設スキル{1}、またはインスピレーション時{2}が必要）。</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>警告：{0}品質を達成できる入植者がいません（建設スキル{1}、またはインスピレーション/生産専門役職時{2}が必要）。</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>伝説品質の改良にはインスピレーションやイデオロギー専門役職などの特別な状況が必要です。</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
@@ -39,5 +41,49 @@
   <SimpleImprove_SettingsCalculatorHeader>品質分布計算機：</SimpleImprove_SettingsCalculatorHeader>
   <SimpleImprove_SettingsSuccessThreshold>成功確率の閾値：</SimpleImprove_SettingsSuccessThreshold>
   <SimpleImprove_SettingsCalculateButton>スキル要件を計算</SimpleImprove_SettingsCalculateButton>
+  
+  
+  <!-- New Settings Menu (Version 2) - Japanese translations -->
+  <SimpleImprove_SettingsTitle>Simple Improve - 設定</SimpleImprove_SettingsTitle>
+  <SimpleImprove_CurrentQualityStandards>現在の品質基準：{0}</SimpleImprove_CurrentQualityStandards>
+  
+  <!-- Preset System -->
+  <SimpleImprove_PresetsHeader>品質基準プリセット</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>見習い</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>初心者</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>デフォルト</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>熟練者</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>職人</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetCustom>カスタム</SimpleImprove_PresetCustom>
+  
+  <!-- Preset Tooltips -->
+  <SimpleImprove_PresetVeryEasyTooltip>改善を試すための緩いスキル要件。</SimpleImprove_PresetVeryEasyTooltip>
+  <SimpleImprove_PresetEasyTooltip>改善を試すための低いスキル要件。</SimpleImprove_PresetEasyTooltip>
+  <SimpleImprove_PresetNormalTooltip>改善を試すためのバランスの取れたスキル要件。</SimpleImprove_PresetNormalTooltip>
+  <SimpleImprove_PresetHardTooltip>改善を試すための高いスキル要件。</SimpleImprove_PresetHardTooltip>
+  <SimpleImprove_PresetExpertTooltip>改善を試すための厳格なスキル要件。</SimpleImprove_PresetExpertTooltip>
+  <SimpleImprove_PresetCustomTooltip>カスタム設定。個別のスキル要求を設定できます。</SimpleImprove_PresetCustomTooltip>
+  
+  <!-- Skill Requirements Section -->
+  <SimpleImprove_SkillRequirementsHeader>カスタムスキル要求</SimpleImprove_SkillRequirementsHeader>
+  <SimpleImprove_PresetPreviewHeader>現在のスキル要求</SimpleImprove_PresetPreviewHeader>
+  <SimpleImprove_SkillRequirementTooltip>{0}品質への改良を試みるための最小建設スキル。</SimpleImprove_SkillRequirementTooltip>
+  <SimpleImprove_SkillSuccessRate>スキル{0}: {1}%成功率\n</SimpleImprove_SkillSuccessRate>
+  
+  <!-- Advanced Settings -->
+  <SimpleImprove_AdvancedSettings>高度な設定</SimpleImprove_AdvancedSettings>
+  <SimpleImprove_RequireMaterials>改良に材料を要求</SimpleImprove_RequireMaterials>
+  <SimpleImprove_RequireMaterialsTooltip>有効にすると、改良は通常の建設のように材料が必要になります。無効にすると、改良は作業のみ必要です。</SimpleImprove_RequireMaterialsTooltip>
+  <SimpleImprove_MaterialCostMultiplier>材料コスト倍率</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>材料コストの倍率（0.1x〜2.0x）。低い値は改良を安くします。</SimpleImprove_MaterialCostMultiplierTooltip>
+  
+  <!-- Success Rate Preview -->
+  <SimpleImprove_ShowSuccessRates>成功率プレビューを表示</SimpleImprove_ShowSuccessRates>
+  <SimpleImprove_ShowSuccessRatesTooltip>異なるスキルレベルと品質の成功率を示すテーブルを表示します。</SimpleImprove_ShowSuccessRatesTooltip>
+  <SimpleImprove_SuccessRatePreview>成功率プレビュー</SimpleImprove_SuccessRatePreview>
+  <SimpleImprove_SkillLevel>スキル</SimpleImprove_SkillLevel>
+  
+  <!-- Buttons and Actions -->
+  <SimpleImprove_ResetToDefaults>デフォルトにリセット</SimpleImprove_ResetToDefaults>
   
 </LanguageData>

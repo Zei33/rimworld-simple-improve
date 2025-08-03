@@ -8,14 +8,36 @@ using Verse;
 namespace SimpleImprove.Core
 {
     /// <summary>
-    /// Mod settings class for SimpleImprove that handles skill requirements and quality calculations.
-    /// Provides configuration for minimum skill levels needed to improve items to different quality tiers.
+    /// Preset quality standards configurations for SimpleImprove settings.
+    /// </summary>
+    public enum QualityStandardsPreset
+    {
+        Apprentice,
+        Novice,
+        Default,
+        Master,
+        Artisan,
+        Custom
+    }
+
+    /// <summary>
+    /// Advanced mod settings class for SimpleImprove with improved UI, presets, and validation.
+    /// Provides comprehensive configuration for skill requirements, quality standards presets, and quality calculations.
     /// </summary>
     public class SimpleImproveSettings : ModSettings
     {
+        #region Core Settings
+        
+        /// <summary>
+        /// Settings version for migration and compatibility handling.
+        /// Version 1: Original implementation with trial system
+        /// Version 2: New implementation with presets and improved UI
+        /// </summary>
+        private int settingsVersion = 2;
+        
         /// <summary>
         /// Dictionary mapping quality categories to minimum skill requirements.
-        /// Default values are based on achieving approximately 5% success chance.
+        /// These values represent the base skill needed to attempt improvements.
         /// </summary>
         private Dictionary<QualityCategory, int> skillRequirements = new Dictionary<QualityCategory, int>
         {
@@ -29,31 +51,131 @@ namespace SimpleImprove.Core
         };
 
         /// <summary>
+        /// Current quality standards preset being used.
+        /// </summary>
+        private QualityStandardsPreset currentPreset = QualityStandardsPreset.Default;
+        
+        /// <summary>
+        /// Whether to show advanced settings section.
+        /// </summary>
+        private bool showAdvancedSettings = false;
+        
+        /// <summary>
+        /// Whether to show detailed success rate information.
+        /// </summary>
+        private bool showSuccessRatePreview = true;
+        
+        /// <summary>
+        /// Whether improvements should require materials (like construction).
+        /// </summary>
+        public bool requireMaterials = true;
+        
+        /// <summary>
+        /// Material cost multiplier (0.1 to 2.0, default 1.0).
+        /// </summary>
+        private float materialCostMultiplier = 1.0f;
+        
+        #endregion
+
+        #region UI State
+        
+        /// <summary>
         /// UI string buffers for the skill requirement input fields.
         /// </summary>
         private Dictionary<QualityCategory, string> skillEntryBuffers = new Dictionary<QualityCategory, string>();
         
         /// <summary>
-        /// The cutoff threshold for calculating skill requirements (success chance percentage).
+        /// Buffer for material cost multiplier input.
+        /// </summary>
+        private string materialCostBuffer = "1.0";
+        
+
+        
+        #endregion
+
+        #region Legacy Support (for migration from version 1)
+        
+        /// <summary>
+        /// Legacy trial cutoff threshold - kept for migration from version 1.
         /// </summary>
         private float trialCutoff = 0.05f;
         
-        /// <summary>
-        /// String buffer for the trial cutoff input field.
-        /// </summary>
-        private string trialCutoffBuffer = "0.05";
-        
-        /// <summary>
-        /// 2D array storing trial results for quality distribution calculations.
-        /// First dimension is skill level (0-20), second dimension is quality level (0-6).
-        /// </summary>
-        private int[,] trialResults = new int[21, 7];
+        #endregion
 
+        #region Static Configuration
+        
         /// <summary>
         /// List of functions that calculate quality tier bonuses for pawns.
         /// These modifiers account for inspirations, roles, and other factors that affect quality generation.
         /// </summary>
         public static List<Func<Pawn, int>> PawnQualityModifiers { get; } = new List<Func<Pawn, int>>();
+
+        /// <summary>
+        /// Predefined quality standards preset configurations.
+        /// </summary>
+        private static readonly Dictionary<QualityStandardsPreset, Dictionary<QualityCategory, int>> PresetConfigurations = new Dictionary<QualityStandardsPreset, Dictionary<QualityCategory, int>>
+        {
+            {
+                QualityStandardsPreset.Apprentice, new Dictionary<QualityCategory, int>
+                {
+                    { QualityCategory.Awful, 0 },
+                    { QualityCategory.Poor, 0 },
+                    { QualityCategory.Normal, 1 },
+                    { QualityCategory.Good, 3 },
+                    { QualityCategory.Excellent, 7 },
+                    { QualityCategory.Masterwork, 12 },
+                    { QualityCategory.Legendary, 16 }
+                }
+            },
+            {
+                QualityStandardsPreset.Novice, new Dictionary<QualityCategory, int>
+                {
+                    { QualityCategory.Awful, 0 },
+                    { QualityCategory.Poor, 0 },
+                    { QualityCategory.Normal, 2 },
+                    { QualityCategory.Good, 6 },
+                    { QualityCategory.Excellent, 10 },
+                    { QualityCategory.Masterwork, 15 },
+                    { QualityCategory.Legendary, 18 }
+                }
+            },
+            {
+                QualityStandardsPreset.Default, new Dictionary<QualityCategory, int>
+                {
+                    { QualityCategory.Awful, 0 },
+                    { QualityCategory.Poor, 0 },
+                    { QualityCategory.Normal, 4 },
+                    { QualityCategory.Good, 10 },
+                    { QualityCategory.Excellent, 14 },
+                    { QualityCategory.Masterwork, 18 },
+                    { QualityCategory.Legendary, 20 }
+                }
+            },
+            {
+                QualityStandardsPreset.Master, new Dictionary<QualityCategory, int>
+                {
+                    { QualityCategory.Awful, 0 },
+                    { QualityCategory.Poor, 1 },
+                    { QualityCategory.Normal, 6 },
+                    { QualityCategory.Good, 12 },
+                    { QualityCategory.Excellent, 16 },
+                    { QualityCategory.Masterwork, 19 },
+                    { QualityCategory.Legendary, 20 }
+                }
+            },
+            {
+                QualityStandardsPreset.Artisan, new Dictionary<QualityCategory, int>
+                {
+                    { QualityCategory.Awful, 0 },
+                    { QualityCategory.Poor, 2 },
+                    { QualityCategory.Normal, 8 },
+                    { QualityCategory.Good, 14 },
+                    { QualityCategory.Excellent, 18 },
+                    { QualityCategory.Masterwork, 20 },
+                    { QualityCategory.Legendary, 20 }
+                }
+            }
+        };
 
         /// <summary>
         /// Static constructor that initializes pawn quality modifiers.
@@ -88,15 +210,34 @@ namespace SimpleImprove.Core
                         if (role?.def.roleEffects != null)
                         {
                             var productionEffect = role.def.roleEffects
-                                .FirstOrDefault(e => e is RoleEffect_ProductionQualityOffset);
+                                .FirstOrDefault(e => e is RoleEffect_ProductionQualityOffset) as RoleEffect_ProductionQualityOffset;
                             if (productionEffect != null)
-                                return 1; // Boosts quality by 1 tier
+                                return productionEffect.offset; // Use actual offset value
                         }
                     }
                     return 0;
                 });
             }
         }
+        
+        #endregion
+
+        #region Public Properties and Methods
+
+        /// <summary>
+        /// Gets the current quality standards preset being used.
+        /// </summary>
+        public QualityStandardsPreset CurrentPreset => currentPreset;
+        
+        /// <summary>
+        /// Gets whether materials are required for improvements.
+        /// </summary>
+        public bool RequireMaterials => requireMaterials;
+        
+        /// <summary>
+        /// Gets the material cost multiplier.
+        /// </summary>
+        public float MaterialCostMultiplier => materialCostMultiplier;
 
         /// <summary>
         /// Gets the minimum skill requirement to improve an item to the specified quality level.
@@ -120,135 +261,375 @@ namespace SimpleImprove.Core
             baseQuality = Mathf.Clamp(baseQuality, 0, 5);
             return skillRequirements[(QualityCategory)baseQuality];
         }
-
+        
         /// <summary>
-        /// Renders the mod settings window contents.
-        /// Provides UI for configuring skill requirements and calculating optimal values.
+        /// Gets the minimum skill requirement considering the best possible bonuses available on the map.
+        /// This calculates what skill level would be needed if a pawn had inspiration and the best available role bonus.
         /// </summary>
-        /// <param name="inRect">The rectangle area to draw the settings within.</param>
-        public void DoWindowContents(Rect inRect)
+        /// <param name="quality">The target quality level.</param>
+        /// <param name="map">The map to search for pawns with bonuses (optional).</param>
+        /// <returns>The minimum Construction skill level required with best available bonuses.</returns>
+        public int GetBestCaseSkillRequirement(QualityCategory quality, Map map = null)
         {
-            var listing = new Listing_Standard { ColumnWidth = 300f };
-            listing.Begin(inRect);
-
-            listing.Label("SimpleImprove_SettingsSkillHeader".Translate());
-            listing.Gap(12);
-
-            foreach (var quality in Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>())
+            // Calculate the best possible quality bonus available
+            int bestTotalBonus = 0;
+            
+            // Inspiration is always potentially available (+2 quality levels)
+            int inspirationBonus = 2;
+            
+            // Find the best role bonus available on the map
+            int bestRoleBonus = 0;
+            if (map?.mapPawns?.FreeColonistsSpawned != null)
             {
-                // Include all quality levels, including Legendary
-
-                if (!skillEntryBuffers.ContainsKey(quality))
-                    skillEntryBuffers[quality] = skillRequirements[quality].ToString();
-
-                var value = skillRequirements[quality];
-                var buffer = skillEntryBuffers[quality];
-                listing.TextFieldNumericLabeled(
-                    $"{quality.GetLabel().CapitalizeFirst()}:",
-                    ref value,
-                    ref buffer,
-                    0,
-                    20
-                );
-                skillRequirements[quality] = value;
-                skillEntryBuffers[quality] = buffer;
+                foreach (var pawn in map.mapPawns.FreeColonistsSpawned)
+                {
+                    // Get role bonuses for this pawn (not inspiration, which we count separately)
+                    foreach (var modifier in PawnQualityModifiers)
+                    {
+                        int modifierValue = modifier(pawn);
+                        // Check if this is a role bonus (not inspiration)
+                        if (pawn?.InspirationDef != InspirationDefOf.Inspired_Creativity && modifierValue > 0)
+                        {
+                            bestRoleBonus = Mathf.Max(bestRoleBonus, modifierValue);
+                        }
+                    }
+                }
+            }
+            else if (ModsConfig.IdeologyActive)
+            {
+                // If no map provided but Ideology is active, assume typical production role bonus
+                bestRoleBonus = 1;
+            }
+            
+            // Best case scenario: inspiration + best available role bonus
+            bestTotalBonus = inspirationBonus + bestRoleBonus;
+            
+            // Calculate what quality level they'd need to achieve before bonuses
+            // If target is Excellent (3) and they get +3 bonus, they only need to achieve Awful (0)
+            int baseQualityNeeded = Mathf.Clamp((int)quality - bestTotalBonus, 0, 5);
+            
+            // Return the skill requirement for that base quality
+            return skillRequirements[(QualityCategory)baseQualityNeeded];
+        }
+        
+        /// <summary>
+        /// Applies a preset configuration to the current settings.
+        /// </summary>
+        /// <param name="preset">The preset to apply.</param>
+        public void ApplyPreset(QualityStandardsPreset preset)
+        {
+            if (preset == QualityStandardsPreset.Custom)
+            {
+                currentPreset = preset;
+                return;
             }
 
-            listing.Gap(20);
-            listing.Label("SimpleImprove_SettingsCalculatorHeader".Translate());
-            listing.TextFieldNumericLabeled(
-                "SimpleImprove_SettingsSuccessThreshold".Translate(),
-                ref trialCutoff,
-                ref trialCutoffBuffer,
-                0f,
-                1f
-            );
-
-            if (listing.ButtonText("SimpleImprove_SettingsCalculateButton".Translate()))
+            if (PresetConfigurations.TryGetValue(preset, out var presetConfig))
             {
-                CalculateSkillRequirements(trialCutoff);
+                skillRequirements.Clear();
+                foreach (var kvp in presetConfig)
+                {
+                    skillRequirements[kvp.Key] = kvp.Value;
+                }
+                currentPreset = preset;
+                
+                // Update UI buffers
+                skillEntryBuffers.Clear();
+                foreach (var kvp in skillRequirements)
+                {
+                    skillEntryBuffers[kvp.Key] = kvp.Value.ToString();
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Validates and clamps skill requirements to reasonable ranges.
+        /// </summary>
+        private void ValidateSkillRequirements()
+        {
+            var keys = skillRequirements.Keys.ToList();
+            foreach (var quality in keys)
+            {
+                skillRequirements[quality] = Mathf.Clamp(skillRequirements[quality], 0, 20);
+            }
+        }
+        
+        #endregion
+
+        #region UI Helper Methods (for Mod class)
+
+        /// <summary>
+        /// Gets a simple preview string for the current preset.
+        /// </summary>
+        public string GetPresetDisplayString()
+        {
+            return GetPresetDisplayName(currentPreset);
+        }
+
+        /// <summary>
+        /// Gets the skill requirement buffer for a specific quality category.
+        /// </summary>
+        public string GetSkillBuffer(QualityCategory quality)
+        {
+            if (!skillEntryBuffers.ContainsKey(quality))
+            {
+                skillEntryBuffers[quality] = skillRequirements.TryGetValue(quality, out int value) ? value.ToString() : "0";
+            }
+            return skillEntryBuffers[quality];
+        }
+
+        /// <summary>
+        /// Sets the skill requirement buffer for a specific quality category and updates the actual value.
+        /// Automatically switches to Custom preset when manually edited.
+        /// </summary>
+        public void SetSkillBuffer(QualityCategory quality, string buffer)
+        {
+            skillEntryBuffers[quality] = buffer;
+            
+            if (int.TryParse(buffer, out int value))
+            {
+                value = Mathf.Clamp(value, 0, 20);
+                skillRequirements[quality] = value;
+                skillEntryBuffers[quality] = value.ToString(); // Update buffer with clamped value
+                
+                // Switch to custom preset since user manually edited values
+                currentPreset = QualityStandardsPreset.Custom;
+            }
+        }
+
+        /// <summary>
+        /// Gets all quality categories in display order.
+        /// </summary>
+        public static QualityCategory[] GetQualityCategoriesInOrder()
+        {
+            return new[]
+            {
+                QualityCategory.Awful,
+                QualityCategory.Poor,
+                QualityCategory.Normal,
+                QualityCategory.Good,
+                QualityCategory.Excellent,
+                QualityCategory.Masterwork,
+                QualityCategory.Legendary
+            };
+        }
+
+        #endregion
+
+        #region UI Helper Methods
+        
+        /// <summary>
+        /// Gets the display name for a quality standards preset.
+        /// </summary>
+        private string GetPresetDisplayName(QualityStandardsPreset preset)
+        {
+            switch (preset)
+            {
+                case QualityStandardsPreset.Apprentice: return "SimpleImprove_PresetVeryEasy".Translate();
+                case QualityStandardsPreset.Novice: return "SimpleImprove_PresetEasy".Translate();
+                case QualityStandardsPreset.Default: return "SimpleImprove_PresetNormal".Translate();
+                case QualityStandardsPreset.Master: return "SimpleImprove_PresetHard".Translate();
+                case QualityStandardsPreset.Artisan: return "SimpleImprove_PresetExpert".Translate();
+                case QualityStandardsPreset.Custom: return "SimpleImprove_PresetCustom".Translate();
+                default: return preset.ToString();
+            }
+        }
+        
+        /// <summary>
+        /// Resets all settings to their default values.
+        /// </summary>
+        public void ResetToDefaults()
+        {
+            ApplyPreset(QualityStandardsPreset.Default);
+            requireMaterials = true;
+            materialCostMultiplier = 1.0f;
+            materialCostBuffer = "1.0";
+            showAdvancedSettings = false;
+            showSuccessRatePreview = true;
+        }
+
+        /// <summary>
+        /// Renders the mod settings window content.
+        /// Provides a two-column interface with quality inputs on the left and preset buttons on the right.
+        /// </summary>
+        /// <param name="inRect">The rectangle area available for drawing the settings interface.</param>
+        public void DoSettingsWindowContents(Rect inRect)
+        {
+            var listing = new Listing_Standard();
+            listing.Begin(inRect);
+
+            // Main title
+            Text.Font = GameFont.Small;
+            listing.Gap(8f);
+
+            // Current preset display
+            listing.Label("SimpleImprove_CurrentQualityStandards".Translate(GetPresetDisplayString()));
+
+            // Calculate column dimensions
+            float columnWidth = (inRect.width - 20f) / 2f; // 20f gap between columns
+            float currentY = listing.CurHeight + inRect.y;
+            const float rowHeight = 24f;
+            const float rowGap = 4f;
+
+            // Left column - Quality input fields
+            Rect leftColumn = new Rect(inRect.x, currentY, columnWidth, 0f);
+            DrawQualityInputs(leftColumn, rowHeight, rowGap);
+
+            // Right column - Preset buttons
+            Rect rightColumn = new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, 0f);
+            currentY = DrawPresetButtons(rightColumn, rowHeight, rowGap);
+			
+			currentY += rowHeight + rowGap + 8f;
+			Widgets.CheckboxLabeled(new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, rowHeight), "SimpleImprove_RequireMaterials".Translate(), ref requireMaterials);
+
+            // Calculate how much vertical space was used by the columns
+            var qualities = GetQualityCategoriesInOrder();
+            float columnsHeight = qualities.Length * (rowHeight + rowGap) + 80f; // Extra space for headers
+
+            // Continue with remaining settings below the columns
+            listing.Gap(columnsHeight);
+
+            listing.Gap(16f);
+
+            // Reset button
+            if (listing.ButtonText("SimpleImprove_ResetToDefaults".Translate()))
+            {
+                ResetToDefaults();
             }
 
             listing.End();
         }
 
         /// <summary>
-        /// Calculates optimal skill requirements based on quality distribution trials.
-        /// Uses the specified success chance threshold to determine minimum skill levels.
+        /// Draws the quality input fields on the left column.
         /// </summary>
-        /// <param name="cutoff">The minimum success chance threshold (0.0 to 1.0).</param>
-        private void CalculateSkillRequirements(float cutoff)
+        private void DrawQualityInputs(Rect columnRect, float rowHeight, float rowGap)
         {
-            // Run trials if not already done
-            if (trialResults.Cast<int>().Sum() == 0)
-            {
-                RunQualityTrials();
-            }
+            float currentY = columnRect.y;
 
-            // Calculate skill requirements based on cutoff
-            for (int skill = 20; skill >= 0; skill--)
+            // Column header
+            Text.Font = GameFont.Small;
+            Widgets.Label(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_SkillRequirementsHeader".Translate());
+            currentY += rowHeight + rowGap + 8f;
+
+            var qualities = GetQualityCategoriesInOrder();
+            const float labelWidth = 100f;
+            const float inputWidth = 60f;
+
+            foreach (var quality in qualities)
             {
-                int totalTrials = 0;
-                for (int q = 0; q < 7; q++)
+                // Quality label
+                Rect labelRect = new Rect(columnRect.x, currentY, labelWidth, rowHeight);
+                Widgets.Label(labelRect, quality.GetLabel().CapitalizeFirst() + ":");
+
+                // Input field
+                Rect inputRect = new Rect(columnRect.x + labelWidth + 5f, currentY, inputWidth, rowHeight);
+                string buffer = GetSkillBuffer(quality);
+                string newBuffer = Widgets.TextField(inputRect, buffer);
+                
+                if (newBuffer != buffer)
                 {
-                    totalTrials += trialResults[skill, q];
+                    SetSkillBuffer(quality, newBuffer);
                 }
 
-                double cumulativeProbability = 0;
-                for (int q = 6; q >= 0; q--)
-                {
-                    cumulativeProbability += (double)trialResults[skill, q] / totalTrials;
-                    
-                    if (q < 6) // Skip Legendary
-                    {
-                        var quality = (QualityCategory)q;
-                        if (cumulativeProbability >= cutoff && skill < 20)
-                        {
-                            skillRequirements[quality] = Math.Max(skillRequirements[quality], skill + 1);
-                        }
-                    }
-                }
-            }
-
-            // Update UI buffers
-            foreach (var kvp in skillRequirements)
-            {
-                skillEntryBuffers[kvp.Key] = kvp.Value.ToString();
+                currentY += rowHeight + rowGap;
             }
         }
 
         /// <summary>
-        /// Runs Monte Carlo trials to determine quality distribution probabilities.
-        /// Simulates quality generation for each skill level to build statistical data.
+        /// Draws the preset buttons on the right column.
         /// </summary>
-        private void RunQualityTrials()
+        private float DrawPresetButtons(Rect columnRect, float rowHeight, float rowGap)
         {
-            const int trialsPerSkillLevel = 1000000;
-            
-            for (int trial = 0; trial < trialsPerSkillLevel; trial++)
-            {
-                for (int skill = 0; skill <= 20; skill++)
-                {
-                    var quality = QualityUtility.GenerateQualityCreatedByPawn(skill, false);
-                    trialResults[skill, (int)quality]++;
-                }
-            }
-        }
+            float currentY = columnRect.y;
 
+            // Column header
+            Text.Font = GameFont.Small;
+            Widgets.Label(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetsHeader".Translate());
+            currentY += rowHeight + rowGap + 8f;
+
+            // Preset buttons
+            if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetVeryEasy".Translate()))
+            {
+                ApplyPreset(QualityStandardsPreset.Apprentice);
+            }
+            currentY += rowHeight + rowGap;
+
+            if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetEasy".Translate()))
+            {
+                ApplyPreset(QualityStandardsPreset.Novice);
+            }
+            currentY += rowHeight + rowGap;
+
+            if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetNormal".Translate()))
+            {
+                ApplyPreset(QualityStandardsPreset.Default);
+            }
+            currentY += rowHeight + rowGap;
+
+            if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetHard".Translate()))
+            {
+                ApplyPreset(QualityStandardsPreset.Master);
+            }
+            currentY += rowHeight + rowGap;
+
+            if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetExpert".Translate()))
+            {
+                ApplyPreset(QualityStandardsPreset.Artisan);
+            }
+
+			return currentY;
+        }
+        
+        #endregion
+
+        #region Save/Load and Migration
+        
         /// <summary>
-        /// Saves and loads mod settings data.
-        /// Handles serialization of skill requirements and provides fallback defaults.
+        /// Saves and loads mod settings data with version migration support.
+        /// Handles backward compatibility and graceful migration from version 1 to version 2.
         /// </summary>
         public override void ExposeData()
         {
             base.ExposeData();
             
-            Scribe_Collections.Look(ref skillRequirements, "skillRequirements", 
-                LookMode.Value, LookMode.Value);
+            // Save/load version for migration handling
+            Scribe_Values.Look(ref settingsVersion, "settingsVersion", 1); // Default to version 1 for old saves
             
-            if (Scribe.mode == LoadSaveMode.LoadingVars && skillRequirements == null)
+            // Core settings
+            Scribe_Collections.Look(ref skillRequirements, "skillRequirements", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref currentPreset, "currentPreset", QualityStandardsPreset.Default);
+            Scribe_Values.Look(ref requireMaterials, "requireMaterials", true);
+            Scribe_Values.Look(ref materialCostMultiplier, "materialCostMultiplier", 1.0f);
+            Scribe_Values.Look(ref showAdvancedSettings, "showAdvancedSettings", false);
+            Scribe_Values.Look(ref showSuccessRatePreview, "showSuccessRatePreview", true);
+            
+            // Legacy settings (for migration from version 1)
+            Scribe_Values.Look(ref trialCutoff, "trialCutoff", 0.05f);
+            
+            // Handle version migration on loading
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
-                // Initialize with defaults if loading fails
+                MigrateFromVersion1();
+                ValidateAndFixLoadedData();
+                UpdateUIBuffers();
+            }
+        }
+        
+        /// <summary>
+        /// Migrates settings from version 1 (trial-based) to version 2 (preset-based).
+        /// Only performs migration if necessary and preserves user customizations when possible.
+        /// </summary>
+        private void MigrateFromVersion1()
+        {
+            if (settingsVersion >= 2)
+                return; // No migration needed
+            
+            Log.Message("[SimpleImprove] Migrating settings from version 1 to version 2...");
+            
+            // If skill requirements are missing or invalid, initialize with defaults
+            if (skillRequirements == null || skillRequirements.Count == 0)
+            {
                 skillRequirements = new Dictionary<QualityCategory, int>
                 {
                     { QualityCategory.Awful, 0 },
@@ -259,16 +640,109 @@ namespace SimpleImprove.Core
                     { QualityCategory.Masterwork, 18 },
                     { QualityCategory.Legendary, 20 }
                 };
+                currentPreset = QualityStandardsPreset.Default;
             }
-
-            // Update UI buffers after loading
-            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            else
             {
-                foreach (var kvp in skillRequirements)
+                // Try to match existing skill requirements to a preset
+                currentPreset = DetermineClosestPreset(skillRequirements);
+                
+                if (Prefs.DevMode)
                 {
-                    skillEntryBuffers[kvp.Key] = kvp.Value.ToString();
+                    Log.Message($"[SimpleImprove] Detected closest preset: {currentPreset}");
                 }
             }
+            
+            // Set new version 2 defaults for new settings
+            requireMaterials = true;
+            materialCostMultiplier = 1.0f;
+            showAdvancedSettings = false;
+            showSuccessRatePreview = true;
+            
+            // Update version
+            settingsVersion = 2;
+            
+            Log.Message("[SimpleImprove] Settings migration completed successfully.");
         }
+        
+        /// <summary>
+        /// Determines the closest preset match for given skill requirements.
+        /// Used during migration to preserve user preferences as much as possible.
+        /// </summary>
+        private QualityStandardsPreset DetermineClosestPreset(Dictionary<QualityCategory, int> requirements)
+        {
+            var bestMatch = QualityStandardsPreset.Custom;
+            var bestScore = float.MaxValue;
+            
+            foreach (var preset in PresetConfigurations.Keys)
+            {
+                var presetConfig = PresetConfigurations[preset];
+                var score = 0f;
+                
+                foreach (var quality in requirements.Keys)
+                {
+                    if (presetConfig.ContainsKey(quality))
+                    {
+                        var diff = Math.Abs(requirements[quality] - presetConfig[quality]);
+                        score += diff * diff; // Squared difference for better matching
+                    }
+                }
+                
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestMatch = preset;
+                }
+            }
+            
+            // If the match is very close (total difference <= 2), use the preset
+            // Otherwise, mark as custom to preserve user's exact values
+            return bestScore <= 4f ? bestMatch : QualityStandardsPreset.Custom;
+        }
+        
+        /// <summary>
+        /// Validates and fixes any invalid data that may have been loaded.
+        /// Ensures all required fields are properly initialized.
+        /// </summary>
+        private void ValidateAndFixLoadedData()
+        {
+            // Ensure all quality categories are present
+            var defaultRequirements = PresetConfigurations[QualityStandardsPreset.Default];
+            foreach (var quality in Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>())
+            {
+                if (!skillRequirements.ContainsKey(quality))
+                {
+                    skillRequirements[quality] = defaultRequirements.TryGetValue(quality, out int defaultValue) ? defaultValue : 0;
+                }
+            }
+            
+            // Validate and clamp all values
+            ValidateSkillRequirements();
+            
+            // Clamp material cost multiplier
+            materialCostMultiplier = Mathf.Clamp(materialCostMultiplier, 0.1f, 2.0f);
+            
+            // Ensure preset is valid
+            if (!Enum.IsDefined(typeof(QualityStandardsPreset), currentPreset))
+            {
+                currentPreset = QualityStandardsPreset.Default;
+            }
+        }
+        
+        /// <summary>
+        /// Updates UI buffers after loading to ensure consistency.
+        /// </summary>
+        private void UpdateUIBuffers()
+        {
+            skillEntryBuffers.Clear();
+            foreach (var kvp in skillRequirements)
+            {
+                skillEntryBuffers[kvp.Key] = kvp.Value.ToString();
+            }
+            
+            materialCostBuffer = materialCostMultiplier.ToString("F1");
+        }
+        
+        #endregion
     }
 }

@@ -63,33 +63,36 @@ namespace SimpleImprove.Jobs
             if (improveComp == null || !improveComp.IsMarkedForImprovement)
                 return null;
 
-            // Check if materials are needed
-            var remainingMaterials = improveComp.GetRemainingMaterialCost();
-            if (remainingMaterials.Any())
+            // Check if materials are needed (only if materials are required by settings)
+            if (SimpleImproveMod.Settings.RequireMaterials)
             {
-                foreach (var material in remainingMaterials)
+                var remainingMaterials = improveComp.GetRemainingMaterialCost();
+                if (remainingMaterials.Any())
                 {
-                    if (pawn.Map.itemAvailability.ThingsAvailableAnywhere(material.thingDef, material.count, pawn))
+                    foreach (var material in remainingMaterials)
                     {
-                        var foundMaterial = FindClosestMaterial(pawn, material);
-                        if (foundMaterial != null)
+                        if (pawn.Map.itemAvailability.ThingsAvailableAnywhere(material.thingDef, material.count, pawn))
                         {
-                            var haulJob = JobMaker.MakeJob(SimpleImproveDefOf.Job_HaulToImprove);
-                            haulJob.targetA = foundMaterial;
-                            haulJob.targetB = thing;
-                            haulJob.count = material.count;
-                            haulJob.haulMode = HaulMode.ToContainer;
-
-                            if (pawn.HasReserved(thing) || pawn.CanReserve(thing, ignoreOtherReservations: forced))
+                            var foundMaterial = FindClosestMaterial(pawn, material);
+                            if (foundMaterial != null)
                             {
-                                return haulJob;
+                                var haulJob = JobMaker.MakeJob(SimpleImproveDefOf.Job_HaulToImprove);
+                                haulJob.targetA = foundMaterial;
+                                haulJob.targetB = thing;
+                                haulJob.count = material.count;
+                                haulJob.haulMode = HaulMode.ToContainer;
+
+                                if (pawn.HasReserved(thing) || pawn.CanReserve(thing, ignoreOtherReservations: forced))
+                                {
+                                    return haulJob;
+                                }
                             }
                         }
                     }
-                }
 
-                JobFailReason.Is($"{"MissingMaterials".Translate(remainingMaterials.Select(m => $"{m.count}x {m.thingDef.label}").ToCommaList())}");
-                return null;
+                    JobFailReason.Is($"{"MissingMaterials".Translate(remainingMaterials.Select(m => $"{m.count}x {m.thingDef.label}").ToCommaList())}");
+                    return null;
+                }
             }
 
             // Check if pawn can do improvement work
@@ -102,43 +105,49 @@ namespace SimpleImprove.Jobs
             if (!GenConstruct.CanConstruct(thing, pawn, true, forced))
                 return null;
 
-            // Check skill requirement
+            // Check skill requirement based on target quality
             var qualityComp = thing.TryGetComp<CompQuality>();
             if (qualityComp != null)
             {
-                var pawnSkill = pawn.skills.GetSkill(SkillDefOf.Construction).Level;
-                var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality, pawn);
+                var targetQuality = improveComp.TargetQuality;
                 
-                if (requiredSkill > pawnSkill)
+                // If no target quality is set (Any improvement), allow any skill level
+                if (targetQuality.HasValue)
                 {
-                    var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality);
+                    var pawnSkill = pawn.skills.GetSkill(SkillDefOf.Construction).Level;
+                    var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value, pawn);
                     
-                    if (baseRequiredSkill > pawnSkill)
+                    if (requiredSkill > pawnSkill)
                     {
-                        // Even with bonuses, skill is too low
-                        if (ModsConfig.IdeologyActive)
+                        var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value);
+                        
+                        if (baseRequiredSkill > pawnSkill)
                         {
-                            JobFailReason.Is($"Skill too low: need {requiredSkill} (or {baseRequiredSkill} with inspiration/role)");
+                            // Even with bonuses, skill is too low
+                            if (ModsConfig.IdeologyActive)
+                            {
+                                JobFailReason.Is($"Skill too low for {targetQuality.Value.GetLabel()} target: need {requiredSkill} (or {baseRequiredSkill} with inspiration/role)");
+                            }
+                            else
+                            {
+                                JobFailReason.Is($"Skill too low for {targetQuality.Value.GetLabel()} target: need {requiredSkill} (or {baseRequiredSkill} with inspiration)");
+                            }
                         }
                         else
                         {
-                            JobFailReason.Is($"Skill too low: need {requiredSkill} (or {baseRequiredSkill} with inspiration)");
+                            // Skill is high enough with bonuses
+                            if (ModsConfig.IdeologyActive)
+                            {
+                                JobFailReason.Is($"Need inspiration or production role for {targetQuality.Value.GetLabel()} target (skill {requiredSkill} required)");
+                            }
+                            else
+                            {
+                                JobFailReason.Is($"Need inspiration for {targetQuality.Value.GetLabel()} target (skill {requiredSkill} required)");
+                            }
                         }
+                        
+                        return null;
                     }
-                    else
-                    {
-                        // Skill is high enough with bonuses
-                        if (ModsConfig.IdeologyActive)
-                        {
-                            JobFailReason.Is($"Need inspiration or production role (skill {requiredSkill} required)");
-                        }
-                        else
-                        {
-                            JobFailReason.Is($"Need inspiration (skill {requiredSkill} required)");
-                        }
-                    }
-                    
-                    return null;
                 }
             }
 

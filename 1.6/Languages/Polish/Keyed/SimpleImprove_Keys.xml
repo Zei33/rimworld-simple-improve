@@ -21,6 +21,8 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Ostrzeżenie: Żaden kolonista nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Ostrzeżenie: Żaden kolonista nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Legendarne ulepszenia wymagają specjalnych okoliczności takich jak inspiracje lub ideologiczne role specjalistów.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
@@ -39,5 +41,49 @@
   <SimpleImprove_SettingsCalculatorHeader>Kalkulator Rozkładu Jakości:</SimpleImprove_SettingsCalculatorHeader>
   <SimpleImprove_SettingsSuccessThreshold>Próg szansy powodzenia:</SimpleImprove_SettingsSuccessThreshold>
   <SimpleImprove_SettingsCalculateButton>Oblicz Wymagania Umiejętności</SimpleImprove_SettingsCalculateButton>
+  
+  
+  <!-- New Settings Menu (Version 2) - Polish translations -->
+  <SimpleImprove_SettingsTitle>Simple Improve - Konfiguracja</SimpleImprove_SettingsTitle>
+  <SimpleImprove_CurrentQualityStandards>Obecne standardy jakości: {0}</SimpleImprove_CurrentQualityStandards>
+  
+  <!-- Preset System -->
+  <SimpleImprove_PresetsHeader>Ustawienia Standardów Jakości</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>Uczeń</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>Nowicjusz</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>Domyślny</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>Mistrz</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>Rzemieślnik</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetCustom>Niestandardowy</SimpleImprove_PresetCustom>
+  
+  <!-- Preset Tooltips -->
+  <SimpleImprove_PresetVeryEasyTooltip>Luźne wymagania umiejętności dla prób ulepszeń.</SimpleImprove_PresetVeryEasyTooltip>
+  <SimpleImprove_PresetEasyTooltip>Niskie wymagania umiejętności dla prób ulepszeń.</SimpleImprove_PresetEasyTooltip>
+  <SimpleImprove_PresetNormalTooltip>Zrównoważone wymagania umiejętności dla prób ulepszeń.</SimpleImprove_PresetNormalTooltip>
+  <SimpleImprove_PresetHardTooltip>Wysokie wymagania umiejętności dla prób ulepszeń.</SimpleImprove_PresetHardTooltip>
+  <SimpleImprove_PresetExpertTooltip>Surowe wymagania umiejętności dla prób ulepszeń.</SimpleImprove_PresetExpertTooltip>
+  <SimpleImprove_PresetCustomTooltip>Konfiguracja niestandardowa. Pozwala ustawić indywidualne wymagania umiejętności.</SimpleImprove_PresetCustomTooltip>
+  
+  <!-- Skill Requirements Section -->
+  <SimpleImprove_SkillRequirementsHeader>Niestandardowe Wymagania Umiejętności</SimpleImprove_SkillRequirementsHeader>
+  <SimpleImprove_PresetPreviewHeader>Aktualne Wymagania Umiejętności</SimpleImprove_PresetPreviewHeader>
+  <SimpleImprove_SkillRequirementTooltip>Minimalna umiejętność Budowania do próby ulepszenia do jakości {0}.</SimpleImprove_SkillRequirementTooltip>
+  <SimpleImprove_SkillSuccessRate>Umiejętność {0}: {1}% wskaźnik sukcesu\n</SimpleImprove_SkillSuccessRate>
+  
+  <!-- Advanced Settings -->
+  <SimpleImprove_AdvancedSettings>Ustawienia Zaawansowane</SimpleImprove_AdvancedSettings>
+  <SimpleImprove_RequireMaterials>Wymagaj materiałów do ulepszenia</SimpleImprove_RequireMaterials>
+  <SimpleImprove_RequireMaterialsTooltip>Gdy włączone, ulepszenia wymagają materiałów jak normalna konstrukcja. Gdy wyłączone, ulepszenia wymagają tylko pracy.</SimpleImprove_RequireMaterialsTooltip>
+  <SimpleImprove_MaterialCostMultiplier>Mnożnik kosztu materiałów</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>Mnożnik dla kosztów materiałów (0.1x do 2.0x). Niższe wartości czynią ulepszenia tańszymi.</SimpleImprove_MaterialCostMultiplierTooltip>
+  
+  <!-- Success Rate Preview -->
+  <SimpleImprove_ShowSuccessRates>Pokaż podgląd wskaźnika sukcesu</SimpleImprove_ShowSuccessRates>
+  <SimpleImprove_ShowSuccessRatesTooltip>Wyświetl tabelę pokazującą wskaźniki sukcesu dla różnych poziomów umiejętności i jakości.</SimpleImprove_ShowSuccessRatesTooltip>
+  <SimpleImprove_SuccessRatePreview>Podgląd Wskaźnika Sukcesu</SimpleImprove_SuccessRatePreview>
+  <SimpleImprove_SkillLevel>Umiejętność</SimpleImprove_SkillLevel>
+  
+  <!-- Buttons and Actions -->
+  <SimpleImprove_ResetToDefaults>Przywróć Domyślne</SimpleImprove_ResetToDefaults>
   
 </LanguageData>

@@ -179,11 +179,18 @@ namespace SimpleImprove.Core
         /// <summary>
         /// Calculates the total material cost required for improvement.
         /// This accounts for the fraction of materials that would be returned if the item were deconstructed.
+        /// Returns empty list if materials are not required by settings.
         /// </summary>
         /// <returns>A list of materials and their required counts for improvement.</returns>
         public List<ThingDefCountClass> GetTotalMaterialCost()
         {
             cachedMaterialsNeeded.Clear();
+            
+            // If materials are not required, return empty list
+            if (!SimpleImproveMod.Settings.RequireMaterials)
+            {
+                return cachedMaterialsNeeded;
+            }
             
             var baseCost = parent.def.CostListAdjusted(parent.Stuff, false);
             var returnedFraction = parent.def.resourcesFractionWhenDeconstructed;
@@ -213,12 +220,19 @@ namespace SimpleImprove.Core
         /// <summary>
         /// Calculates the remaining materials needed for improvement.
         /// This subtracts any materials already stored in the container from the total required.
+        /// Returns empty list if materials are not required by settings.
         /// </summary>
         /// <returns>A list of materials still needed and their counts.</returns>
         public List<ThingDefCountClass> GetRemainingMaterialCost()
         {
             var totalCost = GetTotalMaterialCost();
             var remaining = new List<ThingDefCountClass>();
+            
+            // If materials are not required, return empty list
+            if (!SimpleImproveMod.Settings.RequireMaterials)
+            {
+                return remaining;
+            }
             
             foreach (var material in totalCost)
             {
@@ -238,9 +252,15 @@ namespace SimpleImprove.Core
         /// Gets the number of items of a specific type still needed for improvement.
         /// </summary>
         /// <param name="stuff">The type of material to check.</param>
-        /// <returns>The number of items still needed, or 0 if none are needed.</returns>
+        /// <returns>The number of items still needed, or 0 if none are needed or materials are not required.</returns>
         public int ThingCountNeeded(ThingDef stuff)
         {
+            // If materials are not required, return 0
+            if (!SimpleImproveMod.Settings.RequireMaterials)
+            {
+                return 0;
+            }
+            
             var material = cachedMaterialsNeeded.FirstOrDefault(m => m.thingDef == stuff);
             if (material == null) return 0;
             
@@ -256,7 +276,6 @@ namespace SimpleImprove.Core
         public void CompleteImprovement(Pawn worker)
         {
             workDone = 0;
-            GetMaterialContainer().ClearAndDestroyContents();
             
             var compQuality = parent.TryGetComp<CompQuality>();
             if (compQuality == null)
@@ -270,49 +289,51 @@ namespace SimpleImprove.Core
             
             if (newQuality <= currentQuality)
             {
-                // Improvement failed - show failure message and continue trying if target not met
+                // Improvement failed - show failure message and handle based on target quality
                 MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
                     "SimpleImprove_ImprovementFailed".Translate(newQuality.GetLabel()), 6f);
                 
-                // Check if we should continue improving based on target quality
-                // if (ShouldContinueImproving(currentQuality))
-                // {
-                //     return; // Keep trying - don't clear the improvement flag
-                // }
-                // else
-                // {
-                //     // No target set or target already met - stop improving
-                //     ClearImprovementAndFinish();
-                //     return;
-                // }
-            } else {
-				// Check if we should continue improving based on target quality
-				if (ShouldContinueImproving(newQuality))
-				{
-					return; // Keep improving - don't clear the improvement flag
-				}
+                // Clear materials on failure if required by settings
+                if (SimpleImproveMod.Settings.RequireMaterials)
+                {
+                    GetMaterialContainer().ClearAndDestroyContents();
+                }
+            } 
+            else 
+            {
+                // Improvement succeeded - clear materials and apply the new quality
+                if (SimpleImproveMod.Settings.RequireMaterials)
+                {
+                    GetMaterialContainer().ClearAndDestroyContents();
+                }
 
-				// Improvement succeeded - apply the new quality
-				compQuality.SetQuality(newQuality, ArtGenerationContext.Colony);
-				QualityUtility.SendCraftNotification(parent, worker);
-				
-				// Handle art generation if applicable (excellent quality and above becomes art)
-				var compArt = parent.TryGetComp<CompArt>();
-				if (compArt != null && compArt.CanShowArt)
-				{
-					if (!compArt.Active)
-					{
-						compArt.InitializeArt(ArtGenerationContext.Colony);
-					}
-					compArt.JustCreatedBy(worker);
-				}
-				
-				MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
-					"SimpleImprove_ImprovedTo".Translate(newQuality.GetLabel()), 6f);
-				
-				// Target reached or no target set - finish improvement
-				ClearImprovementAndFinish();
-			}
+				// Apply the new quality first
+                compQuality.SetQuality(newQuality, ArtGenerationContext.Colony);
+                QualityUtility.SendCraftNotification(parent, worker);
+                
+                // Handle art generation if applicable (excellent quality and above becomes art)
+                var compArt = parent.TryGetComp<CompArt>();
+                if (compArt != null && compArt.CanShowArt)
+                {
+                    if (!compArt.Active)
+                    {
+                        compArt.InitializeArt(ArtGenerationContext.Colony);
+                    }
+                    compArt.JustCreatedBy(worker);
+                }
+                
+                MoteMaker.ThrowText(parent.DrawPos, parent.Map, 
+                    "SimpleImprove_ImprovedTo".Translate(newQuality.GetLabel()), 6f);
+                
+                // Check if we should continue improving based on target quality
+                if (ShouldContinueImproving(newQuality))
+                {
+                    return; // Keep improving - don't clear the improvement flag
+                }
+                
+                // Target reached or no target set - finish improvement
+                ClearImprovementAndFinish();
+            }
         }
         
         /// <summary>
@@ -328,6 +349,43 @@ namespace SimpleImprove.Core
                 
             // If current quality is below target, continue improving
             return currentQuality < TargetQuality.Value;
+        }
+        
+        /// <summary>
+        /// Checks if any pawns can achieve the target quality and shows a warning if none are capable.
+        /// Considers skill requirements, work assignments, and potential bonuses from inspirations or roles.
+        /// </summary>
+        /// <param name="targetQuality">The target quality to check skill requirements for.</param>
+        private void CheckAndShowTargetQualitySkillWarning(QualityCategory targetQuality)
+        {
+            var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality);
+            if (baseRequiredSkill <= 0) return;
+            
+            var map = parent.Map;
+            if (map?.mapPawns?.FreeColonistsSpawned == null) return;
+            
+            var allPawns = map.mapPawns.FreeColonistsSpawned;
+            var capablePawns = allPawns.Where(pawn => 
+                pawn.workSettings.WorkIsActive(SimpleImproveDefOf.WorkType_Improving) &&
+                pawn.skills.GetSkill(SkillDefOf.Construction).Level >= SimpleImproveMod.Settings.GetSkillRequirement(targetQuality, pawn)
+            ).ToList();
+            
+            if (!capablePawns.Any())
+            {
+                var bestCaseRequiredSkill = SimpleImproveMod.Settings.GetBestCaseSkillRequirement(targetQuality, map);
+                string message;
+                
+                if (ModsConfig.IdeologyActive)
+                {
+                    message = "SimpleImprove_TargetQualitySkillWarningIdeology".Translate(targetQuality.GetLabel(), baseRequiredSkill, bestCaseRequiredSkill);
+                }
+                else
+                {
+                    message = "SimpleImprove_TargetQualitySkillWarning".Translate(targetQuality.GetLabel(), baseRequiredSkill, bestCaseRequiredSkill);
+                }
+                
+                Messages.Message(message, parent, MessageTypeDefOf.CautionInput);
+            }
         }
         
         /// <summary>
@@ -349,6 +407,8 @@ namespace SimpleImprove.Core
         public void FailImprovement(Pawn worker)
         {
             workDone = 0;
+            
+            // Always clear materials on construction failure (this is actual construction failure, not quality failure)
             GetMaterialContainer().ClearAndDestroyContents();
             
             MoteMaker.ThrowText(parent.DrawPos, parent.Map, "TextMote_ConstructionFail".Translate(), 6f);
@@ -407,36 +467,67 @@ namespace SimpleImprove.Core
                 return sb.ToString();
             
             sb.AppendLineIfNotEmpty();
-            sb.AppendLine("ContainedResources".Translate() + ":");
             
             var totalCost = GetTotalMaterialCost();
             var remaining = GetRemainingMaterialCost();
             var allSatisfied = true;
             
-            foreach (var material in totalCost)
+            // Show material requirements if materials are required by settings
+            if (SimpleImproveMod.Settings.RequireMaterials)
             {
-                var currentCount = material.count - remaining.FirstOrDefault(r => r.thingDef == material.thingDef)?.count ?? material.count;
-                sb.AppendLine($"  {material.thingDef.LabelCap}: {currentCount} / {material.count}");
+                sb.AppendLine("ContainedResources".Translate() + ":");
                 
-                if (currentCount < material.count)
-                    allSatisfied = false;
+                foreach (var material in totalCost)
+                {
+                    var currentCount = material.count - remaining.FirstOrDefault(r => r.thingDef == material.thingDef)?.count ?? material.count;
+                    sb.AppendLine($"  {material.thingDef.LabelCap}: {currentCount} / {material.count}");
+                    
+                    if (currentCount < material.count)
+                        allSatisfied = false;
+                }
+            }
+            else
+            {
+                // If materials are not required but there are stored materials, show them
+                if (GetMaterialContainer().Any)
+                {
+                    sb.AppendLine("Stored materials (not required):");
+                    var storedMaterials = GetMaterialContainer().GroupBy(t => t.def)
+                        .Select(g => new { Def = g.Key, Count = g.Sum(t => t.stackCount) });
+                    
+                    foreach (var stored in storedMaterials)
+                    {
+                        sb.AppendLine($"  {stored.Def.LabelCap}: {stored.Count}");
+                    }
+                }
+                
+                // When materials are not required, improvement is always ready
+                allSatisfied = true;
             }
             
             if (allSatisfied)
             {
                 sb.AppendLine($"WorkLeft".Translate() + ": " + Mathf.CeilToInt(WorkLeft / 60f));
                 
-                var quality = parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
-                var skillReq = SimpleImproveMod.Settings.GetSkillRequirement(quality);
-                
-                if (skillReq > 0)
-                {
-                    sb.AppendLine($"Minimum skill required: {skillReq}");
-                }
-                
+                // Show skill requirement based on target quality
                 if (TargetQuality.HasValue)
                 {
-                    sb.AppendLine($"SimpleImprove_TargetQuality".Translate(TargetQuality.Value.GetLabel()));
+                    var skillReq = SimpleImproveMod.Settings.GetSkillRequirement(TargetQuality.Value);
+                    if (skillReq > 0)
+                    {
+                        sb.AppendLine($"Minimum skill required for {TargetQuality.Value.GetLabel()}: {skillReq}");
+                    }
+                }
+                else
+                {
+                    // For "Any" improvement, show that no specific skill is required
+                    sb.AppendLine("Any skill level accepted (marked for any improvement)");
+                }
+                
+                // Show note if materials are disabled
+                if (!SimpleImproveMod.Settings.RequireMaterials)
+                {
+                    sb.AppendLine("Materials not required (disabled in settings)");
                 }
             }
             
@@ -761,6 +852,12 @@ namespace SimpleImprove.Core
             if (targetQuality == QualityCategory.Legendary)
             {
                 Messages.Message("SimpleImprove_LegendaryWarning".Translate(), MessageTypeDefOf.CautionInput);
+            }
+            
+            // Check if any pawns can achieve the target quality and show warning if not
+            if (targetQuality.HasValue)
+            {
+                CheckAndShowTargetQualitySkillWarning(targetQuality.Value);
             }
             
             // Special case: if this action comes from a marked group and we're setting a new quality,

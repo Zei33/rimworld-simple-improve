@@ -75,9 +75,11 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - **Comprehensive Logging**: Debug messages track component restoration and data integrity
 
 ### Settings System
-- Configurable skill requirements per quality level
-- Quality distribution calculator
-- Support for pawn modifiers (inspirations, roles)
+- **Quality Standards Presets**: Pre-configured skill requirement levels (Apprentice, Novice, Default, Master, Artisan, Custom)
+- **Settings Migration**: Automatic upgrade from Version 1 to Version 2 settings format
+- **Material Requirements Toggle**: Optional material costs for improvements
+- **Quality Distribution Calculator**: Testing tool for different skill configurations
+- **Support for Pawn Modifiers**: Inspirations and ideological roles
 
 ### Job System
 - WorkGiver_Improve: Finds items needing improvement and assigns work
@@ -85,9 +87,11 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - JobDriver_Improve: Performs the actual improvement work
 
 ### Material Management
-- Custom MaterialStorage class restricts what can be stored
-- Only accepts materials needed for improvement
-- Automatically drops materials when improvement is cancelled
+- **Flexible Material Requirements**: Configurable system allows disabling material costs entirely
+- **Custom MaterialStorage Class**: Restricts what can be stored when materials are required
+- **Smart Material Handling**: Only accepts materials needed for improvement when enabled
+- **Automatic Cleanup**: Drops materials when improvement is cancelled
+- **Settings Integration**: Material requirement checks throughout the system respect user preferences
 
 ### Persistent Storage System
 - **Target Quality Persistence**: Target quality settings survive save/load cycles without data loss
@@ -97,6 +101,19 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - **Compatibility**: Works seamlessly with save files created before this system was implemented
 - **Performance**: Minimal memory footprint with efficient cleanup cycles
 - **Robustness**: Handles edge cases like mid-save thing destruction and map transitions
+
+### Quality Standards Preset System
+- **QualityStandardsPreset Enum**: Defines preset difficulty levels (Apprentice through Artisan)
+- **Preset Configuration**: Each preset defines different minimum skill requirements for quality improvements:
+  - **Apprentice**: Very low thresholds - allows low-skill pawns to attempt improvements with high failure rates
+  - **Novice**: Low thresholds - moderate skill requirements with reasonable failure rates
+  - **Default**: Balanced thresholds - ensures reasonable success chances for skilled pawns
+  - **Master**: High thresholds - requires skilled pawns, minimizes material waste
+  - **Artisan**: Very high thresholds - only master craftsmen can attempt, maximizes success rates
+  - **Custom**: User-defined skill requirements for each quality tier
+- **Settings Migration**: Automatic upgrade from legacy settings to preset system
+- **UI Integration**: Enhanced settings interface with preset selection and tooltips
+- **Validation System**: Ensures skill requirements remain within valid ranges
 
 ### Gizmo Consolidation System
 - **ImproveGroup Class**: Represents a collection of buildings with similar improvement states
@@ -151,6 +168,10 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 7. **Smart Multi-Selection**: Consolidated gizmos prevent UI clutter when selecting multiple buildings
 8. **Advanced Quality Targeting**: Complex quality selection rules for mixed building selections
 9. **Cross-Group Operations**: Quality settings can be applied to all selected buildings simultaneously
-11. **Robust Data Management**: Automatic cleanup and validation prevent data corruption and memory leaks
-12. **Enhanced Mod Compatibility**: Dual-storage pattern provides better compatibility with other mods
-13. **Save File Integrity**: Clean separation ensures saves remain valid even if mod is disabled
+10. **Quality Standards Presets**: Pre-configured skill requirement levels for different playstyles and strategies
+11. **Flexible Material Requirements**: Optional material costs - improvements can require only time/labor if preferred
+12. **Enhanced Settings UI**: Improved interface with tooltips, presets, and better organization
+13. **Settings Migration System**: Automatic upgrade from legacy settings format to new preset system
+14. **Robust Data Management**: Automatic cleanup and validation prevent data corruption and memory leaks
+15. **Enhanced Mod Compatibility**: Dual-storage pattern provides better compatibility with other mods
+16. **Save File Integrity**: Clean separation ensures saves remain valid even if mod is disabled

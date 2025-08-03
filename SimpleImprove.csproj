@@ -29,6 +29,16 @@
       <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.CoreModule.dll</HintPath>
     </Reference>
 
+	<!-- IMGUI Unity Module -->
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+
+    <!-- Text Rendering Unity Module -->
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+
     <!-- Optional: pull in all the other UnityEngine.* DLLs automatically -->
     <Reference Include="UnityEngine">
       <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/$(Filename)$(Extension)</HintPath>

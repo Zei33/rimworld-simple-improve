@@ -10,21 +10,38 @@
 - If improvement succeeds, the item gains the new quality level
 
 ### Material Requirements
-- Improvement requires the same materials as initial construction
-- Materials are adjusted based on the item's `resourcesFractionWhenDeconstructed` value
-- Materials are stored in the item temporarily during the improvement process
-- If improvement is cancelled, materials are dropped nearby
+- **Configurable Material Costs**: Option to require materials like normal construction, or just time and labor
+- **Traditional Mode** (materials required):
+  - Improvement requires the same materials as initial construction
+  - Materials are adjusted based on the item's `resourcesFractionWhenDeconstructed` value
+  - Materials are stored in the item temporarily during the improvement process
+  - If improvement is cancelled, materials are dropped nearby
+- **Labor-Only Mode** (materials disabled):
+  - Improvements only require pawn work time
+  - No material gathering or storage needed
+  - Eliminates material waste from failed improvement attempts
+  - Focus purely on skill development and time investment
 
-### Skill Requirements
-- Configurable minimum skill levels for each quality tier
-- Default values based on 5% success chance:
-  - Awful: 0
-  - Poor: 0  
-  - Normal: 4
-  - Good: 10
-  - Excellent: 14
-  - Masterwork: 18
-- Legendary quality cannot be achieved through normal improvement
+### Skill Requirements and Quality Standards
+
+#### Quality Standards Presets
+Choose from pre-configured skill requirement levels:
+
+- **🌱 Apprentice**: Very low skill requirements - allows any pawn to attempt improvements with high failure rates
+- **📚 Novice**: Low skill requirements - most pawns can attempt improvements with moderate success rates
+- **⚖️ Default**: Balanced skill requirements - ensures reasonable success chances for skilled pawns
+- **🎯 Master**: High skill requirements - only skilled pawns can attempt improvements with high success rates
+- **🏆 Artisan**: Very high skill requirements - only master craftsmen can attempt improvements with very high success rates
+- **🛠️ Custom**: Set your own minimum skill requirements for each quality tier
+
+#### Default Skill Requirements (Default Preset)
+- Awful: 0
+- Poor: 0  
+- Normal: 4
+- Good: 10
+- Excellent: 14
+- Masterwork: 18
+- Legendary quality cannot be achieved through normal improvement (requires special circumstances)
 
 ### Target Quality Persistence
 - **Cross-Save Persistence**: Target quality settings automatically survive save/load cycles
@@ -68,10 +85,14 @@
   - **Different Targets**: Separate buttons for each target quality group, with cross-group quality setting affecting all selected buildings
 - Shows current improvement status and target quality
 
-### Settings Menu
-- Adjust minimum skill requirements for each quality level
-- Quality distribution calculator to help determine optimal skill requirements
-- Test different success chance thresholds
+### Enhanced Settings Menu
+- **Quality Standards Presets**: Quick selection from pre-configured difficulty levels
+- **Preset Tooltips**: Detailed explanations of each preset's skill requirements and strategy
+- **Custom Configuration**: Full control over individual skill requirements when using Custom preset
+- **Advanced Settings**: Toggle material requirements on/off
+- **Quality Distribution Calculator**: Test different skill configurations and success rates
+- **Interactive Preview**: Real-time display of current skill requirements and success rates
+- **Settings Migration**: Automatic upgrade from legacy settings format
 
 ### Visual Feedback
 - Text motes show improvement results:
@@ -88,10 +109,10 @@
 - Separate priority from regular construction
 
 ### Job Flow
-1. **Material Hauling**: Pawns gather required materials
-2. **Improvement Work**: Pawns work on the item
-3. **Quality Roll**: New quality determined based on skill
-4. **Result Application**: Quality updated if improved
+1. **Material Hauling**: Pawns gather required materials (if materials are enabled in settings)
+2. **Improvement Work**: Pawns work on the item using their construction skill
+3. **Quality Roll**: New quality determined based on pawn skill and quality generation system
+4. **Result Application**: Quality updated if improved; materials consumed if improvement failed (when materials required)
 
 ### Construction Mechanics
 - Uses same construction speed stats as building

@@ -34,7 +34,7 @@ namespace SimpleImprove
             harmony = new Harmony("com.zei33.simpleimprove");
             harmony.PatchAll();
 
-            Log.Message("[SimpleImprove] Loaded version 1.0 successfully.");
+            Log.Message("[SimpleImprove] Loaded version 1.0.7 successfully.");
         }
 
         /// <summary>
@@ -45,12 +45,12 @@ namespace SimpleImprove
 
         /// <summary>
         /// Renders the mod settings window content.
-        /// Delegates to the settings instance to draw the configuration interface.
+        /// Delegates to the settings class for proper separation of concerns.
         /// </summary>
         /// <param name="inRect">The rectangle area available for drawing the settings interface.</param>
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            Settings.DoWindowContents(inRect);
+            Settings.DoSettingsWindowContents(inRect);
         }
     }
 }

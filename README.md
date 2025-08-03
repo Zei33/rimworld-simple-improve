@@ -14,8 +14,8 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 ### 🔧 Quality Improvement System
 - **Mark any furniture or constructed item** with quality for improvement
 - **Skill-based outcomes** - Higher construction skill increases success chances
-- **Material investment** - Requires the same materials as initial construction
-- **Smart failure handling** - Failed improvements consume materials but preserve the item
+- **Flexible material requirements** - Option to require materials like normal construction, or just time and labor
+- **Smart failure handling** - Failed improvements consume materials (if required) but preserve the item
 
 ### 🎯 Flexible Skill Requirements
 - **Configurable thresholds** for each quality tier
@@ -36,7 +36,8 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 - **Cross-group operations** - set quality targets for all selected buildings at once
 - **Individual item toggles** via building gizmos
 - **Visual feedback** with success/failure messages
-- **Settings menu** with quality distribution calculator
+- **Enhanced settings menu** with preset system, tooltips, and improved organization
+- **Quality distribution calculator** for testing different configurations
 
 ### ⚙️ Seamless Integration  
 - **New "Improving" work type** with separate priority from construction
@@ -104,13 +105,33 @@ Compatible with mods that increase skills above 20.
 Access the mod settings through:
 **Options → Mod Settings → Simple Improve**
 
-- **Skill Requirements**: Adjust minimum construction skill needed for each quality tier
+#### Quality Standards Presets
+
+Choose from pre-configured pawn skill requirements for different improvement strategies:
+
+- **🌱 Apprentice**: Very low skill requirements - allows any pawn to attempt improvements (high failure rates)
+- **📚 Novice**: Low skill requirements - most pawns can attempt improvements with moderate success  
+- **⚖️ Default**: Balanced skill requirements - ensures reasonable success chances for most attempts
+- **🎯 Master**: High skill requirements - only skilled pawns can attempt improvements (high success rates)
+- **🏆 Artisan**: Very high skill requirements - only master craftsmen can attempt improvements (very high success rates)
+- **🛠️ Custom**: Set your own minimum skill requirements for each quality tier
+
+#### Advanced Settings
+
+- **Require Materials for Improvement**: Toggle whether improvements need materials like normal construction, or just require work time
+- **Skill Requirements**: Adjust minimum construction skill needed for each quality tier (Custom preset only)
 - **Quality Calculator**: Test different success rates and skill requirements
 - **Success Thresholds**: Set desired success percentages to automatically calculate skill requirements
 
 ### Recommended Settings
 
-For balanced gameplay, the default settings provide roughly 5% base success chance for each quality tier improvement, requiring significant skill investment but making improvements achievable with dedicated training.
+**For balanced gameplay**: Use the **Default** preset, which provides balanced skill requirements ensuring reasonable success chances for most improvement attempts.
+
+**For fast improvements**: Try **Apprentice** or **Novice** presets to allow lower-skilled pawns to attempt improvements, accepting higher failure rates for faster progression.
+
+**For efficient material usage**: Use **Master** or **Artisan** presets to ensure only highly-skilled pawns attempt improvements, minimizing wasted materials from failed attempts.
+
+**Material-free mode**: Disable "Require Materials for Improvement" in Advanced Settings if you prefer improvements to only cost time and labor, eliminating material waste from failures.
 
 ## Technical Details
 
@@ -186,8 +207,11 @@ A: Materials are consumed but the item keeps its original quality. If materials 
 **Q: Does this work with modded furniture?**
 A: Yes! Any item with a quality stat and proper blueprint definition will work automatically.
 
-**Q: Can I adjust the difficulty?**
-A: Absolutely. Use the mod settings to configure skill requirements for each quality tier.
+**Q: Can I control which pawns can attempt improvements?**
+A: Yes! Choose from 5 preset skill requirement levels (Apprentice to Artisan) or use Custom mode. Apprentice allows any pawn to try (with high failure rates), while Artisan requires master-level construction skill (ensuring high success rates).
+
+**Q: Do I always need materials for improvements?**
+A: No! In the mod settings under Advanced Settings, you can disable "Require Materials for Improvement" to make improvements only require time and labor instead of resources.
 
 ## License
 

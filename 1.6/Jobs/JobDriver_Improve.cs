@@ -81,14 +81,21 @@ namespace SimpleImprove.Jobs
                 // Check skill requirement during work as safety net
                 if (qualityComp != null)
                 {
-                    var pawnSkill = actor.skills.GetSkill(SkillDefOf.Construction).Level;
-                    var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality, actor);
-
-                    if (requiredSkill > pawnSkill)
+                    var targetQuality = comp.TargetQuality;
+                    
+                    // If a target quality is set, check skill requirement for that target
+                    if (targetQuality.HasValue)
                     {
-                        ReadyForNextToil();
-                        return;
+                        var pawnSkill = actor.skills.GetSkill(SkillDefOf.Construction).Level;
+                        var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value, actor);
+
+                        if (requiredSkill > pawnSkill)
+                        {
+                            ReadyForNextToil();
+                            return;
+                        }
                     }
+                    // If no target quality set (Any improvement), allow any skill level
                 }
 
                 // Learn construction skill
@@ -137,11 +144,6 @@ namespace SimpleImprove.Jobs
             improveToil.defaultCompleteMode = ToilCompleteMode.Delay;
             improveToil.defaultDuration = 5000;
             improveToil.activeSkill = () => SkillDefOf.Construction;
-
-            improveToil.finishActions.Add(() =>
-            {
-                pawn.Map.reservationManager.Release(job.targetA, pawn, job);
-            });
 
             yield return improveToil;
         }

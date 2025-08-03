@@ -21,6 +21,8 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Attention : Aucun colon ne peut atteindre la qualité {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Attention : Aucun colon ne peut atteindre la qualité {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Les améliorations légendaires nécessitent des circonstances spéciales comme des inspirations ou des rôles de spécialistes idéologiques.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
@@ -33,11 +35,54 @@
   <SimpleImprove_TargetAny>Toute amélioration</SimpleImprove_TargetAny>
   <SimpleImprove_TargetQuality>Qualité cible : {0}</SimpleImprove_TargetQuality>
   
-  <!-- Settings Menu -->
+  <!-- Settings Menu - Legacy (kept for compatibility) -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
   <SimpleImprove_SettingsSkillHeader>Exigences minimales de compétence pour améliorer à chaque niveau de qualité :</SimpleImprove_SettingsSkillHeader>
   <SimpleImprove_SettingsCalculatorHeader>Calculateur de Distribution de Qualité :</SimpleImprove_SettingsCalculatorHeader>
   <SimpleImprove_SettingsSuccessThreshold>Seuil de chance de succès :</SimpleImprove_SettingsSuccessThreshold>
   <SimpleImprove_SettingsCalculateButton>Calculer les Exigences de Compétence</SimpleImprove_SettingsCalculateButton>
+  
+  <!-- New Settings Menu (Version 2) -->
+  <SimpleImprove_SettingsTitle>Simple Improve - Configuration</SimpleImprove_SettingsTitle>
+  <SimpleImprove_CurrentQualityStandards>Normes de qualité actuelles : {0}</SimpleImprove_CurrentQualityStandards>
+  
+  <!-- Preset System -->
+  <SimpleImprove_PresetsHeader>Préréglages de Difficulté</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>Très Facile</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>Facile</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>Normal</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>Difficile</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>Expert</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetCustom>Personnalisé</SimpleImprove_PresetCustom>
+  
+  <!-- Preset Tooltips -->
+  <SimpleImprove_PresetVeryEasyTooltip>Exigences de compétence très faibles. Idéal pour les nouveaux joueurs ou le jeu décontracté.</SimpleImprove_PresetVeryEasyTooltip>
+  <SimpleImprove_PresetEasyTooltip>Faibles exigences de compétence. Bon pour les joueurs qui veulent des améliorations accessibles.</SimpleImprove_PresetEasyTooltip>
+  <SimpleImprove_PresetNormalTooltip>Exigences de compétence équilibrées. Recommandé pour la plupart des joueurs.</SimpleImprove_PresetNormalTooltip>
+  <SimpleImprove_PresetHardTooltip>Exigences de compétence élevées. Pour les joueurs qui veulent un défi.</SimpleImprove_PresetHardTooltip>
+  <SimpleImprove_PresetExpertTooltip>Exigences de compétence très élevées. Seulement pour les joueurs experts.</SimpleImprove_PresetExpertTooltip>
+  <SimpleImprove_PresetCustomTooltip>Configuration personnalisée. Vous permet de définir les exigences de compétence individuelles.</SimpleImprove_PresetCustomTooltip>
+  
+  <!-- Skill Requirements Section -->
+  <SimpleImprove_SkillRequirementsHeader>Exigences de Compétence Personnalisées</SimpleImprove_SkillRequirementsHeader>
+  <SimpleImprove_PresetPreviewHeader>Exigences de Compétence Actuelles</SimpleImprove_PresetPreviewHeader>
+  <SimpleImprove_SkillRequirementTooltip>Compétence Construction minimale pour tenter d'améliorer à la qualité {0}.</SimpleImprove_SkillRequirementTooltip>
+  <SimpleImprove_SkillSuccessRate>Compétence {0} : {1}% taux de succès\n</SimpleImprove_SkillSuccessRate>
+  
+  <!-- Advanced Settings -->
+  <SimpleImprove_AdvancedSettings>Paramètres Avancés</SimpleImprove_AdvancedSettings>
+  <SimpleImprove_RequireMaterials>Exiger des matériaux pour l'amélioration</SimpleImprove_RequireMaterials>
+  <SimpleImprove_RequireMaterialsTooltip>Lorsque activé, les améliorations nécessitent des matériaux comme la construction normale. Lorsque désactivé, les améliorations ne nécessitent que du travail.</SimpleImprove_RequireMaterialsTooltip>
+  <SimpleImprove_MaterialCostMultiplier>Multiplicateur de coût des matériaux</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>Multiplicateur pour les coûts des matériaux (0.1x à 2.0x). Des valeurs plus faibles rendent les améliorations moins chères.</SimpleImprove_MaterialCostMultiplierTooltip>
+  
+  <!-- Success Rate Preview -->
+  <SimpleImprove_ShowSuccessRates>Afficher l'aperçu du taux de succès</SimpleImprove_ShowSuccessRates>
+  <SimpleImprove_ShowSuccessRatesTooltip>Afficher un tableau montrant les taux de succès pour différents niveaux de compétence et qualités.</SimpleImprove_ShowSuccessRatesTooltip>
+  <SimpleImprove_SuccessRatePreview>Aperçu du Taux de Succès</SimpleImprove_SuccessRatePreview>
+  <SimpleImprove_SkillLevel>Compétence</SimpleImprove_SkillLevel>
+  
+  <!-- Buttons and Actions -->
+  <SimpleImprove_ResetToDefaults>Rétablir aux Valeurs par Défaut</SimpleImprove_ResetToDefaults>
   
 </LanguageData>

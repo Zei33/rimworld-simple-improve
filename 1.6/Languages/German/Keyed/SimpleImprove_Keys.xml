@@ -21,6 +21,8 @@
   <!-- Skill Warning Messages -->
   <SimpleImprove_SkillWarning>Warnung: Kein Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Warnung: Kein Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration/Produktionsrolle).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Warnung: Kein Kolonist kann {0} Qualität erreichen (benötigt Konstruktion {1}, oder {2} mit Inspiration).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Warnung: Kein Kolonist kann {0} Qualität erreichen (benötigt Konstruktion {1}, oder {2} mit Inspiration/Produktionsrolle).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Legendäre Verbesserungen erfordern besondere Umstände wie Inspirationen oder ideologische Spezialistenrollen.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
@@ -33,11 +35,54 @@
   <SimpleImprove_TargetAny>Beliebige Verbesserung</SimpleImprove_TargetAny>
   <SimpleImprove_TargetQuality>Zielqualität: {0}</SimpleImprove_TargetQuality>
   
-  <!-- Settings Menu -->
+  <!-- Settings Menu - Legacy (kept for compatibility) -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
   <SimpleImprove_SettingsSkillHeader>Mindestfertigkeitsanforderungen zur Verbesserung auf jede Qualitätsstufe:</SimpleImprove_SettingsSkillHeader>
   <SimpleImprove_SettingsCalculatorHeader>Qualitätsverteilungsrechner:</SimpleImprove_SettingsCalculatorHeader>
   <SimpleImprove_SettingsSuccessThreshold>Erfolgschancenschwelle:</SimpleImprove_SettingsSuccessThreshold>
   <SimpleImprove_SettingsCalculateButton>Fertigkeitsanforderungen Berechnen</SimpleImprove_SettingsCalculateButton>
+  
+  <!-- New Settings Menu (Version 2) - German translations -->
+  <SimpleImprove_SettingsTitle>Simple Improve - Konfiguration</SimpleImprove_SettingsTitle>
+  <SimpleImprove_CurrentQualityStandards>Aktuelle Qualitätsstandards: {0}</SimpleImprove_CurrentQualityStandards>
+  
+  <!-- Preset System -->
+  <SimpleImprove_PresetsHeader>Qualitätsstandard-Voreinstellungen</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>Lehrling</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>Anfänger</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>Standard</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>Meister</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>Handwerker</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetCustom>Benutzerdefiniert</SimpleImprove_PresetCustom>
+  
+  <!-- Preset Tooltips -->
+  <SimpleImprove_PresetVeryEasyTooltip>Lockere Fertigkeitsanforderungen für Verbesserungsversuche.</SimpleImprove_PresetVeryEasyTooltip>
+  <SimpleImprove_PresetEasyTooltip>Niedrige Fertigkeitsanforderungen für Verbesserungsversuche.</SimpleImprove_PresetEasyTooltip>
+  <SimpleImprove_PresetNormalTooltip>Ausgewogene Fertigkeitsanforderungen für Verbesserungsversuche.</SimpleImprove_PresetNormalTooltip>
+  <SimpleImprove_PresetHardTooltip>Hohe Fertigkeitsanforderungen für Verbesserungsversuche.</SimpleImprove_PresetHardTooltip>
+  <SimpleImprove_PresetExpertTooltip>Strenge Fertigkeitsanforderungen für Verbesserungsversuche.</SimpleImprove_PresetExpertTooltip>
+  <SimpleImprove_PresetCustomTooltip>Benutzerdefinierte Konfiguration. Ermöglicht individuelle Fertigkeitsanforderungen.</SimpleImprove_PresetCustomTooltip>
+  
+  <!-- Skill Requirements Section -->
+  <SimpleImprove_SkillRequirementsHeader>Benutzerdefinierte Fertigkeitsanforderungen</SimpleImprove_SkillRequirementsHeader>
+  <SimpleImprove_PresetPreviewHeader>Aktuelle Fertigkeitsanforderungen</SimpleImprove_PresetPreviewHeader>
+  <SimpleImprove_SkillRequirementTooltip>Mindest-Baufertigkeit zum Versuch der Verbesserung auf {0} Qualität.</SimpleImprove_SkillRequirementTooltip>
+  <SimpleImprove_SkillSuccessRate>Fertigkeit {0}: {1}% Erfolgsrate\n</SimpleImprove_SkillSuccessRate>
+  
+  <!-- Advanced Settings -->
+  <SimpleImprove_AdvancedSettings>Erweiterte Einstellungen</SimpleImprove_AdvancedSettings>
+  <SimpleImprove_RequireMaterials>Materialien für Verbesserung erforderlich</SimpleImprove_RequireMaterials>
+  <SimpleImprove_RequireMaterialsTooltip>Wenn aktiviert, benötigen Verbesserungen Materialien wie normaler Bau. Wenn deaktiviert, benötigen Verbesserungen nur Arbeit.</SimpleImprove_RequireMaterialsTooltip>
+  <SimpleImprove_MaterialCostMultiplier>Materialkostenmultiplikator</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>Multiplikator für Materialkosten (0.1x bis 2.0x). Niedrigere Werte machen Verbesserungen günstiger.</SimpleImprove_MaterialCostMultiplierTooltip>
+  
+  <!-- Success Rate Preview -->
+  <SimpleImprove_ShowSuccessRates>Erfolgsraten-Vorschau anzeigen</SimpleImprove_ShowSuccessRates>
+  <SimpleImprove_ShowSuccessRatesTooltip>Eine Tabelle mit Erfolgsraten für verschiedene Fertigkeitsstufen und Qualitäten anzeigen.</SimpleImprove_ShowSuccessRatesTooltip>
+  <SimpleImprove_SuccessRatePreview>Erfolgsraten-Vorschau</SimpleImprove_SuccessRatePreview>
+  <SimpleImprove_SkillLevel>Fertigkeit</SimpleImprove_SkillLevel>
+  
+  <!-- Buttons and Actions -->
+  <SimpleImprove_ResetToDefaults>Auf Standardwerte zurücksetzen</SimpleImprove_ResetToDefaults>
   
 </LanguageData>

@@ -122,8 +122,8 @@ namespace SimpleImprove.Designators
             var qualityComp = thing.TryGetComp<CompQuality>();
             if (qualityComp == null) return;
             
-            var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality);
-            if (requiredSkill <= 0) return;
+            var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality);
+            if (baseRequiredSkill <= 0) return;
             
             var allPawns = thing.Map.mapPawns.FreeColonistsSpawned;
             var capablePawns = allPawns.Where(pawn => 
@@ -133,16 +133,16 @@ namespace SimpleImprove.Designators
             
             if (!capablePawns.Any())
             {
-                var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality);
+                var bestCaseRequiredSkill = SimpleImproveMod.Settings.GetBestCaseSkillRequirement(qualityComp.Quality, thing.Map);
                 string message;
                 
                 if (ModsConfig.IdeologyActive)
                 {
-                    message = "SimpleImprove_SkillWarningIdeology".Translate(thing.def.label, requiredSkill, baseRequiredSkill);
+                    message = "SimpleImprove_SkillWarningIdeology".Translate(thing.def.label, baseRequiredSkill, bestCaseRequiredSkill);
                 }
                 else
                 {
-                    message = "SimpleImprove_SkillWarning".Translate(thing.def.label, requiredSkill, baseRequiredSkill);
+                    message = "SimpleImprove_SkillWarning".Translate(thing.def.label, baseRequiredSkill, bestCaseRequiredSkill);
                 }
                 
                 Messages.Message(message, thing, MessageTypeDefOf.CautionInput);
