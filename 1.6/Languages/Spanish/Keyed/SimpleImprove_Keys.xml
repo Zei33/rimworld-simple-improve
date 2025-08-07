@@ -76,6 +76,8 @@
   <SimpleImprove_RequireMaterialsTooltip>Cuando está activado, las mejoras requieren materiales como la construcción normal. Cuando está desactivado, las mejoras solo requieren trabajo.</SimpleImprove_RequireMaterialsTooltip>
   <SimpleImprove_MaterialCostMultiplier>Multiplicador de coste de materiales</SimpleImprove_MaterialCostMultiplier>
   <SimpleImprove_MaterialCostMultiplierTooltip>Multiplicador para costes de materiales (0.1x a 2.0x). Valores más bajos hacen las mejoras más baratas.</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MergeIntoConstruction>Fusionar en tipo de trabajo de Construcción</SimpleImprove_MergeIntoConstruction>
+  <SimpleImprove_MergeIntoConstructionTooltip>Cuando está activado, las tareas de mejora aparecerán bajo el tipo de trabajo de Construcción en lugar de tener su propio tipo de trabajo separado. Requiere reinicio para tomar efecto.</SimpleImprove_MergeIntoConstructionTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>Mostrar vista previa de tasa de éxito</SimpleImprove_ShowSuccessRates>

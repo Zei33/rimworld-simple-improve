@@ -3,6 +3,7 @@
   <WorkTypeDef>
     <defName>WorkType_Improving</defName>
     <naturalPriority>500</naturalPriority>
+    <visible>true</visible>
     <relevantSkills>
       <li>Construction</li>
     </relevantSkills>

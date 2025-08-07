@@ -96,9 +96,10 @@ namespace SimpleImprove.Jobs
             }
 
             // Check if pawn can do improvement work
-            if (!pawn.workSettings.WorkIsActive(SimpleImproveDefOf.WorkType_Improving))
+            var activeWorkType = GetActiveWorkType();
+            if (!pawn.workSettings.WorkIsActive(activeWorkType))
             {
-                JobFailReason.Is("NotAssignedToWorkType".Translate(SimpleImproveDefOf.WorkType_Improving.gerundLabel).CapitalizeFirst());
+                JobFailReason.Is("NotAssignedToWorkType".Translate(activeWorkType.gerundLabel).CapitalizeFirst());
                 return null;
             }
 
@@ -192,6 +193,23 @@ namespace SimpleImprove.Jobs
                 9999f,
                 Validator
             );
+        }
+
+        /// <summary>
+        /// Gets the currently active work type for improvement work.
+        /// Returns Construction if merging is enabled, otherwise returns the dedicated Improving work type.
+        /// </summary>
+        /// <returns>The work type that should be checked for improvement work.</returns>
+        private WorkTypeDef GetActiveWorkType()
+        {
+            // If merging is enabled and Construction work type exists, use it
+            if (SimpleImproveMod.Settings?.MergeIntoConstruction == true && WorkTypeDefOf.Construction != null)
+            {
+                return WorkTypeDefOf.Construction;
+            }
+            
+            // Otherwise, use the dedicated improving work type
+            return SimpleImproveDefOf.WorkType_Improving;
         }
     }
 }

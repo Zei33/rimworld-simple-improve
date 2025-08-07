@@ -75,6 +75,12 @@ namespace SimpleImprove.Core
         /// </summary>
         private float materialCostMultiplier = 1.0f;
         
+        /// <summary>
+        /// Whether to merge the Improve work type into Construction instead of having it as a separate work type.
+        /// When enabled, improvement tasks will appear under the Construction work type in the work tab.
+        /// </summary>
+        public bool mergeIntoConstruction = false;
+        
         #endregion
 
         #region UI State
@@ -238,6 +244,11 @@ namespace SimpleImprove.Core
         /// Gets the material cost multiplier.
         /// </summary>
         public float MaterialCostMultiplier => materialCostMultiplier;
+        
+        /// <summary>
+        /// Gets whether the Improve work type should be merged into Construction.
+        /// </summary>
+        public bool MergeIntoConstruction => mergeIntoConstruction;
 
         /// <summary>
         /// Gets the minimum skill requirement to improve an item to the specified quality level.
@@ -444,6 +455,7 @@ namespace SimpleImprove.Core
             requireMaterials = true;
             materialCostMultiplier = 1.0f;
             materialCostBuffer = "1.0";
+            mergeIntoConstruction = false;
             showAdvancedSettings = false;
             showSuccessRatePreview = true;
         }
@@ -482,6 +494,18 @@ namespace SimpleImprove.Core
 			currentY += rowHeight + rowGap + 8f;
 			Widgets.CheckboxLabeled(new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, rowHeight), "SimpleImprove_RequireMaterials".Translate(), ref requireMaterials);
 
+			currentY += rowHeight + rowGap;
+			bool previousMergeState = mergeIntoConstruction;
+			Widgets.CheckboxLabeled(new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, rowHeight), "SimpleImprove_MergeIntoConstruction".Translate(), ref mergeIntoConstruction);
+			
+			// Check if merge setting changed and update work type accordingly
+			if (previousMergeState != mergeIntoConstruction)
+			{
+				LongEventHandler.ExecuteWhenFinished(() => {
+					Patches.WorkTypeMergePatch.UpdateWorkTypeMergeState();
+				});
+			}
+
             // Calculate how much vertical space was used by the columns
             var qualities = GetQualityCategoriesInOrder();
             float columnsHeight = qualities.Length * (rowHeight + rowGap) + 80f; // Extra space for headers
@@ -495,6 +519,10 @@ namespace SimpleImprove.Core
             if (listing.ButtonText("SimpleImprove_ResetToDefaults".Translate()))
             {
                 ResetToDefaults();
+                // Also update work type merge state when resetting
+                LongEventHandler.ExecuteWhenFinished(() => {
+                    Patches.WorkTypeMergePatch.UpdateWorkTypeMergeState();
+                });
             }
 
             listing.End();
@@ -601,6 +629,7 @@ namespace SimpleImprove.Core
             Scribe_Values.Look(ref currentPreset, "currentPreset", QualityStandardsPreset.Default);
             Scribe_Values.Look(ref requireMaterials, "requireMaterials", true);
             Scribe_Values.Look(ref materialCostMultiplier, "materialCostMultiplier", 1.0f);
+            Scribe_Values.Look(ref mergeIntoConstruction, "mergeIntoConstruction", false);
             Scribe_Values.Look(ref showAdvancedSettings, "showAdvancedSettings", false);
             Scribe_Values.Look(ref showSuccessRatePreview, "showSuccessRatePreview", true);
             
@@ -656,6 +685,7 @@ namespace SimpleImprove.Core
             // Set new version 2 defaults for new settings
             requireMaterials = true;
             materialCostMultiplier = 1.0f;
+            mergeIntoConstruction = false;
             showAdvancedSettings = false;
             showSuccessRatePreview = true;
             

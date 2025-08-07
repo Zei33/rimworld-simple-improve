@@ -75,6 +75,8 @@
   <SimpleImprove_RequireMaterialsTooltip>When enabled, improvements require materials like normal construction. When disabled, improvements only require work.</SimpleImprove_RequireMaterialsTooltip>
   <SimpleImprove_MaterialCostMultiplier>Material cost multiplier</SimpleImprove_MaterialCostMultiplier>
   <SimpleImprove_MaterialCostMultiplierTooltip>Multiplier for material costs (0.1x to 2.0x). Lower values make improvements cheaper.</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MergeIntoConstruction>Merge into Construction work type</SimpleImprove_MergeIntoConstruction>
+  <SimpleImprove_MergeIntoConstructionTooltip>When enabled, improvement jobs will appear under the Construction work type instead of having their own separate work type. Requires restart to take effect.</SimpleImprove_MergeIntoConstructionTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>Show success rate preview</SimpleImprove_ShowSuccessRates>

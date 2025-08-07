@@ -125,9 +125,10 @@ namespace SimpleImprove.Designators
             var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality);
             if (baseRequiredSkill <= 0) return;
             
+            var activeWorkType = GetActiveWorkType();
             var allPawns = thing.Map.mapPawns.FreeColonistsSpawned;
             var capablePawns = allPawns.Where(pawn => 
-                pawn.workSettings.WorkIsActive(SimpleImproveDefOf.WorkType_Improving) &&
+                pawn.workSettings.WorkIsActive(activeWorkType) &&
                 pawn.skills.GetSkill(SkillDefOf.Construction).Level >= SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality, pawn)
             ).ToList();
             
@@ -147,6 +148,23 @@ namespace SimpleImprove.Designators
                 
                 Messages.Message(message, thing, MessageTypeDefOf.CautionInput);
             }
+        }
+        
+        /// <summary>
+        /// Gets the currently active work type for improvement work.
+        /// Returns Construction if merging is enabled, otherwise returns the dedicated Improving work type.
+        /// </summary>
+        /// <returns>The work type that should be checked for improvement work.</returns>
+        private WorkTypeDef GetActiveWorkType()
+        {
+            // If merging is enabled and Construction work type exists, use it
+            if (SimpleImproveMod.Settings?.MergeIntoConstruction == true && WorkTypeDefOf.Construction != null)
+            {
+                return WorkTypeDefOf.Construction;
+            }
+            
+            // Otherwise, use the dedicated improving work type
+            return SimpleImproveDefOf.WorkType_Improving;
         }
     }
 }

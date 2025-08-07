@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Verse;
 using SimpleImprove.Core;
+using SimpleImprove.Patches;
 using UnityEngine;
 
 namespace SimpleImprove
@@ -33,6 +34,11 @@ namespace SimpleImprove
             
             harmony = new Harmony("com.zei33.simpleimprove");
             harmony.PatchAll();
+
+            // Initialize work type merging after patches are applied
+            LongEventHandler.ExecuteWhenFinished(() => {
+                WorkTypeMergePatch.Initialize();
+            });
 
             Log.Message("[SimpleImprove] Loaded version 1.0.7 successfully.");
         }
