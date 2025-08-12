@@ -41,7 +41,8 @@ ScaffoldingReadMe.txt
 *~
 CodeCoverage/
 .DS_Store
-.cursor
+1.6/Assemblies/net472/Unity*
+1.6/Assemblies/net472/Assembly*
 
 # MSBuild Binary and Structured Log
 *.binlog
