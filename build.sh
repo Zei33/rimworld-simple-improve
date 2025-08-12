@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 
