@@ -74,8 +74,8 @@
   <SimpleImprove_AdvancedSettings>Ustawienia Zaawansowane</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>Wymagaj materiałów do ulepszenia</SimpleImprove_RequireMaterials>
   <SimpleImprove_RequireMaterialsTooltip>Gdy włączone, ulepszenia wymagają materiałów jak normalna konstrukcja. Gdy wyłączone, ulepszenia wymagają tylko pracy.</SimpleImprove_RequireMaterialsTooltip>
-  <SimpleImprove_MaterialCostMultiplier>Mnożnik kosztu materiałów</SimpleImprove_MaterialCostMultiplier>
-  <SimpleImprove_MaterialCostMultiplierTooltip>Mnożnik dla kosztów materiałów (0.1x do 2.0x). Niższe wartości czynią ulepszenia tańszymi.</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MaterialCostMultiplier>Procent kosztu materiałów</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>Procent normalnych kosztów materiałów (10% do 500%, domyślnie 100%). Niższe wartości czynią ulepszenia tańszymi, wyższe droższymi.</SimpleImprove_MaterialCostMultiplierTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>Pokaż podgląd wskaźnika sukcesu</SimpleImprove_ShowSuccessRates>

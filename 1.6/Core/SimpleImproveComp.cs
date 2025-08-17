@@ -197,10 +197,12 @@ namespace SimpleImprove.Core
             
             foreach (var material in baseCost)
             {
-                var requiredCount = material.count - Mathf.FloorToInt(material.count * returnedFraction);
-                if (requiredCount > 0)
+                // Apply the material cost multiplier to the full build cost first
+                var adjustedBuildCost = Mathf.CeilToInt(material.count * SimpleImproveMod.Settings.MaterialCostMultiplier);
+                
+                if (adjustedBuildCost > 0)
                 {
-                    cachedMaterialsNeeded.Add(new ThingDefCountClass(material.thingDef, requiredCount));
+                    cachedMaterialsNeeded.Add(new ThingDefCountClass(material.thingDef, adjustedBuildCost));
                 }
             }
             

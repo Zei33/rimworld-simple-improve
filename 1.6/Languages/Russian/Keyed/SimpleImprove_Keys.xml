@@ -74,8 +74,8 @@
   <SimpleImprove_AdvancedSettings>Дополнительные Настройки</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>Требовать материалы для улучшения</SimpleImprove_RequireMaterials>
   <SimpleImprove_RequireMaterialsTooltip>Когда включено, улучшения требуют материалы как обычное строительство. Когда отключено, улучшения требуют только работу.</SimpleImprove_RequireMaterialsTooltip>
-  <SimpleImprove_MaterialCostMultiplier>Множитель стоимости материалов</SimpleImprove_MaterialCostMultiplier>
-  <SimpleImprove_MaterialCostMultiplierTooltip>Множитель для стоимости материалов (0.1x до 2.0x). Меньшие значения делают улучшения дешевле.</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MaterialCostMultiplier>Процент стоимости материалов</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>Процент от нормальной стоимости материалов (10% до 500%, по умолчанию 100%). Меньшие значения делают улучшения дешевле, большие - дороже.</SimpleImprove_MaterialCostMultiplierTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>Показать предварительный просмотр успешности</SimpleImprove_ShowSuccessRates>

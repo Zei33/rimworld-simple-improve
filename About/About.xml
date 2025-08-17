@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Simple Improve [1.6]</name>
+  <name>Simple Improve</name>
   <author>Zei33</author>
-  <modVersion>1.0.7</modVersion>
+  <modVersion>1.0.8</modVersion>
   <packageId>Zei33.SimpleImprove</packageId>
   <description>Transform your colony's infrastructure over time! Simple Improve lets you upgrade the quality of furniture and other buildings with quality through skilled construction work.
 
@@ -27,6 +27,7 @@ QUALITY STANDARDS PRESETS:
 
 FLEXIBLE GAMEPLAY:
 • Traditional mode: Requires materials like normal construction (default)
+• Adjustable material costs: Set improvement costs from 5% of original build cost upwards
 • Labor-only mode: Improvements cost only time and skill
 • Works with any modded furniture or building that has quality
 • New "Improving" work type with separate priority from construction (for pawns that are working on improving items)

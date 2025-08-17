@@ -73,8 +73,8 @@
   <SimpleImprove_AdvancedSettings>Paramètres Avancés</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>Exiger des matériaux pour l'amélioration</SimpleImprove_RequireMaterials>
   <SimpleImprove_RequireMaterialsTooltip>Lorsque activé, les améliorations nécessitent des matériaux comme la construction normale. Lorsque désactivé, les améliorations ne nécessitent que du travail.</SimpleImprove_RequireMaterialsTooltip>
-  <SimpleImprove_MaterialCostMultiplier>Multiplicateur de coût des matériaux</SimpleImprove_MaterialCostMultiplier>
-  <SimpleImprove_MaterialCostMultiplierTooltip>Multiplicateur pour les coûts des matériaux (0.1x à 2.0x). Des valeurs plus faibles rendent les améliorations moins chères.</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MaterialCostMultiplier>Pourcentage du coût des matériaux</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>Pourcentage des coûts normaux de matériaux (10% à 500%, par défaut 100%). Des valeurs plus faibles rendent les améliorations moins chères, des valeurs plus élevées les rendent plus chères.</SimpleImprove_MaterialCostMultiplierTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>Afficher l'aperçu du taux de succès</SimpleImprove_ShowSuccessRates>

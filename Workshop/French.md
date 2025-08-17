@@ -32,6 +32,7 @@ Transformez l'infrastructure de votre colonie au fil du temps ! Amélioration Si
 [h2]GAMEPLAY FLEXIBLE[/h2]
 [list]
 [*] Mode traditionnel : Nécessite des matériaux comme une construction normale (par défaut)
+[*] Coûts de matériaux ajustables : Définir les coûts d'amélioration à partir de 5% du coût de construction original vers le haut (100% par défaut = égal au coût de construction)
 [*] Mode travail uniquement : Les améliorations ne coûtent que du temps et des compétences
 [*] Fonctionne avec n'importe quel meuble ou bâtiment moddé qui a une qualité
 [*] Nouveau type de travail "Amélioration" avec priorité séparée de la construction (pour les colons qui travaillent sur l'amélioration d'objets)

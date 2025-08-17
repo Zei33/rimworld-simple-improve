@@ -74,8 +74,8 @@
   <SimpleImprove_AdvancedSettings>高度な設定</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>改良に材料を要求</SimpleImprove_RequireMaterials>
   <SimpleImprove_RequireMaterialsTooltip>有効にすると、改良は通常の建設のように材料が必要になります。無効にすると、改良は作業のみ必要です。</SimpleImprove_RequireMaterialsTooltip>
-  <SimpleImprove_MaterialCostMultiplier>材料コスト倍率</SimpleImprove_MaterialCostMultiplier>
-  <SimpleImprove_MaterialCostMultiplierTooltip>材料コストの倍率（0.1x〜2.0x）。低い値は改良を安くします。</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MaterialCostMultiplier>材料コストのパーセント</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>通常の材料コストのパーセント（10%から500%、デフォルト100%）。低い値にすると改良が安くなり、高い値にすると高くなります。</SimpleImprove_MaterialCostMultiplierTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>成功率プレビューを表示</SimpleImprove_ShowSuccessRates>

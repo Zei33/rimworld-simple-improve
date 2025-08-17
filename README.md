@@ -15,6 +15,7 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 - **Mark any furniture or constructed item** with quality for improvement
 - **Skill-based outcomes** - Higher construction skill increases success chances
 - **Flexible material requirements** - Option to require materials like normal construction, or just time and labor
+- **Adjustable material costs** - Set improvement costs from 5% of the original build cost upwards (100% default = same as build cost)
 - **Smart failure handling** - Failed improvements consume materials (if required) but preserve the item
 
 ### 🎯 Flexible Skill Requirements
@@ -119,6 +120,7 @@ Choose from pre-configured pawn skill requirements for different improvement str
 #### Advanced Settings
 
 - **Require Materials for Improvement**: Toggle whether improvements need materials like normal construction, or just require work time
+- **Material Cost Percentage**: Adjust improvement costs from 5% of original build cost upwards (default 100%)
 - **Skill Requirements**: Adjust minimum construction skill needed for each quality tier (Custom preset only)
 - **Quality Calculator**: Test different success rates and skill requirements
 - **Success Thresholds**: Set desired success percentages to automatically calculate skill requirements
@@ -132,6 +134,10 @@ Choose from pre-configured pawn skill requirements for different improvement str
 **For efficient material usage**: Use **Master** or **Artisan** presets to ensure only highly-skilled pawns attempt improvements, minimizing wasted materials from failed attempts.
 
 **Material-free mode**: Disable "Require Materials for Improvement" in Advanced Settings if you prefer improvements to only cost time and labor, eliminating material waste from failures.
+
+**Budget improvements**: Set Material Cost Percentage to 50% or lower to make improvements more affordable, encouraging experimentation with quality upgrades.
+
+**Expensive improvements**: Set Material Cost Percentage to 200% or higher for additional challenge, making quality improvements a significant investment decision.
 
 ## Technical Details
 
@@ -212,6 +218,9 @@ A: Yes! Choose from 5 preset skill requirement levels (Apprentice to Artisan) or
 
 **Q: Do I always need materials for improvements?**
 A: No! In the mod settings under Advanced Settings, you can disable "Require Materials for Improvement" to make improvements only require time and labor instead of resources.
+
+**Q: How does the Material Cost Percentage setting work?**
+A: This setting controls how much material improvements cost relative to the original build cost. At 100% (default), improving costs the same as building from scratch. At 50%, improvements cost half the materials. At 200%, improvements cost double the materials. This allows you to make improvements cheaper for easier gameplay or more expensive for additional challenge.
 
 ## License
 

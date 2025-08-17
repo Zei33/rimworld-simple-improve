@@ -32,6 +32,7 @@ Transform your colony's infrastructure over time! Simple Improve lets you upgrad
 [h2]FLEXIBLE GAMEPLAY[/h2]
 [list]
 [*] Traditional mode: Requires materials like normal construction (default)
+[*] Adjustable material costs: Set improvement costs from 5% of original build cost upwards (100% default = same as build cost)
 [*] Labor-only mode: Improvements cost only time and skill
 [*] Works with any modded furniture or building that has quality
 [*] New "Improving" work type with separate priority from construction (for pawns that are working on improving items)

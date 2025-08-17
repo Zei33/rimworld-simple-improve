@@ -74,8 +74,8 @@
   <SimpleImprove_AdvancedSettings>高级设置</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>改进需要材料</SimpleImprove_RequireMaterials>
   <SimpleImprove_RequireMaterialsTooltip>启用时，改进需要像正常建造一样的材料。禁用时，改进只需要工作。</SimpleImprove_RequireMaterialsTooltip>
-  <SimpleImprove_MaterialCostMultiplier>材料成本倍数</SimpleImprove_MaterialCostMultiplier>
-  <SimpleImprove_MaterialCostMultiplierTooltip>材料成本的倍数（0.1x到2.0x）。较低的值使改进更便宜。</SimpleImprove_MaterialCostMultiplierTooltip>
+  <SimpleImprove_MaterialCostMultiplier>材料成本百分比</SimpleImprove_MaterialCostMultiplier>
+  <SimpleImprove_MaterialCostMultiplierTooltip>正常材料成本的百分比（10%到500%，默认100%）。低值使改进更便宜，高值使其更昂贵。</SimpleImprove_MaterialCostMultiplierTooltip>
   
   <!-- Success Rate Preview -->
   <SimpleImprove_ShowSuccessRates>显示成功率预览</SimpleImprove_ShowSuccessRates>

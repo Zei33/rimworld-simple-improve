@@ -32,6 +32,7 @@ Transforme a infraestrutura da sua colônia ao longo do tempo! Melhoria Simples 
 [h2]JOGABILIDADE FLEXÍVEL[/h2]
 [list]
 [*] Modo tradicional: Requer materiais como construção normal (padrão)
+[*] Custos de materiais ajustáveis: Defina custos de melhoria a partir de 5% do custo de construção original para cima (100% padrão = igual ao custo de construção)
 [*] Modo somente trabalho: Melhorias custam apenas tempo e habilidade
 [*] Funciona com qualquer móvel ou edifício modificado que tenha qualidade
 [*] Novo tipo de trabalho "Melhorando" com prioridade separada da construção (para colonos que trabalham melhorando itens)

@@ -32,6 +32,7 @@ Mejora Simple [1.6] (Simple Improve)
 [h2]JUGABILIDAD FLEXIBLE[/h2]
 [list]
 [*] Modo tradicional: Requiere materiales como la construcción normal (por defecto)
+[*] Costes de materiales ajustables: Establece costes de mejora desde el 5% del coste de construcción original hacia arriba (100% por defecto = igual al coste de construcción)
 [*] Modo solo trabajo: Las mejoras cuestan solo tiempo y habilidad
 [*] Funciona con cualquier mueble o edificio modificado que tenga calidad
 [*] Nuevo tipo de trabajo "Mejorando" con prioridad separada de la construcción (para colonos que trabajan mejorando objetos)

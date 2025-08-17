@@ -71,7 +71,7 @@ namespace SimpleImprove.Core
         public bool requireMaterials = true;
         
         /// <summary>
-        /// Material cost multiplier (0.1 to 2.0, default 1.0).
+        /// Material cost multiplier (0.1 to 5.0, default 1.0 = 100%).
         /// </summary>
         private float materialCostMultiplier = 1.0f;
         
@@ -85,9 +85,9 @@ namespace SimpleImprove.Core
         private Dictionary<QualityCategory, string> skillEntryBuffers = new Dictionary<QualityCategory, string>();
         
         /// <summary>
-        /// Buffer for material cost multiplier input.
+        /// Buffer for material cost multiplier input (as percentage).
         /// </summary>
-        private string materialCostBuffer = "1.0";
+        private string materialCostBuffer = "100";
         
 
         
@@ -482,9 +482,51 @@ namespace SimpleImprove.Core
 			currentY += rowHeight + rowGap + 8f;
 			Widgets.CheckboxLabeled(new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, rowHeight), "SimpleImprove_RequireMaterials".Translate(), ref requireMaterials);
 
+			// Material cost multiplier input (only show if materials are required)
+			if (requireMaterials)
+			{
+				currentY += rowHeight + rowGap;
+				
+				// Label
+				const float labelWidth = 200f;
+				const float inputWidth = 80f;
+				const float percentWidth = 20f;
+				
+				Rect labelRect = new Rect(inRect.x + columnWidth + 20f, currentY, labelWidth, rowHeight);
+				Widgets.Label(labelRect, "SimpleImprove_MaterialCostMultiplier".Translate() + ":");
+				
+				// Input field
+				Rect inputRect = new Rect(inRect.x + columnWidth + 20f + labelWidth + 5f, currentY, inputWidth, rowHeight);
+				string newBuffer = Widgets.TextField(inputRect, materialCostBuffer);
+				if (newBuffer != materialCostBuffer)
+				{
+					materialCostBuffer = newBuffer;
+					if (float.TryParse(newBuffer, out float percentage))
+					{
+						// Convert percentage to multiplier and clamp
+						float newMultiplier = percentage / 100f;
+						materialCostMultiplier = Mathf.Clamp(newMultiplier, 0.05f, 1000.0f);
+						
+						// Update buffer to show clamped value
+						materialCostBuffer = (materialCostMultiplier * 100f).ToString("F0");
+					}
+				}
+				
+				// Percentage symbol
+				Rect percentRect = new Rect(inputRect.xMax + 2f, currentY, percentWidth, rowHeight);
+				Widgets.Label(percentRect, "%");
+				
+				// Add tooltip
+				if (Mouse.IsOver(labelRect) || Mouse.IsOver(inputRect))
+				{
+					TooltipHandler.TipRegion(new Rect(labelRect.x, labelRect.y, inputRect.xMax - labelRect.x, rowHeight), "SimpleImprove_MaterialCostMultiplierTooltip".Translate());
+				}
+			}
+
             // Calculate how much vertical space was used by the columns
             var qualities = GetQualityCategoriesInOrder();
-            float columnsHeight = qualities.Length * (rowHeight + rowGap) + 80f; // Extra space for headers
+            float materialCostHeight = requireMaterials ? (rowHeight + rowGap) : 0f; // Extra space for material cost input
+            float columnsHeight = qualities.Length * (rowHeight + rowGap) + 80f + materialCostHeight; // Extra space for headers
 
             // Continue with remaining settings below the columns
             listing.Gap(columnsHeight);
@@ -720,7 +762,7 @@ namespace SimpleImprove.Core
             ValidateSkillRequirements();
             
             // Clamp material cost multiplier
-            materialCostMultiplier = Mathf.Clamp(materialCostMultiplier, 0.1f, 2.0f);
+            materialCostMultiplier = Mathf.Clamp(materialCostMultiplier, 0.05f, 1000.0f);
             
             // Ensure preset is valid
             if (!Enum.IsDefined(typeof(QualityStandardsPreset), currentPreset))
@@ -740,7 +782,7 @@ namespace SimpleImprove.Core
                 skillEntryBuffers[kvp.Key] = kvp.Value.ToString();
             }
             
-            materialCostBuffer = materialCostMultiplier.ToString("F1");
+            materialCostBuffer = (materialCostMultiplier * 100f).ToString("F0");
         }
         
         #endregion
