@@ -56,3 +56,6 @@ Confira meus outros mods:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Desintoxicação Biosculptor[/url][/h3]
 Adiciona um mecanismo de ciclo de desintoxicação às cápsulas biosculptor que cura vícios e tolerâncias de forma segura e rápida.
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Save[/url][/h3]
+Adiciona um sistema de salvamento automático separado que salva baseado na passagem do tempo do mundo real ao invés do tempo do jogo. Isso funciona independentemente do sistema de salvamento automático vanilla.

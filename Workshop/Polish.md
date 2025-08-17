@@ -56,3 +56,6 @@ Sprawdź moje inne mody:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Bioskulptor Detoks[/url][/h3]
 Dodaje mechanizm cyklu detoksykacji do kapsuł bioskulptora, który leczy uzależnienia i tolerancję w bezpieczny i szybki sposób.
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Zapis[/url][/h3]
+Dodaje oddzielny system automatycznego zapisu, który zapisuje na podstawie upływu rzeczywistego czasu zamiast czasu gry. Działa niezależnie od waniliowego systemu automatycznego zapisu.

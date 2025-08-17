@@ -56,3 +56,6 @@ Découvrez mes autres mods :
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Désintoxication Biosculpteur[/url][/h3]
 Ajoute un mécanisme de cycle de désintoxication aux nacelles biosculpteur qui guérit les addictions et tolérances de manière sûre et rapide.
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Sauvegarde Chrono[/url][/h3]
+Ajoute un système de sauvegarde automatique séparé qui sauvegarde selon le temps réel qui passe plutôt que le temps de jeu. Cela fonctionne indépendamment du système de sauvegarde automatique vanilla.

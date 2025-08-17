@@ -56,3 +56,6 @@
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]バイオスカルプター解毒[/url][/h3]
 バイオスカルプターポッドに解毒サイクルメカニズムを追加し、依存症と耐性を安全かつ迅速に治療します。
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]クロノセーブ[/url][/h3]
+ゲーム内時間ではなく現実世界の時間経過に基づいて保存する独立したオートセーブシステムを追加します。これはバニラのオートセーブシステムとは独立して動作します。

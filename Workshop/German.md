@@ -56,3 +56,6 @@ Schauen Sie sich meine anderen Mods an:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Bioskulpter Entgiftung[/url][/h3]
 Fügt einen Entgiftungszyklusmechanismus zu Bioskulpter-Kapseln hinzu, der Süchte und Toleranzen auf sichere und schnelle Weise heilt.
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Speicherung[/url][/h3]
+Fügt ein separates Autospeicher-System hinzu, das basierend auf vergehender realer Zeit speichert statt auf Spielzeit. Dies funktioniert unabhängig vom Standard-Autospeicher-System.

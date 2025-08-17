@@ -56,3 +56,6 @@ Check out my other mods:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Biosculpter Detox[/url][/h3]
 Adds a detox cycle mechanic to biosculpter pods that cures addictions and tolerances in a safe and expedient manner.
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Save[/url][/h3]
+Adds a separate autosave system that saves based on real world time passing instead of in-game time. This works independently of the vanilla autosave system.

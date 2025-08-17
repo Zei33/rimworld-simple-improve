@@ -56,3 +56,6 @@
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]生物雕塑戒毒[/url][/h3]
 为生物雕塑舱添加戒毒循环机制，以安全快捷的方式治愈成瘾和耐受性。
+
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]时间存档[/url][/h3]
+添加一个独立的自动存档系统，基于现实世界时间而不是游戏内时间进行保存。此系统独立于原版自动存档系统运行。
