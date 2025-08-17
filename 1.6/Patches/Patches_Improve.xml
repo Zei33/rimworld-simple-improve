@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
-  <!-- Note: Component addition is now handled dynamically via Harmony patch -->
-  <!-- This ensures compatibility with mods that add CompQuality after our patch runs -->
+  <!-- Add SimpleImproveComp to all ThingDefs that have CompQuality -->
+  <!-- This replaces the dynamic Harmony component addition for better performance and compatibility -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>//ThingDef[comps/li[compClass="CompQuality"]]/comps</xpath>
+    <value>
+      <li Class="SimpleImprove.Core.CompProperties_SimpleImprove" />
+    </value>
+  </Operation>
 </Patch>

@@ -24,10 +24,9 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 │   └── JobDriver_Improve.cs         # Performs improvement work
 ├── Utils/                  # Utility classes
 │   └── MaterialStorage.cs           # Custom material container
-├── Patches/                # Harmony patches
+├── Patches/                # Patches for game modification
 │   ├── DesignationCancelPatch.cs    # Handles designation removal
-│   ├── DynamicComponentPatch.cs     # Runtime component addition for mod compatibility
-│   └── Patches_Improve.xml          # XML patches (deprecated)
+│   └── Patches_Improve.xml          # XML patches for component addition
 └── Defs/                   # XML definitions
     ├── DesignationDefs/
     ├── JobDefs/
@@ -43,7 +42,7 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Manages mod settings
 
 ### SimpleImproveComp
-- ThingComp dynamically attached to all items with quality
+- ThingComp attached to all items with quality via XML patches
 - Manages improvement state and work tracking
 - Handles material storage via custom MaterialStorage class
 - Implements IConstructible interface
@@ -61,18 +60,16 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - **Performance Optimized**: Efficient O(1) lookups by thing ID with minimal memory overhead
 - **Mod Safety**: Graceful degradation if mod is disabled - no save corruption or data loss
 
-### Dynamic Component Addition
-- Uses optimized Harmony patch on GetGizmos with intelligent caching
-- Each building processed exactly once using thingIDNumber cache
-- Multiple early exits minimize overhead for irrelevant objects
-- Adds SimpleImproveComp on-demand when first accessing building UI
-- Ensures compatibility with mods that add CompQuality after our patches
-- Automatically detects and enhances any building with quality
-- Performance monitoring in dev mode with periodic statistics
-- No per-mod compatibility patches needed
-- **Enhanced Restoration**: `RestoreComponentsAfterLoad()` automatically restores target quality settings from MapComponent after save/load
-- **Data Validation**: Cross-references designation data with MapComponent storage for consistency
-- **Comprehensive Logging**: Debug messages track component restoration and data integrity
+### XML Component Patching
+- Uses RimWorld's native `PatchOperationInsert` to modify ThingDef definitions
+- Targets all buildings with `CompQuality` using XPath: `//ThingDef[comps/li[compClass="CompQuality"]]/comps`
+- Components are part of the definition, eliminating runtime overhead
+- Automatically includes modded buildings that add quality components
+- Better mod compatibility using established XML patching patterns
+- No complex save/load restoration logic needed
+- **Native Integration**: Follows RimWorld's standard modding practices
+- **Performance Optimized**: Zero runtime component addition overhead
+- **Mod Compatibility**: Works with any mod that adds quality to buildings
 
 ### Settings System
 - **Quality Standards Presets**: Pre-configured skill requirement levels (Apprentice, Novice, Default, Master, Artisan, Custom)

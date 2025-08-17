@@ -35,9 +35,12 @@ namespace SimpleImprove.Patches
                     // Cancel any running improvement jobs for this building
                     CancelImprovementJobs(improveComp.parent);
                     
-                    // Clear the improvement flag directly without triggering setter
-                    // to avoid recursive designation removal
-                    improveComp.SetMarkedForImprovementDirect(false);
+                    // Clear the improvement flag
+                    // Note: Using reflection to directly set the private field to avoid
+                    // recursive designation removal
+                    var field = typeof(SimpleImproveComp).GetField("isMarkedForImprovement", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    field?.SetValue(improveComp, false);
                 }
             }
             

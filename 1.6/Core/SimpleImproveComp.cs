@@ -89,19 +89,7 @@ namespace SimpleImprove.Core
             }
         }
         
-        /// <summary>
-        /// Sets the improvement flag directly without triggering designation management logic.
-        /// This method is used internally to avoid recursive designation removal.
-        /// </summary>
-        /// <param name="value">The value to set for the improvement flag.</param>
-        /// <remarks>
-        /// This method is primarily used by <see cref="Patches.DesignationCancelPatch"/> to avoid
-        /// recursive designation removal when canceling improvements.
-        /// </remarks>
-        public void SetMarkedForImprovementDirect(bool value)
-        {
-            isMarkedForImprovement = value;
-        }
+
 
         /// <summary>
         /// Gets or sets the amount of work completed towards the improvement.
