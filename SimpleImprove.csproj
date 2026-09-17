@@ -1,64 +1,66 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- ◻️  Compile for the exact framework RimWorld embeds -->
+  <!-- Compile for the exact framework RimWorld embeds -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputPath>1.6/Assemblies</OutputPath>
-
-    <!-- C# convenience flags -->
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- RimWorld loads every DLL in Assemblies/. Copying references in there
+         makes the game load duplicate copies of assemblies it already has. -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
-  <!-- ◻️  Tell dotnet *where* to find the 4.7.2 API set on macOS/Linux -->
+  <!-- Where to find the 4.7.2 API set on macOS/Linux -->
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-    <FrameworkPathOverride>
-      /opt/homebrew/opt/mono/lib/mono/4.7.2-api
-    </FrameworkPathOverride>
+    <FrameworkPathOverride>/opt/homebrew/opt/mono/lib/mono/4.7.2-api</FrameworkPathOverride>
   </PropertyGroup>
 
-  <!-- ◻️  Reference the game + Unity assemblies -->
+  <PropertyGroup>
+    <RimWorldManaged>$(RimWorldDir)/Contents/Resources/Data/Managed</RimWorldManaged>
+  </PropertyGroup>
+
+  <!-- Game and Unity assemblies. All reference-only: RimWorld already has them
+       loaded, so Private=false keeps them out of our Assemblies folder. -->
   <ItemGroup>
-    <!-- Assembly-CSharp (all RimWorld game code) -->
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/Assembly-CSharp.dll</HintPath>
+      <HintPath>$(RimWorldManaged)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
     </Reference>
 
-    <!-- Core Unity module (needed for most things) -->
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-
-	<!-- IMGUI Unity Module -->
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-
-    <!-- Text Rendering Unity Module -->
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-
-    <!-- Optional: pull in all the other UnityEngine.* DLLs automatically -->
     <Reference Include="UnityEngine">
-      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/$(Filename)$(Extension)</HintPath>
+      <HintPath>$(RimWorldManaged)/UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
-    <!-- If you patch with Harmony, reference YOUR copy of 0Harmony.dll here -->
-	<Reference Include="0Harmony">
-		<HintPath>1.6/Libraries/0Harmony.dll</HintPath>
-		<Private>false</Private>
-	</Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RimWorldManaged)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
 
-    <!-- Use RimWorld's netstandard for ValueType compatibility with Mono 6.12 -->
+    <!-- GUI, Event, EventType, GUIStyle -->
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RimWorldManaged)/UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(RimWorldManaged)/UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- RimWorld's netstandard, for ValueType compatibility with Mono 6.12 -->
     <Reference Include="netstandard">
-      <HintPath>$(RimWorldDir)/Contents/Resources/Data/Managed/netstandard.dll</HintPath>
+      <HintPath>$(RimWorldManaged)/netstandard.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
+    <!-- Harmony is supplied at runtime by the brrainz.harmony mod dependency -->
+    <Reference Include="0Harmony">
+      <HintPath>1.6/Libraries/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
-
-
 
 </Project>

@@ -41,8 +41,8 @@ ScaffoldingReadMe.txt
 *~
 CodeCoverage/
 .DS_Store
-1.6/Assemblies/net472/Unity*
-1.6/Assemblies/net472/Assembly*
+# Build output. The shipped assembly is produced by build.sh, never committed.
+1.6/Assemblies/net472/
 
 # MSBuild Binary and Structured Log
 *.binlog
@@ -55,3 +55,6 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Local Claude Code overrides, never shared
+.claude/settings.local.json
