@@ -22,20 +22,20 @@ building stays marked and the loop repeats until a roll reaches it.
 | Type | File | Role |
 |---|---|---|
 | `SimpleImproveMod : Mod` | `1.6/ModEntry.cs` | Entry point, `GetSettings`, `harmony.PatchAll()` |
-| `SimpleImproveComp : ThingComp, IConstructible` | `1.6/Core/SimpleImproveComp.cs` (992 L) | All per-building state, gizmos, material maths, `CompleteImprovement` |
+| `SimpleImproveComp : ThingComp, IConstructible, IThingHolder` | `1.6/Core/SimpleImproveComp.cs` | All per-building state, gizmos, material maths, `CompleteImprovement`. Declared on the defs, so it Scribes |
+| `ImprovableDefs` | `1.6/Core/ImprovableDefs.cs` | `Qualifies` and `DeclareCompOn`: which defs carry the comp. Pure, and the one thing in this mod with real test coverage |
+| `Tests/` | NUnit, net472 | Not in the sln, excluded from the mod's compile items. See `Tests/README.md` |
 | `ImproveGroup` | same file, L16-26 | DTO grouping the current selection for one shared gizmo |
-| `SimpleImproveMapComponent : MapComponent` | `1.6/Core/SimpleImproveMapComponent.cs` | `Dictionary<int, QualityCategory>` of target qualities keyed on `thingIDNumber`. The only state that is correctly Scribed |
+| `SimpleImproveMapComponent : MapComponent` | `1.6/Core/SimpleImproveMapComponent.cs` | `Dictionary<int, QualityCategory>` of target qualities keyed on `thingIDNumber`. Redundant now the comp persists; slated for removal in #13 |
 | `SimpleImproveSettings : ModSettings` | `1.6/Core/SimpleImproveSettings.cs` (789 L) | Skill table, 5 presets + Custom, v1 to v2 migration, immediate-mode settings UI |
-| `MaterialStorage : ThingOwner<Thing>` | `1.6/Utils/MaterialStorage.cs` | Accepts only outstanding need. Built with `base(null, false)`, so `Owner` is null |
+| `MaterialStorage : ThingOwner<Thing>` | `1.6/Utils/MaterialStorage.cs` | Accepts only outstanding need. Built with `base(comp, false)`, so `Owner` is the comp and the holder tree reaches it |
 | `WorkGiver_Improve : WorkGiver_Scanner` | `1.6/Jobs/WorkGiver_Improve.cs` | Emits `Job_HaulToImprove` then `Job_Improve` |
 | `JobDriver_HaulToImprove`, `JobDriver_Improve` | `1.6/Jobs/` | Haul-to-container, and the work toil that accrues `WorkDone` |
 | `Designator_MarkForImprovement`, `Designator_CancelImprovement` | `1.6/Designators/` | Dead code, registered by nothing (see defects) |
 
 Defs: `Designation_Improve`, `WorkType_Improving` (naturalPriority 500, Construction),
 `WorkGiver_Improve` (priorityInType 10), `Job_Improve`, `Job_HaulToImprove`.
-`1.6/Patches/Patches_Improve.xml` is a comment-only stub.
-
-Flow: selection triggers `ThingWithComps.GetGizmos`, the prefix attaches the comp,
+Flow: every improvable building carries the comp from the moment it is made,
 `CompGetGizmosExtra` builds `ImproveGroup`s from `Find.Selector`, and the float menu writes
 `TargetQuality` (into the map component) and `IsMarkedForImprovement` (which adds the designation).
 `JobGiver_Work` then reaches `WorkGiver_Improve.HasJobOnThing`, which delegates to `JobOnThing`.
@@ -44,43 +44,80 @@ Harmony surface, all applied by `PatchAll()` from the `Mod` constructor:
 
 | Class | File:line | Target | Kind |
 |---|---|---|---|
-| `DynamicComponentPatch` | `1.6/Patches/DynamicComponentPatch.cs:20` | `Verse.ThingWithComps.GetGizmos` | Prefix, attaches the comp |
-| `DynamicComponentPatch.GameInitPatch` | `1.6/Patches/DynamicComponentPatch.cs:116` | `Verse.Game.InitNewGame` **and** `Verse.Game.LoadGame` | Postfix, clears the cache and re-attaches comps |
+| `CompInjectionPatch` | `1.6/Patches/CompInjectionPatch.cs` | `RimWorld.DefGenerator.GenerateImpliedDefs_PostResolve` | Postfix, declares the comp on the improvable defs |
+| `LateCompInjectionPatch` | same file | `Verse.StaticConstructorOnStartupUtility.CallAll` | Postfix, second idempotent pass for quality added by another mod's C# |
 | `DesignationCancelPatch` | `1.6/Patches/DesignationCancelPatch.cs:12` | `Verse.Designation.Notify_Removing` | Prefix, drops materials and kills jobs |
 
-Only `AddSimpleImproveComp` has a try/catch. Nothing else is exception-guarded.
+Nothing is exception-guarded. `DynamicComponentPatch`, which prefixed `ThingWithComps.GetGizmos` to
+attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it, was deleted on
+2026-09-17 when the comp moved into `def.comps`.
 
 ## Invariants and traps
 
-- **The comp is never declared on a ThingDef.** It exists only for things selected this session that
-  passed the prefix filter, or that carried `Designation_Improve` at load. Every consumer tests
-  `TryGetComp<SimpleImproveComp>() != null` and silently no-ops otherwise, and most of the defect
-  register follows from that. Declaring it through `ThingDef.comps` is the fix under discussion, not a
-  casual refactor.
-- Prefix eligibility order (`DynamicComponentPatch.cs:37-64`): player faction,
-  `ThingCategory.Building`, not already in `processedThings`, has `CompQuality`, has no comp yet,
-  `def.blueprintDef != null`. Failing any check means no gizmo, forever, with no message.
-- **Comp state does not round-trip a save.** `ThingWithComps.ExposeData` calls `InitializeComps()` on
-  `LoadingVars`, rebuilding `comps` strictly from `def.comps`, and the dynamic comp is not in there.
-  `PostExposeData` (`SimpleImproveComp.cs:429`) writes `workDone` and `materialContainer` and never
-  reads them back. The only state that persists is the designation and
-  `SimpleImproveMapComponent.targetQualities`.
-- **Never mark `SimpleImproveComp` sealed.** `GetComp<T>` consults `compsByType`, built only inside
-  `InitializeComps`, so a runtime-appended comp is missing from it. On a thing with three or more
-  comps the linear fallback is reached only because the type is unsealed, since
-  `GenTypes.IsSealedWithCache` short-circuits to null otherwise. Sealing it returns null on most
-  buildings.
+- **The comp is declared on the defs, and that is what makes it persist.** `ImprovableDefs` adds
+  `CompProperties_SimpleImprove` to every `ThingDef` with `ThingCategory.Building`,
+  `blueprintDef != null` and a `CompQuality`. Measured against the shipped game: 43 buildings carry
+  quality, 35 of them have a blueprint and get the comp. The eight that do not are SculptureSmall,
+  SculptureLarge, SculptureGrand, SculptureTerror, Statue, Harp, Harpsichord and Piano, all crafted
+  from a recipe with no `designationCategory`, so `ThingDefGenerator_Buildings` gives them no
+  blueprint.
+- **It must be applied once per play-data load, not once per process.** This is why
+  `CompInjectionPatch` postfixes `DefGenerator.GenerateImpliedDefs_PostResolve` instead of the
+  obvious `[StaticConstructorOnStartup]`. `StaticConstructorOnStartupUtility.CallAll` goes through
+  `RuntimeHelpers.RunClassConstructor`, a no-op once the type is initialised, and
+  `LanguageDatabase.SelectLanguage` is literally `PlayDataLoader.ClearAllPlayData()` then
+  `LoadAllPlayData()`, which rebuilds every `ThingDef` from XML. A static constructor would leave a
+  player who changed language with a mod that silently does nothing until they restart. Dev mode's
+  reload-defs has the same shape, shallow-copying fresh defs over the old ones and replacing `comps`
+  wholesale. `CreateModClasses` also skips a `Mod` type already in `runningModClasses`, so the
+  constructor and its `PatchAll()` genuinely do run only once; the patch survives because Harmony
+  patches the method, not the mod.
+- **Accepted risks from the 2026-09-17 adversarial review, not defects to re-find.**
+  - The comp scribes `isMarkedForImprovement`, `workDone` and `materialContainer` flat onto the
+    parent thing's node, because that is how `ThingWithComps.ExposeData` calls `PostExposeData`.
+    `workDone` is a key vanilla also uses, on `Frame` and `Building_GeneAssembler`, but neither
+    carries quality so neither collides. A modded quality building whose `thingClass` scribed its
+    own `workDone` would collide and the first element would win for both readers. The keys were
+    deliberately **not** renamed: renaming orphans exactly the data the fix exists to recover from
+    existing saves. Re-examine only if such a mod is actually reported.
+  - Staged materials now count toward colony wealth and `PlayerItemAccessibilityUtility`, because
+    the comp is an `IThingHolder` with a real owner. Arguably the correct accounting, since the
+    resources do still exist, but it is a live balance change and needs a changelog note alongside
+    simple-improve#14 and the chair-bug fix.
+  - `DesignationCancelPatch` dropping into a null map (S-9, #10) is now reachable across a reload,
+    because materials survive one. It was already reachable within a session. Fix it with #10 and
+    #11 together, as ordering constraint 3 requires, not on its own.
+  - A save from the 1.0.5 or 1.0.6 era can hold a `Designation_Improve` with no
+    `isMarkedForImprovement` key, giving a building a mark that the work giver ignores. Narrow, and
+    it belongs with the designation work in #12, not here.
+- Do not move this to an XML `PatchOperation`. `LoadedModManager.LoadAllActiveMods` applies patches
+  at line 116 and resolves inheritance at line 373 of `ParseAndProcessXML`, so an XPath runs before
+  inheritance and sees only nodes as authored. 41 of the 43 quality buildings inherit the comp from
+  `FurnitureWithQualityBase`, `BedWithQualityBase`, `ArtBuildingBase`, `MusicalInstrumentBase` or
+  `RitualSeatBase`; only `Sarcophagus` and `GibbetCage` declare it directly. The XPath would match
+  those seven nodes, would reach the eight blueprint-less buildings, could not filter on category
+  (declared further up the chain again), and would miss any def another mod gives quality to. There
+  is also no `CompProperties_Quality` type: vanilla writes `<li><compClass>CompQuality</compClass></li>`.
+- The injector cannot test faction, which the old runtime prefix did, so the comp now exists on
+  non-player quality buildings too. That is safe because `CompGetGizmosExtra` (`:677`) independently
+  re-checks player faction, `CompQuality` and `blueprintDef` before yielding anything.
+- **Comp state round-trips a save, as of 2026-09-17.** It did not before: the comp was attached at
+  runtime and `ThingWithComps.ExposeData` calls `InitializeComps()` on `LoadingVars`, rebuilding
+  `comps` strictly from `def.comps`, so `PostExposeData` wrote `workDone` and `materialContainer`
+  and nothing ever read them. Comps scribe flat onto the parent thing's node rather than into a
+  wrapper, so those orphaned keys are still addressable and an existing save recovers its work and
+  materials on the first load after the fix rather than merely stopping the bleeding.
+- **Never mark `SimpleImproveComp` sealed.** `GetComp<T>` takes a fast path below three comps that
+  type-tests `comps[0]` and `comps[1]` directly; at three or more it consults `compsByType`, and a
+  sealed type parameter that misses the dictionary short-circuits to null instead of falling through
+  to the linear scan. `InitializeComps` does key the dictionary correctly now, so sealing would
+  probably work, which is exactly why the rule is worth keeping written down rather than rediscovered.
 - Target quality is off-comp: `comp.TargetQuality` reads through
   `parent.Map.GetComponent<SimpleImproveMapComponent>()` every access, so it is null off-map or
   despawned. `CleanupOrphanedEntries` (`SimpleImproveMapComponent.cs:83`) runs on `FinalizeInit` and
   every 120000 ticks, dropping any entry whose id is not a spawned, player-faction, quality-bearing,
   blueprint-having thing on that map, so minified, caravanned or transferred buildings lose their
   target silently.
-- `GameInitPatch` carries two `[HarmonyPatch]` attributes on one class
-  (`DynamicComponentPatch.cs:116-117`). `HarmonyMethod.Merge` assigns field by field per attribute, so
-  the last non-null value wins, the class resolves to one target and the other is silently dropped.
-  Which one survives depends on `GetCustomAttributes` ordering and has not been checked in a running
-  game. Settle it with `harmony.GetPatchedMethods()` in dev mode before editing this class.
 - `Mathf.Clamp(baseQuality, 0, 5)` at `SimpleImproveSettings.cs:261` indexes the skill table, but
   `QualityCategory.Legendary` is 6, so the configured Legendary requirement is dead and the Masterwork
   row is used instead. Fixing it raises the default preset from 18 to 20 for every existing colony: a
@@ -90,8 +127,8 @@ Only `AddSimpleImproveComp` has a try/catch. Nothing else is exception-guarded.
   a gizmo. `ApplyQualityTargetToGroup` deliberately applies to every selected building when the acting
   group is already marked and more than one group exists. `ShowQualityTargetFloatMenu` and
   `GetImproveGizmoLabel` are the older single-building path, now unreachable.
-- `MaterialStorage.GetCountCanAccept` returns 0 unless `IsMarkedForImprovement`, so a load that failed
-  to restore the comp also makes the container refuse deliveries.
+- `MaterialStorage.GetCountCanAccept` returns 0 unless `IsMarkedForImprovement`, so anything that
+  loses the marked flag also makes the container refuse deliveries.
 - `ThingCountNeeded` (`:258`) reads `cachedMaterialsNeeded` without populating it, and the haul
   deposit toil (`JobDriver_HaulToImprove.cs:147`) sizes its transfer from it, so the amount moved
   depends on an earlier unrelated `GetTotalMaterialCost()` call on the same comp instance.
@@ -113,14 +150,15 @@ Only `AddSimpleImproveComp` has a try/catch. Nothing else is exception-guarded.
 
 ## Defect register
 
-Confirmed critical and high, and not re-derived here. Evidence, reasoning and the remaining 12
-medium/low entries are in the dossier. Several rows are the consequence of a trap above; the traps
-carry the mechanism.
+Not re-derived here. `/Users/matthewscott/Programming/rimworld/docs/DEFECTS.md` is the ranked
+register and supersedes this table; the 35 filed issues carry the ordering constraints. Several rows
+are the consequence of a trap above; the traps carry the mechanism.
+
+Fixed on 2026-09-17: the comp persistence (issue #2), which also retired `DynamicComponentPatch` and
+the two-`[HarmonyPatch]`-attribute trap along with it.
 
 | Defect | file:line | What breaks |
 |---|---|---|
-| Work progress and every hauled stack destroyed on save/load | `1.6/Core/SimpleImproveComp.cs:429` | See traps. Reload zeroes `workDone` and deletes the container contents, with no message |
-| Two `[HarmonyPatch]` attributes merge to one target | `1.6/Patches/DynamicComponentPatch.cs:116` | See traps. Either the static cache survives into a new colony, where `thingIDNumber` collisions leave buildings permanently gizmo-less, or `RestoreComponentsAfterLoad` never runs after a load |
 | No `ShouldSkip`, no `PotentialWorkThingsGlobal` | `1.6/Jobs/WorkGiver_Improve.cs:14,20` | Every pawn reachability-scans every `BuildingArtificial` on the map on every job search, even with nothing marked |
 | `HasJobOnThing` delegates to `JobOnThing` | `1.6/Jobs/WorkGiver_Improve.cs:49` | Full job construction runs as the scan validator, then again on the winner |
 | Nested `GenClosest.ClosestThingReachable` inside that validator | `1.6/Jobs/WorkGiver_Improve.cs:186` | Unbounded (9999f) map search per required material, per candidate |
@@ -157,15 +195,26 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-There are no tests and no CI. `./build.sh` stages into `$RimWorldDir/Mods/SimpleImprove` and is
-destructive about it; the root file has the detail.
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 42 passing as of 2026-09-17, against the real
+`Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
+`Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
+
+`SimpleImproveSettings` no longer has a static constructor. It used to call `InitializePawnModifiers`,
+which read `ModsConfig.IdeologyActive` and initialised `Verse.UnityData` through a native call, so
+naming the type at all threw outside the game. `InitializePawnModifiers(bool ideologyActive)` is now
+public and `ModEntry` passes the flag in. `new ThingDef()` still throws (`BaseContent` ->
+`ShaderDatabase` -> `Resources.Load`), so tests build defs with `FormatterServices.GetUninitializedObject`
+and must set every field they intend to read.
+
+No CI. `./build.sh` stages into `$RimWorldDir/Mods/SimpleImprove` and is destructive about it; the
+root file has the detail.
 
 The best test that does not need the game: `SimpleImproveSettings.GetSkillRequirement(q, pawn: null)`
 is pure over the skill dictionary, so a table test across all seven `QualityCategory` values catches
 the Legendary clamp. `DetermineClosestPreset`, `ValidateAndFixLoadedData` and the
 `SimpleImproveMapComponent` dictionary methods (constructible with `new SimpleImproveMapComponent(null)`)
-are equally pure. The save/load defect needs the game: a dev-mode debug action that saves, reloads and
-asserts `WorkDone`.
+are equally pure. Verifying the save/load round-trip end to end still needs the game: a dev-mode
+debug action that saves, reloads and asserts `WorkDone`.
 
 ## Repo-specific notes
 

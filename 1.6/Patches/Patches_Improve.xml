@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<Patch>
-  <!-- Note: Component addition is now handled dynamically via Harmony patch -->
-  <!-- This ensures compatibility with mods that add CompQuality after our patch runs -->
-</Patch>

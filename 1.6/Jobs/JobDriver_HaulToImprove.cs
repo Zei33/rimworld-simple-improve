@@ -135,7 +135,9 @@ namespace SimpleImprove.Jobs
                     return;
                 }
 
-                var container = improveComp.GetDirectlyHeldThings();
+                // GetMaterialContainer, not GetDirectlyHeldThings: this is a deposit, so it needs
+                // a real container, and GetDirectlyHeldThings reports null until one exists.
+                var container = improveComp.GetMaterialContainer();
                 if (container == null)
                 {
                     Log.Error($"Could not get material container for {targetThing.Label}");

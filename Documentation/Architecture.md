@@ -12,6 +12,7 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 ├── Core/                    # Core functionality
 │   ├── SimpleImproveSettings.cs      # Mod settings and configuration
 │   ├── SimpleImproveComp.cs         # Component attached to improvable items
+│   ├── ImprovableDefs.cs            # Decides which defs carry the component, and declares it
 │   ├── SimpleImproveMapComponent.cs # Map-level persistent storage for target quality data
 │   ├── CompProperties_SimpleImprove.cs # Component properties
 │   └── SimpleImproveDefOf.cs        # Def references
@@ -25,9 +26,8 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 ├── Utils/                  # Utility classes
 │   └── MaterialStorage.cs           # Custom material container
 ├── Patches/                # Harmony patches
-│   ├── DesignationCancelPatch.cs    # Handles designation removal
-│   ├── DynamicComponentPatch.cs     # Runtime component addition for mod compatibility
-│   └── Patches_Improve.xml          # XML patches (deprecated)
+│   ├── CompInjectionPatch.cs        # Declares the component on every play-data load
+│   └── DesignationCancelPatch.cs    # Handles designation removal
 └── Defs/                   # XML definitions
     ├── DesignationDefs/
     ├── JobDefs/
@@ -43,7 +43,7 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Manages mod settings
 
 ### SimpleImproveComp
-- ThingComp dynamically attached to all items with quality
+- ThingComp declared on every improvable building def, so the game's own save system round-trips it
 - Manages improvement state and work tracking
 - Handles material storage via custom MaterialStorage class
 - Implements IConstructible interface
@@ -61,18 +61,31 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - **Performance Optimized**: Efficient O(1) lookups by thing ID with minimal memory overhead
 - **Mod Safety**: Graceful degradation if mod is disabled - no save corruption or data loss
 
-### Dynamic Component Addition
-- Uses optimized Harmony patch on GetGizmos with intelligent caching
-- Each building processed exactly once using thingIDNumber cache
-- Multiple early exits minimize overhead for irrelevant objects
-- Adds SimpleImproveComp on-demand when first accessing building UI
-- Ensures compatibility with mods that add CompQuality after our patches
-- Automatically detects and enhances any building with quality
-- Performance monitoring in dev mode with periodic statistics
-- No per-mod compatibility patches needed
-- **Enhanced Restoration**: `RestoreComponentsAfterLoad()` automatically restores target quality settings from MapComponent after save/load
-- **Data Validation**: Cross-references designation data with MapComponent storage for consistency
-- **Comprehensive Logging**: Debug messages track component restoration and data integrity
+### Component Declaration
+
+`ImprovableDefs` decides which defs carry the improvement component: category `Building`, an implied
+blueprint, and a `CompQuality`. In the shipped game that is 35 defs, out of 43 that carry quality at
+all. Because the component ends up in `def.comps`, `ThingWithComps` builds it like any other
+component and `PostExposeData` round-trips through the save file.
+
+This replaced a Harmony prefix on `ThingWithComps.GetGizmos` that attached the component at runtime.
+A component attached that way does not survive a save. `ThingWithComps.ExposeData` calls
+`InitializeComps` on load, which rebuilds the component list from `def.comps` alone, so the hauled
+materials and the accumulated work were written to the file and never read back.
+
+`CompInjectionPatch` applies it, as a postfix on `DefGenerator.GenerateImpliedDefs_PostResolve`. That
+point is after blueprint generation and after reference resolution, so every def is final, and it
+runs once per play-data load rather than once per process. The difference matters: changing language
+rebuilds every def from XML, and a static constructor would not run again, so the mod would quietly
+stop working until the game was restarted.
+
+The declaration is made in C# rather than as an XML `PatchOperation` because patches are applied
+before def inheritance is resolved. Of the 43 quality buildings, 41 inherit the quality component
+from one of five abstract parents and only `Sarcophagus` and `GibbetCage` declare it themselves, so
+an XPath over `comps` would match seven nodes and nothing that inherits from them. It would also
+reach the eight quality buildings that have no blueprint and cannot be improved, it could not filter
+on category because that is declared further up the chain again, and it would not see a def that
+another mod gives quality to.
 
 ### Settings System
 - **Quality Standards Presets**: Pre-configured skill requirement levels (Apprentice, Novice, Default, Master, Artisan, Custom)
@@ -98,7 +111,7 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 
 ### Persistent Storage System
 - **Target Quality Persistence**: Target quality settings survive save/load cycles without data loss
-- **Separation of Concerns**: Volatile improvement state (work progress, materials) stored in dynamic components, persistent data (target quality) stored in MapComponent
+- **Separation of Concerns**: Improvement state (work progress, materials) is stored on the component and saved with the building; target quality is stored in the MapComponent
 - **Automatic Cleanup**: Orphaned entries automatically removed when items are destroyed or maps are unloaded
 - **Data Integrity**: Validation ensures consistency between designations and stored target quality data
 - **Compatibility**: Works seamlessly with save files created before this system was implemented
@@ -134,8 +147,8 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 
 ### Component Pattern
 - Uses RimWorld's component system to attach functionality to existing items
-- Dynamic components added via Harmony patches for maximum mod compatibility
-- Separation between volatile state (ThingComp) and persistent data (MapComponent)
+- The component is declared on the defs at startup, so it saves and loads with the building
+- Target quality is the one piece of state still held separately, in the MapComponent
 
 ### MapComponent Pattern
 - **Persistent Storage**: Uses RimWorld's native MapComponent system for reliable save/load
@@ -155,10 +168,13 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - Runtime modifiable without restarts
 
 ### Dual-Storage Pattern
-- **Dynamic Components**: Handle volatile state (work progress, materials, UI state)
-- **MapComponent**: Handles persistent state (target quality settings)
+- **Component**: Holds work progress, hauled materials and the marked flag, saved with the building
+- **MapComponent**: Holds target quality settings, keyed by thing ID
 - **Automatic Synchronization**: Components read from MapComponent on-demand
-- **Clean Separation**: No coupling between storage layers
+
+The split is historical. The component is now declared on the defs and saves like any other
+component, so target quality no longer needs a separate store and the MapComponent is scheduled
+for removal.
 
 ## Improvements Over Original
 

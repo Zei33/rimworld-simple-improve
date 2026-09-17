@@ -28,9 +28,17 @@ namespace SimpleImprove.Core
     /// <summary>
     /// Main component for the SimpleImprove mod functionality.
     /// Handles marking items for improvement, material storage, work tracking, and quality enhancement.
-    /// Implements <see cref="IConstructible"/> to integrate with RimWorld's construction system.
+    /// Implements <see cref="IConstructible"/> to integrate with RimWorld's construction system, and
+    /// <see cref="IThingHolder"/> because it holds the materials hauled towards an improvement.
     /// </summary>
-    public class SimpleImproveComp : ThingComp, IConstructible
+    /// <remarks>
+    /// The component is declared on the relevant defs by <see cref="ImprovableDefs"/>, applied once
+    /// per play-data load by <c>CompInjectionPatch</c>, which is what allows <c>PostExposeData</c>
+    /// below to actually round-trip. Do not mark
+    /// this class sealed: <c>ThingWithComps.GetComp&lt;T&gt;</c> fails fast on a sealed type
+    /// parameter that its <c>compsByType</c> dictionary does not contain.
+    /// </remarks>
+    public class SimpleImproveComp : ThingComp, IConstructible, IThingHolder
     {
         /// <summary>
         /// Indicates whether this item is currently marked for improvement.
@@ -170,11 +178,51 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
-        /// Gets the directly held things for this component.
-        /// This is required for implementing the material storage interface.
+        /// Gets the directly held things for this component, or <c>null</c> when nothing has ever
+        /// been hauled here.
         /// </summary>
-        /// <returns>The material container containing held items.</returns>
-        public ThingOwner GetDirectlyHeldThings() => GetMaterialContainer();
+        /// <returns>The material container, or <c>null</c>.</returns>
+        /// <remarks>
+        /// This must read the field and must not call <see cref="GetMaterialContainer"/>. Declaring
+        /// the component on the defs puts every quality building into
+        /// <c>ThingRequestGroup.ThingHolder</c>, because <c>ThingOwnerUtility.ThisOrAnyCompIsThingHolder</c>
+        /// scans <c>def.comps</c> for a compClass implementing <see cref="IThingHolder"/>. Vanilla
+        /// then calls this on every one of them during ordinary map traversals: the wealth recount
+        /// at <c>Map.FinalizeInit</c> goes through <c>ThingOwnerUtility.GetAllThingsRecursively</c>,
+        /// which does exactly that. Allocating lazily here would therefore create a container for
+        /// every quality building on the map on load, and, because the container would then be
+        /// non-null, write an empty one into every save for every quality building.
+        ///
+        /// Returning null is the vanilla contract, not a violation of it: every traversal that
+        /// reaches a child holder null-checks the result, including
+        /// <c>GetAllThingsRecursively</c> and <c>TryGetInnerInteractableThingOwner</c>. The
+        /// unguarded call sites in the game belong to <c>IHaulSource</c>, transport pods and
+        /// caravans, none of which this component is. Callers inside this mod that need a real
+        /// container to put something into use <see cref="GetMaterialContainer"/> instead.
+        /// </remarks>
+        public ThingOwner GetDirectlyHeldThings() => materialContainer;
+
+        /// <summary>
+        /// Appends any holders nested inside the stored materials.
+        /// </summary>
+        /// <param name="outChildren">The list to append child holders to.</param>
+        /// <remarks>
+        /// Reads the field rather than <see cref="GetMaterialContainer"/> so that walking the holder
+        /// tree does not create a container on every quality building that has never been marked.
+        /// <c>ThingOwnerUtility.AppendThingHoldersFromThings</c> is what reaches a comp's contents at
+        /// all: it walks <c>ThingWithComps.AllComps</c> looking for <see cref="IThingHolder"/>, so
+        /// before this component declared the interface its stored materials were invisible to every
+        /// traversal the game makes from a map.
+        /// </remarks>
+        public void GetChildHolders(List<IThingHolder> outChildren)
+        {
+            if (materialContainer == null)
+            {
+                return;
+            }
+
+            ThingOwnerUtility.AppendThingHoldersFromThings(outChildren, materialContainer);
+        }
 
         /// <summary>
         /// Calculates the total material cost required for improvement.
@@ -426,13 +474,28 @@ namespace SimpleImprove.Core
         /// Saves and loads component data for game save files.
         /// Note: Target quality is now stored in SimpleImproveMapComponent for persistence.
         /// </summary>
+        /// <remarks>
+        /// These keys are written flat onto the parent thing's node, because
+        /// <c>ThingWithComps.ExposeData</c> calls each comp's <c>PostExposeData</c> directly rather
+        /// than wrapping it. That is why saves written before the component was declared on the def
+        /// still carry readable values here, and why this fix recovers work and materials from an
+        /// existing save rather than only preventing the next loss.
+        /// </remarks>
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Values.Look(ref isMarkedForImprovement, "isMarkedForImprovement", false);
             Scribe_Values.Look(ref workDone, "workDone", 0f);
             // Note: targetQuality is now stored in SimpleImproveMapComponent
-            Scribe_Deep.Look(ref materialContainer, "materialContainer", this);
+
+            // Only write the container when one exists. The component is now on every improvable
+            // building def, so scribing unconditionally would add a node to every quality building
+            // in every save, the overwhelming majority of which have never been marked. An absent
+            // node leaves the field null on load and GetMaterialContainer creates it on demand.
+            if (Scribe.mode != LoadSaveMode.Saving || materialContainer != null)
+            {
+                Scribe_Deep.Look(ref materialContainer, "materialContainer", this);
+            }
         }
 
         /// <summary>
@@ -445,9 +508,12 @@ namespace SimpleImprove.Core
         {
             base.PostDestroy(mode, previousMap);
             
-            if (mode == DestroyMode.Deconstruct)
+            // Read the field, not GetMaterialContainer: the component is on every improvable
+            // building def now, so the lazy getter would create a container for every one of them
+            // as it is destroyed, purely to find it empty.
+            if (mode == DestroyMode.Deconstruct && materialContainer != null)
             {
-                GetMaterialContainer().TryDropAll(parent.Position, previousMap, ThingPlaceMode.Near);
+                materialContainer.TryDropAll(parent.Position, previousMap, ThingPlaceMode.Near);
             }
             
             // Clean up target quality data from the MapComponent
@@ -465,7 +531,9 @@ namespace SimpleImprove.Core
             var sb = new StringBuilder();
             sb.Append(base.CompInspectStringExtra());
             
-            if (!isMarkedForImprovement && !GetMaterialContainer().Any) 
+            // Field, not GetMaterialContainer: this runs for every quality building the player
+            // selects, and the lazy getter would allocate a container for each one.
+            if (!isMarkedForImprovement && materialContainer?.Any != true)
                 return sb.ToString();
             
             sb.AppendLineIfNotEmpty();

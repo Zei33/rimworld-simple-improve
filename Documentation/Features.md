@@ -126,14 +126,13 @@ Choose from pre-configured skill requirement levels:
 ## Compatibility
 
 ### Harmony Patches
-- Minimal patches for maximum compatibility
-- Only patches designation removal notifications and component restoration
+- Two patches: one declares the improvement component on the defs, one handles designation removal
+- Neither changes the behaviour of the method it attaches to
 - All other functionality uses standard RimWorld systems
-- Enhanced component restoration ensures data consistency after save/load
 
 ### Save File Integrity
 - **MapComponent Storage**: Uses RimWorld's native save system for maximum compatibility
-- **Clean Separation**: Persistent data stored separately from dynamic components
+- **Component Storage**: Work progress and hauled materials save and load with the building
 - **Graceful Degradation**: Save files remain valid if mod is disabled or uninstalled
 - **No Save Corruption**: Robust cleanup prevents orphaned data from causing issues
 - **Version Tolerance**: Works with saves created across different mod versions
@@ -142,7 +141,7 @@ Choose from pre-configured skill requirement levels:
 - Automatically works with any modded items that have quality
 - Respects custom material costs
 - Compatible with modded inspirations and roles
-- Enhanced dynamic component system works with mods that add quality to items post-load
+- Modded buildings are picked up at startup, once every mod's defs have loaded
 
 ## Limitations
 

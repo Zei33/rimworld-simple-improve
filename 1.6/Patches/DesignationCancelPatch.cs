@@ -25,8 +25,9 @@ namespace SimpleImprove.Patches
                 var improveComp = __instance.target.Thing.TryGetComp<SimpleImproveComp>();
                 if (improveComp != null && improveComp.IsMarkedForImprovement)
                 {
-                    // Drop any stored materials
-                    improveComp.GetDirectlyHeldThings().TryDropAll(
+                    // GetMaterialContainer, not GetDirectlyHeldThings, which reports null until
+                    // something has actually been hauled here.
+                    improveComp.GetMaterialContainer().TryDropAll(
                         improveComp.parent.Position, 
                         improveComp.parent.Map, 
                         ThingPlaceMode.Near

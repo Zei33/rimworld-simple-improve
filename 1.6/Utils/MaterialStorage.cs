@@ -24,7 +24,13 @@ namespace SimpleImprove.Utils
         /// Initializes a new instance of the <see cref="MaterialStorage"/> class.
         /// </summary>
         /// <param name="comp">The improvement component that owns this storage.</param>
-        public MaterialStorage(SimpleImproveComp comp) : base(null, false)
+        /// <remarks>
+        /// The component is passed as the <see cref="Verse.IThingHolder"/> owner rather than null,
+        /// which is what lets <c>ThingOwnerUtility.GetRootMap</c> and <c>GetRootPosition</c> resolve
+        /// a location for the stored materials. Those two walk the owner chain and have an explicit
+        /// branch for a holder that is a <c>ThingComp</c>, reading its parent thing's position.
+        /// </remarks>
+        public MaterialStorage(SimpleImproveComp comp) : base(comp, false)
         {
             improveComp = comp;
         }
@@ -35,7 +41,7 @@ namespace SimpleImprove.Utils
         /// </summary>
         /// <param name="oldOwner">The existing thing owner to transfer contents from.</param>
         /// <param name="comp">The improvement component that owns this storage.</param>
-        public MaterialStorage(ThingOwner<Thing> oldOwner, SimpleImproveComp comp) : base(null, false)
+        public MaterialStorage(ThingOwner<Thing> oldOwner, SimpleImproveComp comp) : base(comp, false)
         {
             improveComp = comp;
             
