@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -113,10 +114,28 @@ namespace SimpleImprove.Patches
         /// Clears caches when a new game starts or loads to prevent issues with reused thing IDs.
         /// Also handles restoration of SimpleImproveComp for buildings with improvement designations after loading.
         /// </summary>
-        [HarmonyPatch(typeof(Game), "InitNewGame")]
-        [HarmonyPatch(typeof(Game), "LoadGame")]
+        /// <remarks>
+        /// Both targets are enumerated by <see cref="TargetMethods"/> rather than declared as two
+        /// class-level [HarmonyPatch] attributes. Two such attributes do not mean two targets:
+        /// PatchClassProcessor folds them with HarmonyMethod.Merge, field by field, last non-null
+        /// value winning, so only one target survives and the other is dropped silently. This class
+        /// previously carried [HarmonyPatch(typeof(Game), "InitNewGame")] followed by
+        /// [HarmonyPatch(typeof(Game), "LoadGame")], which meant the cache was never cleared and
+        /// components were never restored when starting a new game.
+        /// </remarks>
+        [HarmonyPatch]
         public static class GameInitPatch
         {
+            /// <summary>
+            /// Enumerates every method this patch applies to. Unlike stacked [HarmonyPatch]
+            /// attributes, each entry here is patched independently.
+            /// </summary>
+            public static IEnumerable<MethodBase> TargetMethods()
+            {
+                yield return AccessTools.Method(typeof(Game), nameof(Game.InitNewGame));
+                yield return AccessTools.Method(typeof(Game), nameof(Game.LoadGame));
+            }
+
             public static void Postfix()
             {
                 processedThings.Clear();

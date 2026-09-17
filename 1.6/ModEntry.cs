@@ -34,7 +34,7 @@ namespace SimpleImprove
             harmony = new Harmony("com.zei33.simpleimprove");
             harmony.PatchAll();
 
-            Log.Message("[SimpleImprove] Loaded version 1.0.7 successfully.");
+            Log.Message("[SimpleImprove] Loaded version 1.0.8 successfully.");
         }
 
         /// <summary>
