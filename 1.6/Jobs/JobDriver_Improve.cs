@@ -136,7 +136,11 @@ namespace SimpleImprove.Jobs
             improveToil.WithEffect(TargetThingA.def.repairEffect, TargetIndex.A);
             improveToil.FailOnDespawnedNullOrForbidden(TargetIndex.A);
             improveToil.FailOnCannotTouch(TargetIndex.A, PathEndMode.Touch);
-            improveToil.FailOn(() => !GenConstruct.CanConstruct(TargetThingA, pawn));
+            // checkSkills: false must match WorkGiver_Improve.JobOnThing. This overload defaults it
+            // to true, so leaving it implicit would let the work giver hand out a job that this toil
+            // then failed on the first tick, for any thing whose def carries a
+            // constructionSkillPrerequisite above the pawn's Construction level.
+            improveToil.FailOn(() => !GenConstruct.CanConstruct(TargetThingA, pawn, checkSkills: false));
             improveToil.WithProgressBar(TargetIndex.A, () => {
                 var comp = TargetComp;
                 return comp?.WorkDone / comp?.WorkToBuild ?? 0f;

@@ -102,7 +102,23 @@ namespace SimpleImprove.Jobs
                 return null;
             }
 
-            if (!GenConstruct.CanConstruct(thing, pawn, true, forced))
+            // checkSkills is deliberately false. It gates ThingDef.constructionSkillPrerequisite,
+            // which exists to gate BUILDING a thing from scratch, not working on one that already
+            // exists. Leaving it true made improvement inherit the build requirement: a DiningChair
+            // declares 4 and an Armchair 5, so a Construction 3 pawn was refused with "Construction
+            // skill too low" while a Stool, which declares none, was accepted. That is the chair bug
+            // users reported. Confirmed in game on 2026-09-17 as a clean staircase across
+            // Stool/DiningChair/Armchair at Construction 3, 4 and 5.
+            //
+            // Vanilla's own work giver for an already-built Building, RimWorld.WorkGiver_Repair,
+            // never calls CanConstruct at all and imposes no such prerequisite. This mod has its own
+            // skill model keyed to the target quality, just below, which is the gate that should
+            // apply. Note the third parameter is checkSkills, not forced; they are easy to transpose.
+            //
+            // Everything else CanConstruct does is still wanted and still runs: FirstBlockingThing
+            // (so a pawn sitting on the furniture still blocks it), reachability, reservation,
+            // burning and the Ideology building restriction.
+            if (!GenConstruct.CanConstruct(thing, pawn, checkSkills: false, forced: forced))
                 return null;
 
             // Check skill requirement based on target quality
