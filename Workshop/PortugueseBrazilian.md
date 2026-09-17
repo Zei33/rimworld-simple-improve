@@ -35,7 +35,18 @@ Transforme a infraestrutura da sua colônia ao longo do tempo! Melhoria Simples 
 [*] Custos de materiais ajustáveis: Defina custos de melhoria a partir de 5% do custo de construção original para cima (100% padrão = igual ao custo de construção)
 [*] Modo somente trabalho: Melhorias custam apenas tempo e habilidade
 [*] Funciona com qualquer móvel ou edifício modificado que tenha qualidade
-[*] Novo tipo de trabalho "Melhorando" com prioridade separada da construção (para colonos que trabalham melhorando itens)
+[*] Novo tipo de trabalho "Melhorar" com prioridade separada da construção (para colonos que trabalham melhorando itens)
+[*] Mecanoides da colônia: construtóides podem fazer trabalho de melhoria
+[/list]
+
+[h2]CONFIGURANDO O TIPO DE TRABALHO[/h2]
+[list]
+[*] Na aba "Trabalho", esse tipo de trabalho é a coluna com o título "Melhorar".
+[*] Em uma colônia que já existia antes de você adicionar o mod, ele começa desligado para todos os colonos. O RimWorld dá prioridade 0 a um tipo de trabalho novo em um jogo salvo existente, e prioridade 0 significa que o trabalho nunca é assumido.
+[*] Abra a aba "Trabalho" e defina uma prioridade na coluna "Melhorar" para os colonos que você quer nessa função.
+[*] Para um colono que surge depois de o mod ser adicionado, o RimWorld liga apenas os seis tipos de trabalho em que ele é melhor, então "Melhorar" ainda pode ficar desligado para um colono com construção fraca.
+[*] Nos mecanoides da colônia quem liga é o próprio mod, ao carregar um jogo salvo. A aba "Trabalho" do RimWorld lista apenas colonos e nunca mostra um mecanoide, então não há onde ajustar isso à mão.
+[*] Um mecanoide é avaliado pelo nível de habilidade fixo que os mecanoides usam em todo trabalho, que é 10, então na predefinição "Padrão" um construtóide recebe os edifícios marcados para melhoria qualquer ou com qualidade alvo até "bom", e não os marcados para "excelente" ou acima.
 [/list]
 
 [h2]INTERFACE APRIMORADA[/h2]

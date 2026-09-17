@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!--
+    Project RimFactory construction drones take their allowed work from the drone station's own mod
+    extension rather than from RaceProps.mechEnabledWorkTypes, so they need their own operation.
+
+    This is a player's patch, written and donated by Shin on 1 March 2026 with "Feel free to
+    incorporate it into your mod", and shipped here unchanged apart from the success element.
+
+    UNVERIFIED against the mod itself. Project RimFactory is not installed on the machine this was
+    written on, so the xpath has not been matched against a real ConstructionDroneStation def. It is
+    safe either way: a missed xpath is a silent no-op under <success>Always</success>, and a drone
+    that does get the work type is refused by WorkerSkill.FirstBlocker if its race carries no skill
+    tracker, rather than reaching the quality roll and throwing there. Worth checking against the
+    real def before anyone claims it works.
+
+    Two ways it could miss that are worth knowing. Patches apply before XmlInheritance.Resolve, so
+    the xpath only sees nodes the def declares literally in its own file; if the station inherits
+    modExtensions from an abstract parent this will not match. And the li class attribute has to be
+    the full type name the mod actually writes.
+
+    Load order does not matter. LoadedModManager builds the unified document from every mod's XML
+    first and applies all patches afterwards, so this sees Project RimFactory's defs whether it loads
+    before or after Simple Improve.
+  -->
+  <Operation Class="PatchOperationAdd">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[defName="ConstructionDroneStation"]/modExtensions/li[@Class="ProjectRimFactory.Drones.DefModExtension_DroneStation"]/workTypes</xpath>
+    <value>
+      <li>WorkType_Improving</li>
+    </value>
+  </Operation>
+
+</Patch>

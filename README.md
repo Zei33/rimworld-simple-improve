@@ -41,7 +41,7 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 - **Quality distribution calculator** for testing different configurations
 
 ### ⚙️ Seamless Integration  
-- **New "Improving" work type** with separate priority from construction
+- **New "Improve" work type** with separate priority from construction
 - **Automatic material hauling** - Pawns gather resources automatically
 - **Experience gain** - Construction skill improves while working
 - **Universal mod compatibility** - Works with any mod that adds quality to buildings
@@ -63,6 +63,30 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 
 ## Usage
 
+### Switching the work type on
+
+Simple Improve adds a separate work type so improvement can be prioritised apart from Construction.
+In the Work tab it is the column headed **Improve**.
+
+**In a colony that already existed before you added the mod, it starts switched off for every
+colonist.** RimWorld gives a newly added work type priority 0 in an existing save, and priority 0
+means the job is never picked up. Nothing is wrong; the column just has to be turned on. Open the
+Work tab and set a priority in the Improve column for the colonists you want doing it.
+
+For a colonist created after the mod was added, RimWorld switches on only the six work types they are
+best at, so Improve can still be off for one whose Construction is weak. Worth checking the column.
+
+**Colony mechs are switched on for you.** Constructoids can do improvement work, and the mod sets
+their priority itself when a save is loaded. It has to: RimWorld's Work tab lists colonists only and
+never shows a mech, so there is nowhere for you to set it by hand. Nothing else is touched, and a
+mech you have already given a different priority is left alone.
+
+A mech is judged on the fixed skill level mechanoids use for every job, which is 10. So under the
+Default preset the mod will give a constructoid a building marked for any improvement, or marked for
+a target up to Good, and will not give it one marked for Excellent or above. The quality it then
+rolls is the ordinary roll for skill 10, the same as for a colonist at that level, so a lucky result
+above the target is still possible.
+
 ### Marking Items for Improvement
 
 1. **Using Designators**:
@@ -80,7 +104,7 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 ### How Improvement Works
 
 1. **Designation**: Mark items for improvement using the designator or item button
-2. **Material Hauling**: Pawns with "Improving" work enabled will gather required materials
+2. **Material Hauling**: Pawns with "Improve" work enabled will gather required materials
 3. **Construction Work**: Pawns perform improvement work based on their construction skill
 4. **Quality Roll**: New quality is determined using RimWorld's standard quality system
 5. **Result**: If quality improves, the new quality is applied; otherwise materials are consumed and the process can retry

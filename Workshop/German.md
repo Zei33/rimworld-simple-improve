@@ -35,7 +35,18 @@ Verwandeln Sie die Infrastruktur Ihrer Kolonie im Laufe der Zeit! Einfache Verbe
 [*] Anpassbare Materialkosten: Setze Verbesserungskosten ab 5% der ursprünglichen Baukosten aufwärts (100% Standard = gleich Baukosten)
 [*] Nur-Arbeit-Modus: Verbesserungen kosten nur Zeit und Fertigkeit
 [*] Funktioniert mit allen modifizierten Möbeln oder Gebäuden mit Qualität
-[*] Neuer "Verbesserungs"-Arbeitstyp mit separater Priorität vom Bauen (für Kolonisten, die an der Verbesserung von Gegenständen arbeiten)
+[*] Neuer Arbeitstyp "Verbessern" mit separater Priorität vom Bauen (für Kolonisten, die an der Verbesserung von Gegenständen arbeiten)
+[*] Kolonie-Mechs: Konstruktoiden können Verbesserungsarbeit erledigen
+[/list]
+
+[h2]DEN ARBEITSTYP EINRICHTEN[/h2]
+[list]
+[*] Im Reiter "Arbeit" ist dieser Arbeitstyp die Spalte mit der Überschrift "Verbessern".
+[*] In einer Kolonie, die es vor dem Hinzufügen des Mods schon gab, ist er bei jedem Kolonisten ausgeschaltet. RimWorld gibt einem neu hinzugefügten Arbeitstyp in einem vorhandenen Spielstand Priorität 0, und bei Priorität 0 wird die Arbeit nie übernommen.
+[*] Öffne den Reiter "Arbeit" und setze in der Spalte "Verbessern" eine Priorität für die Kolonisten, die sie erledigen sollen.
+[*] Bei einem Kolonisten, der nach dem Hinzufügen des Mods dazukommt, schaltet RimWorld nur die sechs Arbeitstypen ein, in denen er am besten ist, also kann "Verbessern" bei einem Kolonisten mit schwacher Konstruktion trotzdem aus sein.
+[*] Bei Kolonie-Mechs schaltet der Mod ihn beim Laden eines Spielstands selbst ein. RimWorlds Reiter "Arbeit" listet nur Kolonisten und zeigt nie einen Mech, es gibt also keine Stelle, an der man ihn von Hand setzen könnte.
+[*] Ein Mech wird nach dem festen Fertigkeitswert bewertet, den Mechanoiden für jede Arbeit verwenden, nämlich 10. Mit der Voreinstellung "Standard" bekommt ein Konstruktoid daher Gebäude, die für eine beliebige Verbesserung oder für eine Zielqualität bis "gut" markiert sind, aber keine, die für "exzellent" oder höher markiert sind.
 [/list]
 
 [h2]VERBESSERTE BENUTZEROBERFLÄCHE[/h2]

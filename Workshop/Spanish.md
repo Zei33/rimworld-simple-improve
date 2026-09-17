@@ -23,7 +23,7 @@ Mejora Simple [1.6] (Simple Improve)
 [list]
 [*] Aprendiz: Requisitos de habilidad flexibles (altas tasas de fallo, pero cualquier colono asignado puede intentarlo)
 [*] Novato: Requisitos de habilidad bajos (tasas de éxito moderadas, y la mayoría de los colonos pueden intentarlo)
-[*] Por defecto: Requisitos equilibrados (tasas de éxito razonables para todos los niveles)
+[*] Predeterminado: Requisitos equilibrados (tasas de éxito razonables para todos los niveles)
 [*] Maestro: Requisitos de habilidad altos (mayor tasa de éxito, solo colonos bien preparados pueden intentarlo)
 [*] Artesano: Requisitos de habilidad estrictos (desperdicio mínimo, solo colonos con alta probabilidad de éxito pueden intentarlo)
 [*] Personalizado: Establece tus propios umbrales de habilidad (control total sobre los requisitos de habilidad para cada nivel de calidad)
@@ -35,7 +35,18 @@ Mejora Simple [1.6] (Simple Improve)
 [*] Costes de materiales ajustables: Establece costes de mejora desde el 5% del coste de construcción original hacia arriba (100% por defecto = igual al coste de construcción)
 [*] Modo solo trabajo: Las mejoras cuestan solo tiempo y habilidad
 [*] Funciona con cualquier mueble o edificio modificado que tenga calidad
-[*] Nuevo tipo de trabajo "Mejorando" con prioridad separada de la construcción (para colonos que trabajan mejorando objetos)
+[*] Nuevo tipo de trabajo "Mejorar" con prioridad separada de la construcción (para colonos que trabajan mejorando objetos)
+[*] Mecas de la colonia: los constructoides pueden hacer trabajo de mejora
+[/list]
+
+[h2]CONFIGURAR EL TIPO DE TRABAJO[/h2]
+[list]
+[*] En la pestaña "Trabajo", este tipo de trabajo es la columna titulada "Mejorar".
+[*] En una colonia que ya existía antes de añadir el mod, está desactivado en todos los colonos. RimWorld asigna prioridad 0 a un tipo de trabajo nuevo en una partida guardada existente, y la prioridad 0 significa que el trabajo nunca se toma.
+[*] Abre la pestaña "Trabajo" y asigna una prioridad en la columna "Mejorar" a los colonos que quieras que se encarguen.
+[*] En un colono que aparece después de añadir el mod, RimWorld solo activa los seis tipos de trabajo en los que es mejor, así que "Mejorar" puede seguir desactivado en un colono con poca construcción.
+[*] En las mecas de la colonia lo activa el propio mod al cargar una partida guardada. La pestaña "Trabajo" de RimWorld solo lista colonos y nunca muestra una meca, así que no hay ningún sitio donde ajustarlo a mano.
+[*] Una meca se evalúa con el nivel de habilidad fijo que los mecanoides usan en cualquier trabajo, que es 10, así que con el ajuste predefinido "Predeterminado" a un constructoide se le dan los edificios marcados para cualquier mejora o con calidad objetivo hasta "bueno", y no los marcados para "excelente" o superior.
 [/list]
 
 [h2]INTERFAZ MEJORADA[/h2]

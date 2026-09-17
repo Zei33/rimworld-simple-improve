@@ -35,7 +35,18 @@ Transform your colony's infrastructure over time! Simple Improve lets you upgrad
 [*] Adjustable material costs: Set improvement costs from 5% of original build cost upwards (100% default = same as build cost)
 [*] Labor-only mode: Improvements cost only time and skill
 [*] Works with any modded furniture or building that has quality
-[*] New "Improving" work type with separate priority from construction (for pawns that are working on improving items)
+[*] New "Improve" work type with separate priority from construction (for colonists that are working on improving items)
+[*] Colony mechs: constructoids can do improvement work
+[/list]
+
+[h2]SETTING UP THE WORK TYPE[/h2]
+[list]
+[*] In the Work tab the work type is the column headed "Improve".
+[*] In a colony that existed before you added the mod it starts switched off for every colonist. RimWorld gives a newly added work type priority 0 in an existing save, and priority 0 means the job is never picked up.
+[*] Open the Work tab and set a priority in the Improve column for the colonists you want doing it.
+[*] For a colonist created after the mod was added, RimWorld switches on only the six work types they are best at, so Improve can still be off for one whose Construction is weak.
+[*] Colony mechs are switched on for you when a save is loaded. RimWorld's Work tab lists colonists only and never shows a mech, so there is nowhere to set it by hand.
+[*] A mech is judged on the fixed skill level mechanoids use for every job, which is 10, so on the Default preset a constructoid is given buildings marked for any improvement or for a target up to Good, and not ones marked for Excellent or above.
 [/list]
 
 [h2]ENHANCED INTERFACE[/h2]

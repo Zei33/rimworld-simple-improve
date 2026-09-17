@@ -108,9 +108,57 @@ Choose from pre-configured skill requirement levels:
 ## Work System
 
 ### Work Type
-- New "Improving" work type
+- New work type, `WorkType_Improving`, shown in the Work tab as the column **Improve**. The header is
+  `WorkTypeDef.labelShort` capitalised, so name it that way in anything a player reads
 - Uses Construction skill
 - Separate priority from regular construction
+- **Starts switched off in an existing save.** `Pawn_WorkSettings.priorities` is a `DefMap`, and
+  `DefMap.ExposeData` pads a work type it has not seen before with `new V()`, which for an int is 0.
+  Nothing downstream raises it: `Pawn_WorkSettings.ExposeData` only ever calls `Disable` on load, and
+  `EnableAndInitialize`, which would assign priority 3, is reached only from `PawnGenerator` for a
+  new pawn, from `ResurrectionUtility`, from `LordToil_Siege`, and from `Pawn.SetFaction` when a pawn
+  joins the player faction. None of those fire for a pawn already in the colony. So every existing
+  pawn arrives with the work type off.
+- For a pawn generated after the mod was added, `EnableAndInitialize` assigns priority 3 only to the
+  six work types with the highest average relevant skill, because `LimitInitialActiveWorks` is
+  `!pawn.RaceProps.IsMechanoid`. A new colonist weak at Construction can still arrive with Improving
+  off.
+- `LimitInitialActiveWorks` is false for mechanoids, so a constructoid gestated after the mod was
+  added gets the work type at priority 3 with no cap. One that already existed arrives at 0, and
+  cannot be raised by the player, which is why the mod raises it itself. See below.
+
+### Colony mechs
+- Constructoids can be assigned Improving. `1.6/Patches/MechWorkTypes.xml` appends the work type to
+  `Mech_Constructoid`'s `mechEnabledWorkTypes`, which is required because
+  `Verse.Pawn.GetDisabledWorkTypes` treats that list as a whitelist for colony mechs and disables
+  every work type absent from it.
+- A mech is judged on `RaceProperties.mechFixedSkillLevel`, which defaults to 10 and which no shipped
+  def overrides, so a constructoid is treated as a Construction 10 worker. Under the Default preset
+  that clears the Good requirement of 10 and not the Excellent requirement of 14, so the mod hands it
+  buildings marked for any improvement or for a target up to Good. That gates which jobs it is given,
+  not what it rolls: the roll is `GenerateQualityCreatedByPawn` at skill 10, exactly as for a
+  colonist at that level, so a result above the target is still possible.
+- Mechs get no skill bonus to `ConstructionSpeed`. `StatWorker` applies `noSkillFactor`, which
+  defaults to 1, so a constructoid works at the base rate rather than at a skill 10 rate.
+- **The def patch alone is inert for a mech that predates it**, and this is the part that makes the
+  fix actually do something. Removing the work type from the disabled list does not raise the
+  priority already stored against the mech. `Pawn_WorkSettings.ExposeData` wrote 0 there on every
+  load while the type was still disabled, nothing re-runs `EnableAndInitialize` for a pawn that
+  already has settings, and `GetPriority`'s "any non-zero counts as 3" shortcut is gated on
+  `RaceProps.Humanlike`, so a mech is held to the stored 0 exactly.
+- **The player cannot fix it either.** RimWorld's only per-work-type priority UI is the Work tab, and
+  `MainTabWindow_PawnTable.Pawns` is `mapPawns.FreeColonists`, which filters on `RaceProps.Humanlike`
+  and never lists a mech. Biotech's Mechs tab offers a work mode and no per-work-type column.
+- So `SimpleImproveMapComponent.EnableImprovingForColonyMechs` raises it, on every map load, only for
+  colony mechs, only from 0, and only when the work type is not disabled for them. That last guard is
+  required: `Pawn_WorkSettings.SetPriority` logs a red error and refuses a non-zero priority on a
+  disabled work type. Raising it is not overriding a player's choice, because no UI lets a player
+  make that choice for a mech. If RimWorld ever adds one, this becomes wrong and should be revisited.
+- Constructoid only, of the seven vanilla mechs that declare `mechEnabledWorkTypes`. It is the one
+  that already carries Construction.
+- `1.6/Patches/ProjectRimFactoryDrones.xml` does the same for Project RimFactory construction drones,
+  using the patch a player wrote and donated. It is unverified against that mod and is a silent no-op
+  when the mod is absent.
 
 ### Job Flow
 1. **Material Hauling**: Pawns gather required materials (if materials are enabled in settings)

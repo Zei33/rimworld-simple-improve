@@ -37,6 +37,13 @@ building stays marked and the loop repeats until a roll reaches it.
 
 Defs: `Designation_Improve`, `WorkType_Improving` (naturalPriority 500, Construction),
 `WorkGiver_Improve` (priorityInType 10), `Job_Improve`, `Job_HaulToImprove`.
+
+XML patches, in `1.6/Patches/` beside the C# (RimWorld globs `*.xml` from a folder named exactly
+`Patches`, so it has to live there): `MechWorkTypes.xml` appends the work type to
+`Mech_Constructoid.mechEnabledWorkTypes`, and `ProjectRimFactoryDrones.xml` does the same for that
+mod's drone station. Both carry `<success>Always</success>`, which is the whole of their gating.
+`Tests/MechWorkTypePatchTests.cs` runs the mech xpath against the installed game's own XML, so a
+RimWorld update that renames or moves the def fails a test rather than silently doing nothing.
 Flow: every improvable building carries the comp from the moment it is made,
 `CompGetGizmosExtra` builds `ImproveGroup`s from `Find.Selector`, and the float menu writes
 `TargetQuality` (into the map component) and `IsMarkedForImprovement` (which adds the designation).
@@ -135,6 +142,48 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   deposit toil (`JobDriver_HaulToImprove.cs:147`) sizes its transfer from it, so the amount moved
   depends on an earlier unrelated `GetTotalMaterialCost()` call on the same comp instance.
   `GetTotalMaterialCost` also hands callers the shared mutable field itself.
+- **A def patch is the only way to give a colony mech a work type, and its two obvious gates do not
+  work.** `Verse.Pawn.GetDisabledWorkTypes` reads `RaceProps.mechEnabledWorkTypes` live off the race
+  def as a whitelist, so XML is sufficient and no Harmony patch is wanted. But:
+  - **`MayRequire` on an `<Operation>` is read by nothing.** `ModContentPack.LoadPatches` iterates
+    every `<Operation>` child and deserialises it unconditionally; the `MayRequire` check in
+    `LoadedModManager` applies to def nodes after patching. It looks like a DLC gate and is a no-op.
+    It does work on an `<li>` inside a list and on a def node.
+  - **`success` is a child element, not an attribute.** `DirectXmlToObject` maps only child nodes
+    onto fields, so `success="Always"` is silently ignored. Write `<success>Always</success>`.
+  - An xpath that matches nothing logs a red error naming the file at the end of def loading, which
+    is why `<success>Always</success>` is the gate: without the DLC the def is not in the document.
+  - Patches apply **before** `XmlInheritance.Resolve`, so an xpath only sees what a def declares
+    literally. All seven vanilla mechs declare `mechEnabledWorkTypes` directly, so this is safe here,
+    but a modded mech inheriting the list from an abstract parent would not match.
+  - Load order does not matter. `CombineIntoUnifiedXML` builds the document from every mod first and
+    `ApplyPatches` runs afterwards, so a patch against a third-party def needs no `loadAfter`.
+  - Seven vanilla mechs declare the field, all Biotech: Constructoid (Construction), Lifter
+    (Hauling), Tunneler (Mining), Fabricor (five production types), Agrihand (PlantCutting, Growing),
+    Cleansweeper (Cleaning), Paramedic (Doctor, Firefighter). Combat mechs declare none, so under the
+    whitelist every work type is disabled for them.
+- **A def patch that enables a work type for mechs is INERT on its own, and this is the trap that
+  nearly shipped.** Removing the type from the disabled list does not raise the priority already
+  stored against the mech. `Pawn_WorkSettings.ExposeData` wrote 0 there on every load while the type
+  was still disabled; nothing re-runs `EnableAndInitialize` for a pawn that already has settings (its
+  four call sites are `PawnGenerator` for a new pawn, `ResurrectionUtility`, `LordToil_Siege` and
+  `Pawn.SetFaction` when joining the player faction); and `GetPriority`'s "any non-zero counts as 3"
+  shortcut is gated on `RaceProps.Humanlike`, so a mech is held to the stored 0 exactly.
+  **And the player cannot fix it**: RimWorld's only per-work-type priority UI is the Work tab, whose
+  `MainTabWindow_PawnTable.Pawns` is `mapPawns.FreeColonists`, filtered on `RaceProps.Humanlike`, so
+  it never lists a mech. Biotech's Mechs tab has a work mode and no per-work-type column. So the mod
+  raises it itself in `SimpleImproveMapComponent`, from 0 only, for colony mechs only, guarded on
+  `WorkTypeIsDisabled` because `SetPriority` logs a red error and refuses otherwise. That is not
+  overriding a player choice only because no UI lets a player make that choice for a mech; if one
+  ever appears, revisit it.
+- **A work type added to an existing save arrives switched off, and the two halves of that differ by
+  pawn kind.** `DefMap.ExposeData` pads an unseen def with `new V()`, which for an int is 0, and
+  nothing downstream raises it: `Pawn_WorkSettings.ExposeData` only ever calls `Disable` on load. For
+  a pawn generated afterwards, `EnableAndInitialize` assigns priority 3 to only the **six** work types
+  with the highest average relevant skill, because `LimitInitialActiveWorks` is
+  `!pawn.RaceProps.IsMechanoid`. So a new colonist weak at Construction can still arrive with the work
+  type off, while a mech has no cap and always gets it. Say this in the docs or the fix reads as
+  ineffective.
 - **A worker's Construction level is not `pawn.skills.GetSkill(...).Level`, and the two vanilla APIs
   that answer the question disagree with each other.** Read it through `WorkerSkill.Of`, never
   directly. `Pawn.skills` is assigned only inside `if (pawn.RaceProps.Humanlike)` in
@@ -166,6 +215,11 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   There is no vanilla list of colonists plus mechs; `SpawnedColonyMechs` is mechs only. Both getters
   return shared buffers they clear on access, but they are different buffers, so reading one does not
   clobber the other.
+- **A work-type column header is `WorkTypeDef.labelShort`, capitalised.** `PawnColumnWorker_WorkPriority`
+  draws `def.workType.labelShort.CapitalizeFirst()`. English `labelShort` here is **Improve**, not
+  "Improving", and the store copy said "the Improving column" until an adversarial review caught it.
+  Same class of error as Chrono Save's "Mod Settings". The Japanese Work tab is another: vanilla
+  calls it **優先順位**, not 作業 or 仕事, so a literal translation names a screen that does not exist.
 - The mod's Japanese strings say `建設スキル`; vanilla's Construction skill is `建築`. The new
   `SimpleImprove_NoConstructionSkill` follows vanilla, because it renders in a float menu beside
   vanilla's own text. The four older keys were left alone. Normalise them with the localisation work
@@ -193,7 +247,8 @@ are the consequence of a trap above; the traps carry the mechanism.
 
 Fixed on 2026-09-17: the comp persistence (issue #2), which also retired `DynamicComponentPatch` and
 the two-`[HarmonyPatch]`-attribute trap along with it. Fixed on 2026-09-18: the unguarded
-`pawn.skills` and `pawn.workSettings` dereferences (issue #9).
+`pawn.skills` and `pawn.workSettings` dereferences (issue #9), and colony mechs being unable to hold
+the work type (issue #8).
 
 | Defect | file:line | What breaks |
 |---|---|---|
@@ -203,7 +258,7 @@ the two-`[HarmonyPatch]`-attribute trap along with it. Fixed on 2026-09-18: the 
 | A completed `Building` is handed to `GenConstruct.CanConstruct` | `1.6/Jobs/WorkGiver_Improve.cs:105` | An argument shape no vanilla caller produces. Any third-party postfix that assumes a blueprint or frame throws and kills the whole scan |
 | Chairs cannot be improved (likely) | `1.6/Jobs/WorkGiver_Improve.cs:105` | `CanConstruct(..., checkSkills: true, ...)` enforces `constructionSkillPrerequisite`, which `DiningChair` (4), `Armchair` (5) and `Couch` (5) declare and beds, stools and dressers do not |
 | ~~Unguarded `pawn.skills` dereference~~ | fixed 2026-09-18, issue #9 | Was: any non-humanlike worker NREs, every tick during the job. All five sites and both `workSettings` sites now go through `WorkerSkill` and `ImproveWorkers` |
-| Mechs can never take the work type | `1.6/Defs/WorkTypeDefs/WorkTypes_Improve.xml:3` | `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`; `GetDisabledWorkTypes` disables every unlisted type for colony mechs |
+| ~~Mechs can never take the work type~~ | fixed 2026-09-18, issue #8 | Was: `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`. `1.6/Patches/MechWorkTypes.xml` appends the improving work type to it |
 | Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history, while three published descriptions advertise the tab |
 | Legendary skill requirement unreachable | `1.6/Core/SimpleImproveSettings.cs:261` | See traps |
 | Two unrelated DLLs ship inside the published mod | fixed in the repo 2026-09-17 | The 17 Aug 2025 Workshop file carries `ISharpZipLib.dll` and `com.rlabrecque.steamworks.net.dll` beside `SimpleImprove.dll`, and RimWorld loads them as mod assemblies for all 6356 subscribers. `build.sh` now deletes everything in the staged output bar `SimpleImprove.dll` and every csproj `<Reference>` is `<Private>false</Private>`, so the repo no longer produces them. Live until the next upload, so it is a reason to ship one |
@@ -233,7 +288,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 65 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 82 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 

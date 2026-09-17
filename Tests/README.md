@@ -8,6 +8,12 @@ dotnet test Tests/SimpleImprove.Tests.csproj
 net472 NUnit, running against the real `Assembly-CSharp.dll` from the installed game rather than a
 stub. `RimWorldDir` must be set; the workspace `.claude/settings.json` and `~/.zshrc` both export it.
 
+`MechWorkTypePatchTests` goes further and reads the game's shipped def XML under
+`$RimWorldDir/Data`, so that a RimWorld update which renames or moves `Mech_Constructoid` fails a
+test rather than silently turning the mod's def patch into a no-op. The two tests that need Biotech
+`Assume` the file exists and are skipped rather than failed when it does not, because Biotech is a
+paid DLC and the patch is a no-op without it. Nothing else here depends on a DLC.
+
 This project is deliberately not in `rimworld-simple-improve.sln`, so `dotnet build` on the solution
 still builds only the mod and stays at zero warnings. The mod's own `.csproj` removes `Tests/**` from
 its compile items, so nothing here can reach the shipped assembly.
@@ -42,7 +48,8 @@ calls, and in this mod it is wide:
 Covered today: `ImprovableDefs` (the decision the save/load fix rests on),
 `SimpleImproveSettings` (skill table, presets, modifier registration),
 `SimpleImproveMapComponent` (the target quality store), `WorkerSkill` (the skill gate that keeps a
-skill-less worker away from the quality roll), and the container allocation behaviour on
+skill-less worker away from the quality roll), `ImproveWorkers` (the mech priority correction), the
+shipped `PatchOperation` XML, and the container allocation behaviour on
 `SimpleImproveComp`. That last one is small and matters more than its size: `GetDirectlyHeldThings`
 must report null until something is hauled, because declaring the component on the defs puts every
 quality building into `ThingRequestGroup.ThingHolder` and vanilla traversals call it on all of them.
@@ -57,7 +64,12 @@ What that still does not reach: the `FirstBlocker` calls in `WorkGiver_Improve` 
 `JobDriver_Improve` themselves. Deleting either is invisible to this suite, because both need a
 spawned `Thing` on a `Map`. Routing both through one function shrinks the gap rather than closing it.
 
-Quote coverage against those five types, never the repo: most of this mod needs a spawned `Thing` on
+`ImproveWorkers.ShouldEnableForMech` is covered the same way. The readings it decides over
+(`IsColonyMech`, `WorkTypeIsDisabled`, `GetPriority`) are all unreachable, so the map component takes
+them and passes three primitives in. `PotentialOnMap` beside it is pure readings and has no coverage,
+which is the right split rather than an omission.
+
+Quote coverage against those six types, never the repo: most of this mod needs a spawned `Thing` on
 a `Map` and a whole-repo figure would be misleading.
 
 The background is `docs/spikes/test-harness/README.md` in the workspace, which records what each

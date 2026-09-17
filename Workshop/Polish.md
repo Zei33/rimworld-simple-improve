@@ -35,7 +35,18 @@ Przekształć infrastrukturę swojej kolonii z czasem! Prosta Poprawa pozwala ul
 [*] Regulowane koszty materiałów: Ustaw koszty ulepszeń od 5% pierwotnego kosztu budowy wzwyż (domyślnie 100% = równe kosztowi budowy)
 [*] Tryb tylko pracy: Ulepszenia kosztują tylko czas i umiejętności
 [*] Działa z dowolnymi zmodyfikowanymi meblami lub budynkami z jakością
-[*] Nowy typ pracy "Poprawa" z oddzielnym priorytetem od budowy (dla kolonistów pracujących nad ulepszaniem przedmiotów)
+[*] Nowy typ pracy "Ulepszanie" z oddzielnym priorytetem od budowy (dla kolonistów pracujących nad ulepszaniem przedmiotów)
+[*] Mechy kolonii: konstruktoidy mogą wykonywać pracę przy ulepszaniu
+[/list]
+
+[h2]KONFIGURACJA TYPU PRACY[/h2]
+[list]
+[*] W zakładce "Praca" ten typ pracy to kolumna zatytułowana "Ulepszanie".
+[*] W kolonii, która istniała przed dodaniem moda, jest on wyłączony u każdego kolonisty. RimWorld nadaje nowo dodanemu typowi pracy priorytet 0 w istniejącym zapisie, a priorytet 0 oznacza, że praca nigdy nie zostanie podjęta.
+[*] Otwórz zakładkę "Praca" i ustaw priorytet w kolumnie "Ulepszanie" dla kolonistów, którzy mają się tym zajmować.
+[*] U kolonisty, który pojawił się po dodaniu moda, RimWorld włącza tylko sześć typów pracy, w których jest on najlepszy, więc "Ulepszanie" może nadal być wyłączone u kolonisty ze słabym budownictwem.
+[*] Mechom kolonii mod włącza go sam przy wczytywaniu zapisu. Zakładka "Praca" w RimWorld wymienia tylko kolonistów i nigdy nie pokazuje mecha, więc nie ma gdzie ustawić tego ręcznie.
+[*] Mech jest oceniany według stałego poziomu umiejętności, którego mechanoidy używają przy każdej pracy, czyli 10, więc przy ustawieniu "Domyślny" konstruktoid dostaje budynki oznaczone do dowolnego ulepszenia lub z jakością docelową do "dobra" włącznie, a nie te oznaczone na "wspaniała" lub wyżej.
 [/list]
 
 [h2]ULEPSZONE INTERFEJS[/h2]

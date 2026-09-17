@@ -125,7 +125,9 @@ namespace SimpleImprove.Designators
             var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality);
             if (baseRequiredSkill <= 0) return;
             
-            var allPawns = thing.Map.mapPawns.FreeColonistsSpawned;
+            // Colonists and colony mechs. FreeColonistsSpawned alone excludes mechs, which would
+            // warn that nothing can reach the target while a constructoid stood there able to.
+            var allPawns = ImproveWorkers.PotentialOnMap(thing.Map);
             var capablePawns = allPawns.Where(pawn =>
                 ImproveWorkers.IsAssignedToImproving(pawn) &&
                 WorkerSkill.Of(pawn).Meets(SimpleImproveMod.Settings.GetSkillRequirement(qualityComp.Quality, pawn))

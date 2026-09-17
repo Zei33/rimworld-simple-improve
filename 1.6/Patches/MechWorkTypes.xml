@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!--
+    Colony mechs are gated by a whitelist, not a blacklist. Verse.Pawn.GetDisabledWorkTypes walks
+    every WorkTypeDef in the database and, under if (ModsConfig.BiotechActive && IsColonyMech), adds
+    to the DISABLED list every one that is not in RaceProps.mechEnabledWorkTypes. Mech_Constructoid
+    ships that list with Construction alone, so WorkType_Improving is disabled for it until it is
+    added here. Nothing in C# can fix this: the whitelist is read live off the race def.
+
+    Constructoid only, of the seven mechs that declare the field. It is the one that already carries
+    Construction. Lifter has Hauling, Tunneler Mining, Fabricor the five production types, Agrihand
+    PlantCutting and Growing, Cleansweeper Cleaning, Paramedic Doctor and Firefighter. A player who
+    wants another one can copy the operation and change the defName.
+
+    A mech is judged on RaceProperties.mechFixedSkillLevel, which defaults to 10 and which no shipped
+    def overrides, so a constructoid improves as a Construction 10 worker. Under the Default preset
+    that reaches Good but not Excellent.
+
+    On <success>: the xpath cannot match without Biotech, because the Mech_Constructoid def is then
+    not in the document at all, and a missed xpath otherwise logs a red error naming this file at the
+    end of def loading. Always makes it a silent no-op instead.
+
+    Do NOT reach for MayRequire here. ModContentPack.LoadPatches deserialises every <Operation> child
+    unconditionally and reads no MayRequire attribute; the MayRequire check in LoadedModManager
+    applies to def nodes after patching, not to operations. It would look like a gate and be nothing.
+    Note also that <success> is a child ELEMENT: DirectXmlToObject maps only child nodes onto fields,
+    so success="Always" written as an attribute is silently ignored.
+  -->
+  <Operation Class="PatchOperationAdd">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[defName="Mech_Constructoid"]/race/mechEnabledWorkTypes</xpath>
+    <value>
+      <li>WorkType_Improving</li>
+    </value>
+  </Operation>
+
+</Patch>

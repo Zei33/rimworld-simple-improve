@@ -30,7 +30,16 @@ FLEXIBLE GAMEPLAY:
 • Adjustable material costs: Set improvement costs from 5% of original build cost upwards
 • Labor-only mode: Improvements cost only time and skill
 • Works with any modded furniture or building that has quality
-• New "Improving" work type with separate priority from construction (for pawns that are working on improving items)
+• New "Improve" work type with separate priority from construction (for colonists that are working on improving items)
+• Colony mechs: constructoids can do improvement work
+
+SETTING UP THE WORK TYPE:
+• In the Work tab the work type is the column headed "Improve"
+• In a colony that existed before you added the mod it starts switched off for every colonist, because RimWorld gives a newly added work type priority 0 in an existing save
+• Open the Work tab and set a priority in the Improve column for the colonists you want doing it
+• For a colonist created after the mod was added, RimWorld switches on only the six work types they are best at, so Improve can still be off for one whose Construction is weak
+• Colony mechs are switched on for you when a save is loaded. RimWorld's Work tab lists colonists only and never shows a mech, so there is nowhere to set it by hand
+• A mech is judged on the fixed skill level mechanoids use for every job, which is 10, so on the Default preset a constructoid is given buildings marked for any improvement or for a target up to Good, and not ones marked for Excellent or above
 
 ENHANCED INTERFACE:
 • Drag-select multiple items for batch improvement

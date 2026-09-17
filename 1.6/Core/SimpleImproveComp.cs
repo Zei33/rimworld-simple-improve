@@ -414,7 +414,9 @@ namespace SimpleImprove.Core
             var map = parent.Map;
             if (map?.mapPawns?.FreeColonistsSpawned == null) return;
             
-            var allPawns = map.mapPawns.FreeColonistsSpawned;
+            // Colonists and colony mechs. FreeColonistsSpawned alone excludes mechs, which would
+            // warn that nothing can reach the target while a constructoid stood there able to.
+            var allPawns = ImproveWorkers.PotentialOnMap(map);
             var capablePawns = allPawns.Where(pawn =>
                 ImproveWorkers.IsAssignedToImproving(pawn) &&
                 WorkerSkill.Of(pawn).Meets(SimpleImproveMod.Settings.GetSkillRequirement(targetQuality, pawn))

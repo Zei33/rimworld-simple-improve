@@ -134,9 +134,59 @@ namespace SimpleImprove.Core
         public override void FinalizeInit()
         {
             base.FinalizeInit();
-            
+
             // Clean up any orphaned entries after loading
             CleanupOrphanedEntries();
+
+            EnableImprovingForColonyMechs();
+        }
+
+        /// <summary>
+        /// Switches improvement work on for colony mechs that still have it stored at priority zero.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The def patch that lets a mech hold the work type cannot raise a priority already saved
+        /// against it, and the player has nowhere to raise it either: RimWorld's only per-work-type
+        /// priority UI is the Work tab, which lists humanlike colonists and never mechs.
+        /// <see cref="ImproveWorkers.ShouldEnableForMech"/> carries the full reasoning and why this is
+        /// not overriding a choice the player made.
+        /// </para>
+        /// <para>
+        /// Runs on every map load rather than once behind a scribed flag. It is idempotent, it costs
+        /// one pass over the colony mechs on the map, and a one-shot flag would miss a mech that was
+        /// away in a caravan when the flag was set.
+        /// </para>
+        /// </remarks>
+        private void EnableImprovingForColonyMechs()
+        {
+            if (map?.mapPawns == null)
+            {
+                return;
+            }
+
+            // Copied, because SpawnedColonyMechs hands back a shared buffer that it clears on the
+            // next access rather than a list of its own.
+            foreach (var mech in map.mapPawns.SpawnedColonyMechs.ToList())
+            {
+                if (mech?.workSettings == null || !mech.workSettings.EverWork)
+                {
+                    continue;
+                }
+
+                // IsColonyMech is what SpawnedColonyMechs already filters on, and is passed anyway so
+                // the predicate states its own precondition rather than inheriting it from the caller.
+                if (!ImproveWorkers.ShouldEnableForMech(
+                        mech.IsColonyMech,
+                        mech.WorkTypeIsDisabled(SimpleImproveDefOf.WorkType_Improving),
+                        mech.workSettings.GetPriority(SimpleImproveDefOf.WorkType_Improving)))
+                {
+                    continue;
+                }
+
+                mech.workSettings.SetPriority(
+                    SimpleImproveDefOf.WorkType_Improving, ImproveWorkers.DefaultMechPriority);
+            }
         }
 
         /// <summary>

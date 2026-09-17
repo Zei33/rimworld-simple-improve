@@ -35,7 +35,18 @@ Transformez l'infrastructure de votre colonie au fil du temps ! Amélioration Si
 [*] Coûts de matériaux ajustables : Définir les coûts d'amélioration à partir de 5% du coût de construction original vers le haut (100% par défaut = égal au coût de construction)
 [*] Mode travail uniquement : Les améliorations ne coûtent que du temps et des compétences
 [*] Fonctionne avec n'importe quel meuble ou bâtiment moddé qui a une qualité
-[*] Nouveau type de travail "Amélioration" avec priorité séparée de la construction (pour les colons qui travaillent sur l'amélioration d'objets)
+[*] Nouveau type de travail "Améliorer" avec priorité séparée de la construction (pour les colons qui travaillent sur l'amélioration d'objets)
+[*] Mécas de la colonie : les constructoïdes peuvent faire le travail d'amélioration
+[/list]
+
+[h2]CONFIGURER LE TYPE DE TRAVAIL[/h2]
+[list]
+[*] Dans l'onglet "Travail", ce type de travail est la colonne intitulée "Améliorer".
+[*] Dans une colonie qui existait avant l'ajout du mod, il est désactivé pour tous les colons. RimWorld attribue la priorité 0 à un type de travail ajouté dans une sauvegarde existante, et la priorité 0 signifie que le travail n'est jamais pris en charge.
+[*] Ouvrez l'onglet "Travail" et définissez une priorité dans la colonne "Améliorer" pour les colons que vous voulez y affecter.
+[*] Pour un colon apparu après l'ajout du mod, RimWorld n'active que les six types de travail dans lesquels il est le meilleur, donc "Améliorer" peut rester désactivé pour un colon dont la construction est faible.
+[*] Pour les mécas de la colonie, le mod l'active lui-même au chargement d'une sauvegarde. L'onglet "Travail" de RimWorld ne liste que les colons et n'affiche jamais un méca, il n'y a donc nulle part où le régler à la main.
+[*] Un méca est jugé sur le niveau de compétence fixe que les mécanoïdes utilisent pour tous les travaux, soit 10, donc avec le préréglage "Par défaut" un constructoïde se voit confier les bâtiments marqués pour une amélioration quelconque ou pour une qualité cible allant jusqu'à "bon", et pas ceux marqués pour "excellent" ou au-dessus.
 [/list]
 
 [h2]INTERFACE AMÉLIORÉE[/h2]
