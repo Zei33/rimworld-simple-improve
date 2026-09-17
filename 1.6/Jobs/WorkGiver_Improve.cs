@@ -95,8 +95,9 @@ namespace SimpleImprove.Jobs
                 }
             }
 
-            // Check if pawn can do improvement work
-            if (!pawn.workSettings.WorkIsActive(SimpleImproveDefOf.WorkType_Improving))
+            // Check if pawn can do improvement work. ImproveWorkers carries why this is not a bare
+            // workSettings.WorkIsActive call.
+            if (!ImproveWorkers.IsAssignedToImproving(pawn))
             {
                 JobFailReason.Is("NotAssignedToWorkType".Translate(SimpleImproveDefOf.WorkType_Improving.gerundLabel).CapitalizeFirst());
                 return null;
@@ -121,20 +122,32 @@ namespace SimpleImprove.Jobs
             if (!GenConstruct.CanConstruct(thing, pawn, checkSkills: false, forced: forced))
                 return null;
 
-            // Check skill requirement based on target quality
+            // The skill gate. Both halves live in WorkerSkill.FirstBlocker so their order is a
+            // decision the test suite can see: an unreadable skill is refused whether or not a target
+            // quality is set, because the improvement ends at
+            // QualityUtility.GenerateQualityCreatedByPawn, which reads
+            // `pawn.RaceProps.IsMechanoid ? mechFixedSkillLevel : pawn.skills.GetSkill(...).Level`
+            // with no null guard on the second branch. A modded drone race is exactly that shape and
+            // would throw inside vanilla rather than here.
+            //
+            // A null requirement means the player marked the building for any improvement at all, in
+            // which case no particular quality is being aimed at and any readable skill will do.
+            WorkerSkill workerSkill = WorkerSkill.Of(pawn);
             var qualityComp = thing.TryGetComp<CompQuality>();
-            if (qualityComp != null)
+            var targetQuality = qualityComp != null ? improveComp.TargetQuality : null;
+            int? requiredSkill = targetQuality.HasValue
+                ? SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value, pawn)
+                : (int?)null;
+
+            switch (WorkerSkill.FirstBlocker(workerSkill, requiredSkill))
             {
-                var targetQuality = improveComp.TargetQuality;
-                
-                // If no target quality is set (Any improvement), allow any skill level
-                if (targetQuality.HasValue)
-                {
-                    var pawnSkill = pawn.skills.GetSkill(SkillDefOf.Construction).Level;
-                    var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value, pawn);
-                    
-                    if (requiredSkill > pawnSkill)
+                case ImproveSkillBlocker.NoConstructionSkill:
+                    JobFailReason.Is("SimpleImprove_NoConstructionSkill".Translate(pawn.LabelShort));
+                    return null;
+
+                case ImproveSkillBlocker.SkillTooLow:
                     {
+                        var pawnSkill = workerSkill.Level;
                         var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value);
                         
                         if (baseRequiredSkill > pawnSkill)
@@ -164,7 +177,6 @@ namespace SimpleImprove.Jobs
                         
                         return null;
                     }
-                }
             }
 
             var improveJob = JobMaker.MakeJob(SimpleImproveDefOf.Job_Improve, thing);

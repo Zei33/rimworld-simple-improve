@@ -78,28 +78,30 @@ namespace SimpleImprove.Jobs
                 var actor = improveToil.actor;
                 var qualityComp = comp.parent.TryGetComp<CompQuality>();
 
-                // Check skill requirement during work as safety net
-                if (qualityComp != null)
-                {
-                    var targetQuality = comp.TargetQuality;
-                    
-                    // If a target quality is set, check skill requirement for that target
-                    if (targetQuality.HasValue)
-                    {
-                        var pawnSkill = actor.skills.GetSkill(SkillDefOf.Construction).Level;
-                        var requiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value, actor);
+                // The same decision WorkGiver_Improve.JobOnThing makes, deliberately through the
+                // same function so the two cannot drift. It is a safety net rather than the gate: the
+                // work giver already refused an unreadable skill, so reaching that case here means the
+                // job arrived some other way, and this job ends at CompleteImprovement, whose quality
+                // roll dereferences pawn.skills without a guard for a non-mechanoid.
+                //
+                // A null requirement is the "any improvement" case, where the player aimed at no
+                // particular quality and any readable skill will do.
+                var workerSkill = WorkerSkill.Of(actor);
+                var targetQuality = qualityComp != null ? comp.TargetQuality : null;
+                int? requiredSkill = targetQuality.HasValue
+                    ? SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value, actor)
+                    : (int?)null;
 
-                        if (requiredSkill > pawnSkill)
-                        {
-                            ReadyForNextToil();
-                            return;
-                        }
-                    }
-                    // If no target quality set (Any improvement), allow any skill level
+                if (WorkerSkill.FirstBlocker(workerSkill, requiredSkill) != ImproveSkillBlocker.None)
+                {
+                    ReadyForNextToil();
+                    return;
                 }
 
-                // Learn construction skill
-                actor.skills.Learn(SkillDefOf.Construction, 0.25f);
+                // Learn construction skill. Null on every non-humanlike worker, so a mech earns no XP
+                // and keeps working, which is exactly what JobDriver_ConstructFinishFrame does at its
+                // own per-tick XP grant.
+                actor.skills?.Learn(SkillDefOf.Construction, 0.25f);
 
                 // Calculate work speed
                 var speed = actor.GetStatValue(StatDefOf.ConstructionSpeed) * 1.7f;

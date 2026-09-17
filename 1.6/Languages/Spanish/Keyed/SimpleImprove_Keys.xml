@@ -86,4 +86,7 @@
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>Restablecer a Valores Predeterminados</SimpleImprove_ResetToDefaults>
   
+  <!-- Work messages -->
+  <SimpleImprove_NoConstructionSkill>{0} no tiene habilidad de construcción.</SimpleImprove_NoConstructionSkill>
+  
 </LanguageData>

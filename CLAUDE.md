@@ -23,7 +23,9 @@ building stays marked and the loop repeats until a roll reaches it.
 |---|---|---|
 | `SimpleImproveMod : Mod` | `1.6/ModEntry.cs` | Entry point, `GetSettings`, `harmony.PatchAll()` |
 | `SimpleImproveComp : ThingComp, IConstructible, IThingHolder` | `1.6/Core/SimpleImproveComp.cs` | All per-building state, gizmos, material maths, `CompleteImprovement`. Declared on the defs, so it Scribes |
-| `ImprovableDefs` | `1.6/Core/ImprovableDefs.cs` | `Qualifies` and `DeclareCompOn`: which defs carry the comp. Pure, and the one thing in this mod with real test coverage |
+| `ImprovableDefs` | `1.6/Core/ImprovableDefs.cs` | `Qualifies` and `DeclareCompOn`: which defs carry the comp. Pure, and well covered |
+| `WorkerSkill` | `1.6/Core/WorkerSkill.cs` | The Construction level a worker is judged on, and `FirstBlocker` over it. `Of(Pawn)` takes the readings and decides nothing; `From` and `FirstBlocker` decide everything and are pure |
+| `ImproveWorkers` | `1.6/Core/ImproveWorkers.cs` | `IsAssignedToImproving`, the one place the work-settings guard lives |
 | `Tests/` | NUnit, net472 | Not in the sln, excluded from the mod's compile items. See `Tests/README.md` |
 | `ImproveGroup` | same file, L16-26 | DTO grouping the current selection for one shared gizmo |
 | `SimpleImproveMapComponent : MapComponent` | `1.6/Core/SimpleImproveMapComponent.cs` | `Dictionary<int, QualityCategory>` of target qualities keyed on `thingIDNumber`. Redundant now the comp persists; slated for removal in #13 |
@@ -133,6 +135,41 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   deposit toil (`JobDriver_HaulToImprove.cs:147`) sizes its transfer from it, so the amount moved
   depends on an earlier unrelated `GetTotalMaterialCost()` call on the same comp instance.
   `GetTotalMaterialCost` also hands callers the shared mutable field itself.
+- **A worker's Construction level is not `pawn.skills.GetSkill(...).Level`, and the two vanilla APIs
+  that answer the question disagree with each other.** Read it through `WorkerSkill.Of`, never
+  directly. `Pawn.skills` is assigned only inside `if (pawn.RaceProps.Humanlike)` in
+  `PawnComponentsUtility.CreateInitialComponents`, and `Humanlike` is `intelligence >= Humanlike`
+  while every mechanoid ships `ToolUser`, so it is null on mechs, animals and any modded drone race.
+  - `QualityUtility.GenerateQualityCreatedByPawn` branches on `RaceProps.IsMechanoid` and has **no
+    null guard** on its other branch, so it throws for a non-mechanoid with no tracker. That call is
+    where every improve job ends, which is why the gate has to refuse such a pawn outright rather
+    than treat it as skill 0, and why it has to refuse it even on an "any improvement" mark where no
+    requirement is checked at all.
+  - `GenConstruct.CanConstruct` uses a different shape again: two **independent** `if`s, one on
+    `p.skills != null` and one on `p.IsColonyMech`, not an if/else and not a fall-through. A pawn
+    that is neither passes its skill gate entirely ungated.
+  - `Bill.PawnAllowedToStartAnew` is the vanilla site that does produce an effective level as an int,
+    and it pre-guards with `(p.skills != null || p.IsColonyMech)`. There is no general helper:
+    `mechFixedSkillLevel` has nine read sites and every one spells the fallback inline.
+  - `RaceProperties.mechFixedSkillLevel` defaults to **10** and no shipped def overrides it, so every
+    vanilla mech is judged at Construction 10. Mechs get no skill factor on `ConstructionSpeed`
+    though: `StatWorker` applies `noSkillFactor`, which defaults to 1, so a constructoid works at
+    base speed while being gated as a 10.
+- **`pawn.workSettings` is not null on a colony mech.** `PawnComponentsUtility.AddAndRemoveDynamicComponents`
+  constructs one for every player-faction mechanoid carrying a `CompOverseerSubject`, which is all of
+  them. It is null on a dead pawn (`RemoveComponentsOnKilled` nulls it) and on other non-humanlikes.
+  Guard with `workSettings != null && workSettings.EverWork` as `JobGiver_Work.GetPriority` does, not
+  with a bare null test: `WorkIsActive` does **not** throw on an uninitialised one, it logs an error
+  and silently rewrites the pawn's whole priority table, which the player never sees.
+- `MapPawns.FreeColonistsSpawned` gates on `RaceProps.Humanlike`, so it **excludes colony mechs**, and
+  so do `FreeColonists`, `FreeColonistsAndPrisoners(Spawned)` and every `PawnsFinder` colonist list.
+  There is no vanilla list of colonists plus mechs; `SpawnedColonyMechs` is mechs only. Both getters
+  return shared buffers they clear on access, but they are different buffers, so reading one does not
+  clobber the other.
+- The mod's Japanese strings say `建設スキル`; vanilla's Construction skill is `建築`. The new
+  `SimpleImprove_NoConstructionSkill` follows vanilla, because it renders in a float menu beside
+  vanilla's own text. The four older keys were left alone. Normalise them with the localisation work
+  in #18, and pick vanilla's term.
 - Translation keys are not named after what they display: `SimpleImprove_PresetVeryEasy` renders
   "Apprentice", `...Easy` "Novice", `...Normal` "Default", `...Hard` "Master", `...Expert` "Artisan".
   The preset enum values are newer than the keys, so change the key values, not the key names. 21 of
@@ -155,7 +192,8 @@ register and supersedes this table; the 35 filed issues carry the ordering const
 are the consequence of a trap above; the traps carry the mechanism.
 
 Fixed on 2026-09-17: the comp persistence (issue #2), which also retired `DynamicComponentPatch` and
-the two-`[HarmonyPatch]`-attribute trap along with it.
+the two-`[HarmonyPatch]`-attribute trap along with it. Fixed on 2026-09-18: the unguarded
+`pawn.skills` and `pawn.workSettings` dereferences (issue #9).
 
 | Defect | file:line | What breaks |
 |---|---|---|
@@ -164,7 +202,7 @@ the two-`[HarmonyPatch]`-attribute trap along with it.
 | Nested `GenClosest.ClosestThingReachable` inside that validator | `1.6/Jobs/WorkGiver_Improve.cs:186` | Unbounded (9999f) map search per required material, per candidate |
 | A completed `Building` is handed to `GenConstruct.CanConstruct` | `1.6/Jobs/WorkGiver_Improve.cs:105` | An argument shape no vanilla caller produces. Any third-party postfix that assumes a blueprint or frame throws and kills the whole scan |
 | Chairs cannot be improved (likely) | `1.6/Jobs/WorkGiver_Improve.cs:105` | `CanConstruct(..., checkSkills: true, ...)` enforces `constructionSkillPrerequisite`, which `DiningChair` (4), `Armchair` (5) and `Couch` (5) declare and beds, stools and dressers do not |
-| Unguarded `pawn.skills` dereference | `1.6/Jobs/WorkGiver_Improve.cs:117`, `1.6/Jobs/JobDriver_Improve.cs:89,102` | Any non-humanlike worker NREs, every tick during the job |
+| ~~Unguarded `pawn.skills` dereference~~ | fixed 2026-09-18, issue #9 | Was: any non-humanlike worker NREs, every tick during the job. All five sites and both `workSettings` sites now go through `WorkerSkill` and `ImproveWorkers` |
 | Mechs can never take the work type | `1.6/Defs/WorkTypeDefs/WorkTypes_Improve.xml:3` | `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`; `GetDisabledWorkTypes` disables every unlisted type for colony mechs |
 | Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history, while three published descriptions advertise the tab |
 | Legendary skill requirement unreachable | `1.6/Core/SimpleImproveSettings.cs:261` | See traps |
@@ -195,7 +233,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 42 passing as of 2026-09-17, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 65 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 

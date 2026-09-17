@@ -415,9 +415,9 @@ namespace SimpleImprove.Core
             if (map?.mapPawns?.FreeColonistsSpawned == null) return;
             
             var allPawns = map.mapPawns.FreeColonistsSpawned;
-            var capablePawns = allPawns.Where(pawn => 
-                pawn.workSettings.WorkIsActive(SimpleImproveDefOf.WorkType_Improving) &&
-                pawn.skills.GetSkill(SkillDefOf.Construction).Level >= SimpleImproveMod.Settings.GetSkillRequirement(targetQuality, pawn)
+            var capablePawns = allPawns.Where(pawn =>
+                ImproveWorkers.IsAssignedToImproving(pawn) &&
+                WorkerSkill.Of(pawn).Meets(SimpleImproveMod.Settings.GetSkillRequirement(targetQuality, pawn))
             ).ToList();
             
             if (!capablePawns.Any())

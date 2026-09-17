@@ -86,4 +86,7 @@
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>Przywróć Domyślne</SimpleImprove_ResetToDefaults>
   
+  <!-- Work messages -->
+  <SimpleImprove_NoConstructionSkill>{0} nie ma umiejętności budownictwa.</SimpleImprove_NoConstructionSkill>
+  
 </LanguageData>

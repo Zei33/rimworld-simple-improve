@@ -86,4 +86,7 @@
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>重置为默认值</SimpleImprove_ResetToDefaults>
   
+  <!-- Work messages -->
+  <SimpleImprove_NoConstructionSkill>{0}没有建造技能。</SimpleImprove_NoConstructionSkill>
+  
 </LanguageData>

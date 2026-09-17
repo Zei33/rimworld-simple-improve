@@ -41,12 +41,23 @@ calls, and in this mod it is wide:
 
 Covered today: `ImprovableDefs` (the decision the save/load fix rests on),
 `SimpleImproveSettings` (skill table, presets, modifier registration),
-`SimpleImproveMapComponent` (the target quality store), and the container allocation behaviour on
+`SimpleImproveMapComponent` (the target quality store), `WorkerSkill` (the skill gate that keeps a
+skill-less worker away from the quality roll), and the container allocation behaviour on
 `SimpleImproveComp`. That last one is small and matters more than its size: `GetDirectlyHeldThings`
 must report null until something is hauled, because declaring the component on the defs puts every
 quality building into `ThingRequestGroup.ThingHolder` and vanilla traversals call it on all of them.
 
-Quote coverage against those four types, never the repo: most of this mod needs a spawned `Thing` on
+`WorkerSkill` is the worked example of the split this harness rewards, and it is worth copying. The
+readings that cannot be tested (`pawn.skills`, `RaceProps.IsMechanoid`, `mechFixedSkillLevel`) are
+taken in one method, `Of(Pawn)`, which decides nothing. Everything that decides anything takes
+primitives: `From` picks the branch, `FirstBlocker` orders the two guards. Both are exercised here,
+and the fixture records which mutations each one catches.
+
+What that still does not reach: the `FirstBlocker` calls in `WorkGiver_Improve` and
+`JobDriver_Improve` themselves. Deleting either is invisible to this suite, because both need a
+spawned `Thing` on a `Map`. Routing both through one function shrinks the gap rather than closing it.
+
+Quote coverage against those five types, never the repo: most of this mod needs a spawned `Thing` on
 a `Map` and a whole-repo figure would be misleading.
 
 The background is `docs/spikes/test-harness/README.md` in the workspace, which records what each

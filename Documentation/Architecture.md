@@ -14,6 +14,8 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 │   ├── SimpleImproveComp.cs         # Component attached to improvable items
 │   ├── ImprovableDefs.cs            # Decides which defs carry the component, and declares it
 │   ├── SimpleImproveMapComponent.cs # Map-level persistent storage for target quality data
+│   ├── WorkerSkill.cs               # A worker's Construction level, and the skill gate over it
+│   ├── ImproveWorkers.cs            # Which pawns can be given improvement work
 │   ├── CompProperties_SimpleImprove.cs # Component properties
 │   └── SimpleImproveDefOf.cs        # Def references
 ├── Designators/            # UI designators for marking items

@@ -85,4 +85,7 @@
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>Reset to Defaults</SimpleImprove_ResetToDefaults>
   
+  <!-- Work messages -->
+  <SimpleImprove_NoConstructionSkill>{0} has no construction skill.</SimpleImprove_NoConstructionSkill>
+  
 </LanguageData>
