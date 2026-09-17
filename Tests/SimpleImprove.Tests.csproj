@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- net472 to match what the mod ships and what RimWorld embeds. The capability boundary is the
+       same under net9.0, measured, but staying on net472 keeps BCL semantics aligned with
+       production. See docs/spikes/test-harness/README.md in the workspace. -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>SimpleImprove.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <FrameworkPathOverride>/opt/homebrew/opt/mono/lib/mono/4.7.2-api</FrameworkPathOverride>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RimWorldManaged>$(RimWorldDir)/Contents/Resources/Data/Managed</RimWorldManaged>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+  </ItemGroup>
+
+  <!-- The mod's own sources are compiled into the test assembly rather than referenced as a built
+       DLL. Two reasons: internals and private members stay reachable without an InternalsVisibleTo,
+       and a ProjectReference would rebuild the mod into 1.6/Assemblies/net472 in Debug, which is
+       where build.sh expects a Release artefact to be staged from. -->
+  <ItemGroup>
+    <Compile Include="../1.6/**/*.cs" Exclude="../1.6/obj/**/*.cs;../1.6/Assemblies/**/*.cs" />
+    <Compile Include="*.cs" />
+  </ItemGroup>
+
+  <!-- Private=true here, unlike the mod's own csproj: nothing preloads these for the test runner,
+       so they have to be copied next to the test assembly. -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorldManaged)/Assembly-CSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(RimWorldManaged)/UnityEngine.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RimWorldManaged)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RimWorldManaged)/UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(RimWorldManaged)/UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="netstandard">
+      <HintPath>$(RimWorldManaged)/netstandard.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>../1.6/Libraries/0Harmony.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

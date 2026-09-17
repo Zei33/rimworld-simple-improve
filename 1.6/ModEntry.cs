@@ -1,4 +1,5 @@
 using HarmonyLib;
+using RimWorld;
 using Verse;
 using SimpleImprove.Core;
 using UnityEngine;
@@ -30,6 +31,10 @@ namespace SimpleImprove
         public SimpleImproveMod(ModContentPack pack) : base(pack)
         {
             Settings = GetSettings<SimpleImproveSettings>();
+
+            // Registered here rather than from a static constructor on the settings class, which
+            // used to reach ModsConfig and made that whole class unconstructible outside the game.
+            SimpleImproveSettings.InitializePawnModifiers(ModsConfig.IdeologyActive);
             
             harmony = new Harmony("com.zei33.simpleimprove");
             harmony.PatchAll();

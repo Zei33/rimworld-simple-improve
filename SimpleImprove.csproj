@@ -21,6 +21,13 @@
     <RimWorldManaged>$(RimWorldDir)/Contents/Resources/Data/Managed</RimWorldManaged>
   </PropertyGroup>
 
+  <!-- Tests/ compiles the mod's sources into its own assembly. Without this the default glob would
+       also pull the test sources into the shipped DLL, along with a reference to NUnit. -->
+  <ItemGroup>
+    <Compile Remove="Tests/**" />
+    <None Remove="Tests/**" />
+  </ItemGroup>
+
   <!-- Game and Unity assemblies. All reference-only: RimWorld already has them
        loaded, so Private=false keeps them out of our Assemblies folder. -->
   <ItemGroup>

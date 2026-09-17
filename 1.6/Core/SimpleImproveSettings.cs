@@ -178,19 +178,25 @@ namespace SimpleImprove.Core
         };
 
         /// <summary>
-        /// Static constructor that initializes pawn quality modifiers.
-        /// </summary>
-        static SimpleImproveSettings()
-        {
-            InitializePawnModifiers();
-        }
-
-        /// <summary>
         /// Initializes the pawn quality modifiers that affect improvement outcomes.
         /// Sets up bonuses for inspired creativity and production specialist roles.
         /// </summary>
-        private static void InitializePawnModifiers()
+        /// <param name="ideologyActive">Whether the Ideology DLC is active.</param>
+        /// <remarks>
+        /// Called from the mod's constructor rather than from a static constructor, and it takes the
+        /// DLC flag rather than reading it. A static constructor here reached
+        /// <c>ModsConfig.IdeologyActive</c>, which initialises <c>Verse.ModsConfig</c>, which
+        /// initialises <c>Verse.UnityData</c>, which makes a native call. That chain made the whole
+        /// class impossible to construct outside a running game, so none of the skill arithmetic
+        /// below could be tested. Passing the flag in moves the only piece of game state to the one
+        /// caller that genuinely has a game.
+        ///
+        /// Clears first, so calling it more than once cannot double up the modifiers.
+        /// </remarks>
+        public static void InitializePawnModifiers(bool ideologyActive)
         {
+            PawnQualityModifiers.Clear();
+
             // Inspired Creativity bonus
             PawnQualityModifiers.Add(pawn =>
             {
@@ -200,7 +206,7 @@ namespace SimpleImprove.Core
             });
 
             // Production Specialist role bonus (Ideology DLC)
-            if (ModsConfig.IdeologyActive)
+            if (ideologyActive)
             {
                 PawnQualityModifiers.Add(pawn =>
                 {
