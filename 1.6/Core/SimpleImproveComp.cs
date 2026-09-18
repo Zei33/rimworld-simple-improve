@@ -864,64 +864,20 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
-        /// Gets all selected things that have SimpleImproveComp and are eligible for improvement.
-        /// </summary>
-        /// <returns>List of SimpleImproveComp components from selected buildings.</returns>
-        private List<SimpleImproveComp> GetSelectedImproveComps()
-        {
-            return Find.Selector.SelectedObjects.OfType<Thing>()
-                .Where(t => t.Faction == Faction.OfPlayer && 
-                           t.TryGetComp<CompQuality>() != null && 
-                           t.TryGetComp<CompQuality>().Quality != QualityCategory.Legendary &&
-                           t.def.blueprintDef != null)
-                .Select(t => t.TryGetComp<SimpleImproveComp>())
-                .Where(c => c != null)
-                .ToList();
-        }
-
-        /// <summary>
         /// Analyzes the current selection and groups buildings by their improvement state.
-        /// Implements the grouping rules for consolidated gizmo display.
         /// </summary>
-        /// <returns>List of improvement groups.</returns>
+        /// <returns>List of improvement groups, which must be treated as read-only.</returns>
+        /// <remarks>
+        /// The work moved to <see cref="ImproveSelection"/>, which does it once per frame for the
+        /// whole selection instead of once per selected comp. This method ran the full scan every
+        /// time it was called, and it is called from <see cref="CompGetGizmosExtra"/>, which vanilla
+        /// calls for each selected thing, so the comp-lookup count was quadratic in the size of the
+        /// selection. <see cref="ImproveSelection.Current"/> carries the cache key and why it is not
+        /// simply the frame number.
+        /// </remarks>
         private List<ImproveGroup> AnalyzeSelection()
         {
-            var selectedComps = GetSelectedImproveComps();
-            if (!selectedComps.Any()) return new List<ImproveGroup>();
-
-            var groups = new List<ImproveGroup>();
-
-            // Group unmarked buildings
-            var unmarkedComps = selectedComps.Where(c => !c.IsMarkedForImprovement).ToList();
-            if (unmarkedComps.Any())
-            {
-                groups.Add(new ImproveGroup
-                {
-                    Comps = unmarkedComps,
-                    IsMarked = false,
-                    TargetQuality = null,
-                    Representative = unmarkedComps.First(),
-                    GroupKey = "unmarked"
-                });
-            }
-
-            // Group marked buildings by target quality
-            var markedComps = selectedComps.Where(c => c.IsMarkedForImprovement).ToList();
-            var markedGroups = markedComps
-                .GroupBy(c => c.TargetQuality?.ToString() ?? "any")
-                .Select(g => new ImproveGroup
-                {
-                    Comps = g.ToList(),
-                    IsMarked = true,
-                    TargetQuality = g.First().TargetQuality,
-                    Representative = g.First(),
-                    GroupKey = $"marked_{g.Key}"
-                })
-                .ToList();
-
-            groups.AddRange(markedGroups);
-
-            return groups;
+            return ImproveSelection.Current();
         }
 
         /// <summary>
@@ -1034,7 +990,7 @@ namespace SimpleImprove.Core
             {
                 defaultLabel = GetGroupGizmoLabel(group),
                 defaultDesc = GetGroupGizmoDesc(group),
-                icon = ContentFinder<Texture2D>.Get("UI/Commands/Improve", true),
+                icon = ImproveSelection.Icon,
                 action = () => ShowGroupQualityTargetFloatMenu(group, allGroups),
                 groupKey = GetGroupGizmoKey(group)
             };
