@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using RimWorld;
 using SimpleImprove.Core;
@@ -217,6 +220,99 @@ namespace SimpleImprove.Tests
             Assert.That(declared.DeclaringType, Is.EqualTo(typeof(SimpleImproveComp)),
                 "SimpleImproveComp stopped overriding PostDeSpawn, which strands hauled materials "
                 + "in the component on every uninstall. That is issue #11.");
+        }
+
+        [Test]
+        public void TheMaterialCostIsNotHandedOutFromAField()
+        {
+            // GetTotalMaterialCost used to clear and refill a cachedMaterialsNeeded field and return
+            // it, so every caller held a live alias to state the next call emptied. It was never
+            // saving an allocation, since the method builds a fresh ThingDefCountClass per entry per
+            // call regardless, and CompInspectStringExtra took the list and then made a call that
+            // re-entered and cleared it one line before iterating.
+            //
+            // Neither method can be run here: both read SimpleImproveMod.Settings, which needs the
+            // game. The field's absence is the durable part of the fix and is what this asserts.
+            Assert.That(
+                typeof(SimpleImproveComp).GetField(
+                    "cachedMaterialsNeeded",
+                    BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static),
+                Is.Null,
+                "cachedMaterialsNeeded is back, so GetTotalMaterialCost is handing callers an alias "
+                + "to state its next call clears.");
+        }
+
+        [Test]
+        public void TheNeededCountIsComputedRatherThanRead()
+        {
+            // ThingCountNeeded read the cache without ever populating it, so it answered with
+            // whatever the last call on this component instance had left behind. Its only consumer,
+            // JobDriver_HaulToImprove, sizes the deposit with it one line before the transfer that
+            // would have repopulated it, so on a cold component the count was 0, nothing moved, and
+            // the pawn walked away still carrying.
+            Assert.That(
+                CallNamesIn("ThingCountNeeded"),
+                Does.Contain("SimpleImprove.Core.SimpleImproveComp.GetTotalMaterialCost"),
+                "ThingCountNeeded no longer computes the cost it compares against.");
+        }
+
+        [Test]
+        public void WorkToBuildIsFlooredSoNothingDividesByZero()
+        {
+            // JobDriver_Improve divides by this twice, and one of those divisions decides whether the
+            // improvement FAILS. At zero, speed / 0 is positive infinity, Mathf.Pow(chance, infinity)
+            // is zero, so the fail roll is Rand.Value < 1f and always true: the pawn destroys the
+            // staged materials every tick it works and the work giver re-issues the job, while the
+            // progress bar reads 0/0 as NaN.
+            //
+            // Vanilla does the same division unfloored in JobDriver_ConstructFinishFrame and
+            // Frame.PercentComplete, so an auditor diffing against the game will want to remove this.
+            // The floor lives in the property rather than at the call sites so that WorkLeft and the
+            // inspect string agree with the divisors.
+            Assert.That(
+                CallNamesIn("get_WorkToBuild"),
+                Does.Contain("UnityEngine.Mathf.Max"),
+                "WorkToBuild is unfloored again. A modded def, a modded stuff stat factor, or a "
+                + "custom scenario's ScenPart_StatFactor at 0% all reach zero, and zero turns every "
+                + "improvement attempt into a guaranteed failure that destroys the materials.");
+        }
+
+        [Test]
+        public void MarkingChecksForAnExistingDesignationBeforeAddingOne()
+        {
+            // Two faults in one branch. The `?.` swallowed a null map and then set the flag anyway,
+            // leaving the component marked with no designation, and since the work giver became
+            // designation-driven that building is invisible to it, so the mark silently did nothing.
+            // And DesignationManager.AddDesignation logs a red error and returns on a double add,
+            // which a save written by 1.0.5 or 1.0.6 can trigger by re-marking a building that
+            // already carries a stale designation.
+            //
+            // IL order is not execution order, so this pins that both calls are present and that the
+            // test appears before the add, which is as much as reading a body can say.
+            var calls = CallNamesIn("set_IsMarkedForImprovement");
+
+            int test = calls.IndexOf("Verse.DesignationManager.DesignationOn");
+            int add = calls.IndexOf("Verse.DesignationManager.AddDesignation");
+
+            Assert.That(test, Is.GreaterThanOrEqualTo(0),
+                "The marking path no longer checks for an existing designation, so re-marking a "
+                + "building that carries a stale one logs a red error every time.");
+            Assert.That(add, Is.GreaterThanOrEqualTo(0),
+                "The marking path no longer adds a designation at all.");
+            Assert.That(test, Is.LessThan(add));
+        }
+
+        private static List<string> CallNamesIn(string methodName)
+        {
+            MethodInfo method = typeof(SimpleImproveComp).GetMethod(
+                methodName,
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+                | BindingFlags.Static | BindingFlags.DeclaredOnly);
+
+            Assert.That(method, Is.Not.Null,
+                "SimpleImproveComp has no " + methodName + " to read.");
+
+            return ILCalls.CalledBy(method).Select(ILCalls.Describe).ToList();
         }
 
         [Test]

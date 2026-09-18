@@ -56,11 +56,6 @@ namespace SimpleImprove.Core
         private float workDone;
         
         /// <summary>
-        /// Cached list of materials needed for improvement to avoid repeated calculations.
-        /// </summary>
-        private List<ThingDefCountClass> cachedMaterialsNeeded = new List<ThingDefCountClass>();
-        
-        /// <summary>
         /// The quality the improvement is aiming at, or <c>null</c> for any improvement at all.
         /// </summary>
         /// <remarks>
@@ -109,8 +104,30 @@ namespace SimpleImprove.Core
                 }
                 else if (value && !isMarkedForImprovement)
                 {
-                    // Add designation when marking
-                    parent.Map?.designationManager.AddDesignation(new Designation(parent, SimpleImproveDefOf.Designation_Improve));
+                    // Refuse to mark when there is no designation manager to write to. The `?.` here
+                    // used to swallow a null map and then set the flag anyway, leaving the component
+                    // marked with no designation; since the work giver became designation-driven,
+                    // that building is invisible to it, so the mark silently did nothing. The null
+                    // map is reachable for the same reason the unmark path documents above: both
+                    // float menus capture this component in a closure and revalidate nothing when
+                    // clicked, while the game ticks.
+                    //
+                    // The guard is on this branch only. Unmarking off-map must still clear the flag
+                    // and the target, or a building minified while its menu was open would come back
+                    // marked with materials it cannot use.
+                    if (parent.Map == null)
+                    {
+                        return;
+                    }
+
+                    // DesignationOn first, because DesignationManager.AddDesignation logs a red error
+                    // and returns on a double add. A save written by 1.0.5 or 1.0.6 can carry a
+                    // designation whose component flag is false, and re-marking it hit exactly that.
+                    if (parent.Map.designationManager.DesignationOn(parent, SimpleImproveDefOf.Designation_Improve) == null)
+                    {
+                        parent.Map.designationManager.AddDesignation(
+                            new Designation(parent, SimpleImproveDefOf.Designation_Improve));
+                    }
                 }
                 
                 isMarkedForImprovement = value;
@@ -164,7 +181,35 @@ namespace SimpleImprove.Core
         /// This value is based on the parent thing's WorkToBuild stat.
         /// </summary>
         /// <value>The total work required in work units.</value>
-        public float WorkToBuild => parent.def.GetStatValueAbstract(StatDefOf.WorkToBuild, parent.Stuff);
+        /// <remarks>
+        /// <para>
+        /// The floor is deliberate and is NOT a transcription error against vanilla. Vanilla divides
+        /// by this stat unfloored in both <c>JobDriver_ConstructFinishFrame</c> and
+        /// <c>Frame.PercentComplete</c>, so an auditor diffing against the game will want to remove
+        /// it. Vanilla gets away with it; this mod would not, because it divides in two places and
+        /// one of them decides whether the improvement FAILS.
+        /// </para>
+        /// <para>
+        /// At zero, <c>speed / WorkToBuild</c> is positive infinity,
+        /// <c>Mathf.Pow(successChance, infinity)</c> is zero for any chance below one, so the fail
+        /// roll is <c>Rand.Value &lt; 1f</c> and always true. The pawn destroys the staged materials
+        /// every tick it works and the work giver re-issues the job, while the progress bar reads
+        /// 0/0 as NaN. The stat cannot go negative, since <c>StatWorker.FinalizeValue</c> clamps at
+        /// the def's <c>minValue</c> of 0, so zero is the only bad value.
+        /// </para>
+        /// <para>
+        /// No shipped improvable def is at risk: the nine defs declaring
+        /// <c>&lt;WorkToBuild&gt;0&lt;/WorkToBuild&gt;</c> are all spots (sleeping, marriage, party,
+        /// crafting, butcher, meditation, ritual, caravan packing) and none carries
+        /// <c>CompQuality</c>, so none qualifies. It is reachable anyway: a custom scenario's
+        /// <c>ScenPart_StatFactor</c> accepts 0% and is applied before the clamp, a modded stuff can
+        /// carry a <c>WorkToBuild</c> stat factor of zero, and a modded improvable def can simply
+        /// declare it. Flooring in the property rather than at the two call sites is what keeps
+        /// <see cref="WorkLeft"/> and the inspect string agreeing with them.
+        /// </para>
+        /// </remarks>
+        public float WorkToBuild =>
+            Mathf.Max(parent.def.GetStatValueAbstract(StatDefOf.WorkToBuild, parent.Stuff), 1f);
         
         /// <summary>
         /// Gets the remaining work needed to complete the improvement.
@@ -260,31 +305,39 @@ namespace SimpleImprove.Core
         /// Returns empty list if materials are not required by settings.
         /// </summary>
         /// <returns>A list of materials and their required counts for improvement.</returns>
+        /// <remarks>
+        /// This used to return a <c>cachedMaterialsNeeded</c> field, cleared on entry and refilled,
+        /// so every caller held a live alias to state the next call emptied. Nothing was saving an
+        /// allocation by it, because the loop below allocates a fresh <c>ThingDefCountClass</c> per
+        /// entry per call either way, and the alias was a real hazard one line wide:
+        /// <c>CompInspectStringExtra</c> took this list, then called
+        /// <see cref="GetRemainingMaterialCost"/>, which re-entered here and cleared the very list it
+        /// was about to iterate. It survived only because the refill reproduced identical content.
+        /// </remarks>
         public List<ThingDefCountClass> GetTotalMaterialCost()
         {
-            cachedMaterialsNeeded.Clear();
-            
+            var needed = new List<ThingDefCountClass>();
+
             // If materials are not required, return empty list
             if (!SimpleImproveMod.Settings.RequireMaterials)
             {
-                return cachedMaterialsNeeded;
+                return needed;
             }
-            
+
             var baseCost = parent.def.CostListAdjusted(parent.Stuff, false);
-            var returnedFraction = parent.def.resourcesFractionWhenDeconstructed;
-            
+
             foreach (var material in baseCost)
             {
                 // Apply the material cost multiplier to the full build cost first
                 var adjustedBuildCost = Mathf.CeilToInt(material.count * SimpleImproveMod.Settings.MaterialCostMultiplier);
-                
+
                 if (adjustedBuildCost > 0)
                 {
-                    cachedMaterialsNeeded.Add(new ThingDefCountClass(material.thingDef, adjustedBuildCost));
+                    needed.Add(new ThingDefCountClass(material.thingDef, adjustedBuildCost));
                 }
             }
-            
-            return cachedMaterialsNeeded;
+
+            return needed;
         }
 
         /// <summary>
@@ -341,7 +394,12 @@ namespace SimpleImprove.Core
                 return 0;
             }
             
-            var material = cachedMaterialsNeeded.FirstOrDefault(m => m.thingDef == stuff);
+            // GetTotalMaterialCost(), not a field. This read cachedMaterialsNeeded without ever
+            // populating it, so the answer was whatever the last call on this component instance had
+            // left behind. Its only consumer is JobDriver_HaulToImprove, which sizes the deposit with
+            // it one line before the transfer that would have repopulated it, so on a cold component
+            // the count was 0, the transfer moved nothing, and the pawn walked away still carrying.
+            var material = GetTotalMaterialCost().FirstOrDefault(m => m.thingDef == stuff);
             if (material == null) return 0;
             
             return material.count - GetMaterialContainer().TotalStackCountOfDef(stuff);
