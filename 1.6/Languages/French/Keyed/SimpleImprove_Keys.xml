@@ -42,12 +42,12 @@
   <SimpleImprove_CurrentQualityStandards>Normes de qualité actuelles : {0}</SimpleImprove_CurrentQualityStandards>
   
   <!-- Preset System -->
-  <SimpleImprove_PresetsHeader>Préréglages de Difficulté</SimpleImprove_PresetsHeader>
-  <SimpleImprove_PresetVeryEasy>Très Facile</SimpleImprove_PresetVeryEasy>
-  <SimpleImprove_PresetEasy>Facile</SimpleImprove_PresetEasy>
-  <SimpleImprove_PresetNormal>Normal</SimpleImprove_PresetNormal>
-  <SimpleImprove_PresetHard>Difficile</SimpleImprove_PresetHard>
-  <SimpleImprove_PresetExpert>Expert</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetsHeader>Préréglages des normes de qualité</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>Apprenti</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>Compagnon</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>Par défaut</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>Chevronné</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>Perfectionniste</SimpleImprove_PresetExpert>
   <SimpleImprove_PresetCustom>Personnalisé</SimpleImprove_PresetCustom>
   
   <!-- Skill Requirements Section -->

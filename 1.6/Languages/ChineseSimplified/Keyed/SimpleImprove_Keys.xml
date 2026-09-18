@@ -42,12 +42,12 @@
   <SimpleImprove_CurrentQualityStandards>当前品质标准：{0}</SimpleImprove_CurrentQualityStandards>
   
   <!-- Preset System -->
-  <SimpleImprove_PresetsHeader>难度预设</SimpleImprove_PresetsHeader>
-  <SimpleImprove_PresetVeryEasy>非常简单</SimpleImprove_PresetVeryEasy>
-  <SimpleImprove_PresetEasy>简单</SimpleImprove_PresetEasy>
-  <SimpleImprove_PresetNormal>普通</SimpleImprove_PresetNormal>
-  <SimpleImprove_PresetHard>困难</SimpleImprove_PresetHard>
-  <SimpleImprove_PresetExpert>专家</SimpleImprove_PresetExpert>
+  <SimpleImprove_PresetsHeader>品质标准预设</SimpleImprove_PresetsHeader>
+  <SimpleImprove_PresetVeryEasy>学徒</SimpleImprove_PresetVeryEasy>
+  <SimpleImprove_PresetEasy>熟手</SimpleImprove_PresetEasy>
+  <SimpleImprove_PresetNormal>默认</SimpleImprove_PresetNormal>
+  <SimpleImprove_PresetHard>行家</SimpleImprove_PresetHard>
+  <SimpleImprove_PresetExpert>名家</SimpleImprove_PresetExpert>
   <SimpleImprove_PresetCustom>自定义</SimpleImprove_PresetCustom>
   
   <!-- Skill Requirements Section -->
