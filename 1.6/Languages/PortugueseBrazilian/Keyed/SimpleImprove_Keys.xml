@@ -34,18 +34,11 @@
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Qualquer melhoria</SimpleImprove_TargetAny>
-  <SimpleImprove_TargetQuality>Qualidade alvo: {0}</SimpleImprove_TargetQuality>
   
   <!-- Settings Menu -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
-  <SimpleImprove_SettingsSkillHeader>Requisitos mínimos de habilidade para melhorar a cada nível de qualidade:</SimpleImprove_SettingsSkillHeader>
-  <SimpleImprove_SettingsCalculatorHeader>Calculadora de Distribuição de Qualidade:</SimpleImprove_SettingsCalculatorHeader>
-  <SimpleImprove_SettingsSuccessThreshold>Limite de chance de sucesso:</SimpleImprove_SettingsSuccessThreshold>
-  <SimpleImprove_SettingsCalculateButton>Calcular Requisitos de Habilidade</SimpleImprove_SettingsCalculateButton>
-  
   
   <!-- New Settings Menu (Version 2) - Portuguese Brazilian translations -->
-  <SimpleImprove_SettingsTitle>Simple Improve - Configuração</SimpleImprove_SettingsTitle>
   <SimpleImprove_CurrentQualityStandards>Padrões de Qualidade Atuais: {0}</SimpleImprove_CurrentQualityStandards>
   
   <!-- Preset System -->
@@ -57,32 +50,13 @@
   <SimpleImprove_PresetExpert>Artesão</SimpleImprove_PresetExpert>
   <SimpleImprove_PresetCustom>Personalizado</SimpleImprove_PresetCustom>
   
-  <!-- Preset Tooltips -->
-  <SimpleImprove_PresetVeryEasyTooltip>Requisitos de habilidade flexíveis para tentar melhorias.</SimpleImprove_PresetVeryEasyTooltip>
-  <SimpleImprove_PresetEasyTooltip>Requisitos de habilidade baixos para tentar melhorias.</SimpleImprove_PresetEasyTooltip>
-  <SimpleImprove_PresetNormalTooltip>Requisitos de habilidade equilibrados para tentar melhorias.</SimpleImprove_PresetNormalTooltip>
-  <SimpleImprove_PresetHardTooltip>Requisitos de habilidade altos para tentar melhorias.</SimpleImprove_PresetHardTooltip>
-  <SimpleImprove_PresetExpertTooltip>Requisitos de habilidade rigorosos para tentar melhorias.</SimpleImprove_PresetExpertTooltip>
-  <SimpleImprove_PresetCustomTooltip>Configuração personalizada. Permite definir requisitos de habilidade individuais.</SimpleImprove_PresetCustomTooltip>
-  
   <!-- Skill Requirements Section -->
   <SimpleImprove_SkillRequirementsHeader>Requisitos de Habilidade Personalizados</SimpleImprove_SkillRequirementsHeader>
-  <SimpleImprove_PresetPreviewHeader>Requisitos de Habilidade Atuais</SimpleImprove_PresetPreviewHeader>
-  <SimpleImprove_SkillRequirementTooltip>Habilidade mínima de Construção para tentar melhorar para qualidade {0}.</SimpleImprove_SkillRequirementTooltip>
-  <SimpleImprove_SkillSuccessRate>Habilidade {0}: {1}% taxa de sucesso\n</SimpleImprove_SkillSuccessRate>
   
   <!-- Advanced Settings -->
-  <SimpleImprove_AdvancedSettings>Configurações Avançadas</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>Requer materiais para melhoria</SimpleImprove_RequireMaterials>
-  <SimpleImprove_RequireMaterialsTooltip>Quando ativado, melhorias requerem materiais como construção normal. Quando desativado, melhorias só requerem trabalho.</SimpleImprove_RequireMaterialsTooltip>
   <SimpleImprove_MaterialCostMultiplier>Porcentagem do custo de material</SimpleImprove_MaterialCostMultiplier>
   <SimpleImprove_MaterialCostMultiplierTooltip>Porcentagem dos custos normais de material (10% a 500%, padrão 100%). Valores menores tornam melhorias mais baratas, valores maiores as tornam mais caras.</SimpleImprove_MaterialCostMultiplierTooltip>
-  
-  <!-- Success Rate Preview -->
-  <SimpleImprove_ShowSuccessRates>Mostrar prévia da taxa de sucesso</SimpleImprove_ShowSuccessRates>
-  <SimpleImprove_ShowSuccessRatesTooltip>Exibir uma tabela mostrando taxas de sucesso para diferentes níveis de habilidade e qualidades.</SimpleImprove_ShowSuccessRatesTooltip>
-  <SimpleImprove_SuccessRatePreview>Prévia da Taxa de Sucesso</SimpleImprove_SuccessRatePreview>
-  <SimpleImprove_SkillLevel>Habilidade</SimpleImprove_SkillLevel>
   
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>Redefinir para Padrões</SimpleImprove_ResetToDefaults>
@@ -90,4 +64,13 @@
   <!-- Work messages -->
   <SimpleImprove_NoConstructionSkill>{0} não tem habilidade de construção.</SimpleImprove_NoConstructionSkill>
   
+  <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_StoredMaterialsNotRequired>Materiais armazenados (não obrigatórios):</SimpleImprove_StoredMaterialsNotRequired>
+  <SimpleImprove_MinimumSkillFor>Habilidade mínima para {0}: {1}</SimpleImprove_MinimumSkillFor>
+  <SimpleImprove_AnySkillAccepted>Qualquer nível de habilidade é aceito (marcado para melhoria qualquer)</SimpleImprove_AnySkillAccepted>
+  <SimpleImprove_MaterialsNotRequired>Materiais não obrigatórios (desativado nas configurações)</SimpleImprove_MaterialsNotRequired>
+  <SimpleImprove_SkillTooLow>Habilidade de construção baixa demais para {0}: requer {1}.</SimpleImprove_SkillTooLow>
+  <SimpleImprove_SkillTooLowDespiteBonus>Habilidade de construção baixa demais para {0}: requer {1}, ou {2} com a inspiração ou função deste colono.</SimpleImprove_SkillTooLowDespiteBonus>
+  
 </LanguageData>
+  

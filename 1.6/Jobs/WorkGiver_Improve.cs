@@ -403,34 +403,41 @@ namespace SimpleImprove.Jobs
                             return null;
                         }
 
-                        var pawnSkill = workerSkill.Level;
-                        var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value);
+                        // The two numbers used to be the wrong way round, and because a bonus can
+                        // only ever subtract, the one offered as the improvement was always the
+                        // larger. The greyed-out menu entry read "need <bonused> (or <unbonused>
+                        // with inspiration/role)", so a player was told that being inspired would
+                        // make the job HARDER.
+                        //
+                        // requiredSkill already includes whatever bonus this pawn currently has,
+                        // because GetSkillRequirement was given the pawn. baseRequiredSkill is the
+                        // same lookup with no pawn, so it is the unbonused figure and the one to
+                        // lead with.
+                        int baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value);
 
-                        if (baseRequiredSkill > pawnSkill)
+                        // The old else-arm could not run. It was guarded on
+                        // baseRequiredSkill > pawnSkill, and reaching this case at all means
+                        // requiredSkill > pawnSkill, with baseRequiredSkill >= requiredSkill always,
+                        // so the guard was a tautology and the two "Need inspiration for X" messages
+                        // were dead in vanilla. They were also the wrong messages to want back: they
+                        // said "you have the skill, you just need the bonus", which cannot be true
+                        // here, since requiredSkill is already computed WITH this pawn's bonus.
+                        //
+                        // The real distinction, and the only one these numbers can support, is
+                        // whether this pawn is getting a bonus at all. If they are and are still
+                        // short, both figures are worth showing. If they are not, the two numbers
+                        // are equal and printing both says nothing.
+                        if (requiredSkill.Value < baseRequiredSkill)
                         {
-                            // Even with bonuses, skill is too low
-                            if (ModsConfig.IdeologyActive)
-                            {
-                                JobFailReason.Is($"Skill too low for {targetQuality.Value.GetLabel()} target: need {requiredSkill} (or {baseRequiredSkill} with inspiration/role)");
-                            }
-                            else
-                            {
-                                JobFailReason.Is($"Skill too low for {targetQuality.Value.GetLabel()} target: need {requiredSkill} (or {baseRequiredSkill} with inspiration)");
-                            }
+                            JobFailReason.Is("SimpleImprove_SkillTooLowDespiteBonus".Translate(
+                                targetQuality.Value.GetLabel(), baseRequiredSkill, requiredSkill.Value));
                         }
                         else
                         {
-                            // Skill is high enough with bonuses
-                            if (ModsConfig.IdeologyActive)
-                            {
-                                JobFailReason.Is($"Need inspiration or production role for {targetQuality.Value.GetLabel()} target (skill {requiredSkill} required)");
-                            }
-                            else
-                            {
-                                JobFailReason.Is($"Need inspiration for {targetQuality.Value.GetLabel()} target (skill {requiredSkill} required)");
-                            }
+                            JobFailReason.Is("SimpleImprove_SkillTooLow".Translate(
+                                targetQuality.Value.GetLabel(), baseRequiredSkill));
                         }
-                        
+
                         return null;
                     }
             }

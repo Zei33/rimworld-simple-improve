@@ -820,7 +820,7 @@ namespace SimpleImprove.Core
                 // If materials are not required but there are stored materials, show them
                 if (GetMaterialContainer().Any)
                 {
-                    sb.AppendLine("Stored materials (not required):");
+                    sb.AppendLine("SimpleImprove_StoredMaterialsNotRequired".Translate());
                     var storedMaterials = GetMaterialContainer().GroupBy(t => t.def)
                         .Select(g => new { Def = g.Key, Count = g.Sum(t => t.stackCount) });
                     
@@ -844,19 +844,20 @@ namespace SimpleImprove.Core
                     var skillReq = SimpleImproveMod.Settings.GetSkillRequirement(TargetQuality.Value);
                     if (skillReq > 0)
                     {
-                        sb.AppendLine($"Minimum skill required for {TargetQuality.Value.GetLabel()}: {skillReq}");
+                        sb.AppendLine("SimpleImprove_MinimumSkillFor".Translate(
+                            TargetQuality.Value.GetLabel(), skillReq));
                     }
                 }
                 else
                 {
                     // For "Any" improvement, show that no specific skill is required
-                    sb.AppendLine("Any skill level accepted (marked for any improvement)");
+                    sb.AppendLine("SimpleImprove_AnySkillAccepted".Translate());
                 }
                 
                 // Show note if materials are disabled
                 if (!SimpleImproveMod.Settings.RequireMaterials)
                 {
-                    sb.AppendLine("Materials not required (disabled in settings)");
+                    sb.AppendLine("SimpleImprove_MaterialsNotRequired".Translate());
                 }
             }
             

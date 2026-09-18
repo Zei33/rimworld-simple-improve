@@ -34,17 +34,11 @@
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Any improvement</SimpleImprove_TargetAny>
-  <SimpleImprove_TargetQuality>Target quality: {0}</SimpleImprove_TargetQuality>
   
   <!-- Settings Menu - Legacy (kept for compatibility) -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
-  <SimpleImprove_SettingsSkillHeader>Minimum skill requirements to improve to each quality level:</SimpleImprove_SettingsSkillHeader>
-  <SimpleImprove_SettingsCalculatorHeader>Quality Distribution Calculator:</SimpleImprove_SettingsCalculatorHeader>
-  <SimpleImprove_SettingsSuccessThreshold>Success chance threshold:</SimpleImprove_SettingsSuccessThreshold>
-  <SimpleImprove_SettingsCalculateButton>Calculate Skill Requirements</SimpleImprove_SettingsCalculateButton>
   
   <!-- New Settings Menu (Version 2) -->
-  <SimpleImprove_SettingsTitle>Simple Improve - Configuration</SimpleImprove_SettingsTitle>
   <SimpleImprove_CurrentQualityStandards>Current Quality Standards: {0}</SimpleImprove_CurrentQualityStandards>
   
   <!-- Preset System -->
@@ -56,37 +50,26 @@
   <SimpleImprove_PresetExpert>Artisan</SimpleImprove_PresetExpert>
   <SimpleImprove_PresetCustom>Custom</SimpleImprove_PresetCustom>
   
-  <!-- Preset Tooltips -->
-  <SimpleImprove_PresetVeryEasyTooltip>Loose skill requirements for attempting improvements.</SimpleImprove_PresetVeryEasyTooltip>
-  <SimpleImprove_PresetEasyTooltip>Low skill requirements for attempting improvement.</SimpleImprove_PresetEasyTooltip>
-  <SimpleImprove_PresetNormalTooltip>Balanced skill requirements for attempting improvement.</SimpleImprove_PresetNormalTooltip>
-  <SimpleImprove_PresetHardTooltip>High skill requirements for attempting improvement.</SimpleImprove_PresetHardTooltip>
-  <SimpleImprove_PresetExpertTooltip>Tight skill requirements for attempting improvement.</SimpleImprove_PresetExpertTooltip>
-  <SimpleImprove_PresetCustomTooltip>Custom configuration. Allows you to set individual skill requirements.</SimpleImprove_PresetCustomTooltip>
-  
   <!-- Skill Requirements Section -->
   <SimpleImprove_SkillRequirementsHeader>Custom Skill Requirements</SimpleImprove_SkillRequirementsHeader>
-  <SimpleImprove_PresetPreviewHeader>Current Skill Requirements</SimpleImprove_PresetPreviewHeader>
-  <SimpleImprove_SkillRequirementTooltip>Minimum Construction skill to attempt improving to {0} quality.</SimpleImprove_SkillRequirementTooltip>
-  <SimpleImprove_SkillSuccessRate>Skill {0}: {1}% success rate\n</SimpleImprove_SkillSuccessRate>
   
   <!-- Advanced Settings -->
-  <SimpleImprove_AdvancedSettings>Advanced Settings</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>Require materials for improvement</SimpleImprove_RequireMaterials>
-  <SimpleImprove_RequireMaterialsTooltip>When enabled, improvements require materials like normal construction. When disabled, improvements only require work.</SimpleImprove_RequireMaterialsTooltip>
   <SimpleImprove_MaterialCostMultiplier>Material cost percentage</SimpleImprove_MaterialCostMultiplier>
   <SimpleImprove_MaterialCostMultiplierTooltip>Percentage of normal material costs (10% to 500%, default 100%). Lower values make improvements cheaper, higher values make them more expensive.</SimpleImprove_MaterialCostMultiplierTooltip>
-  
-  <!-- Success Rate Preview -->
-  <SimpleImprove_ShowSuccessRates>Show success rate preview</SimpleImprove_ShowSuccessRates>
-  <SimpleImprove_ShowSuccessRatesTooltip>Display a table showing success rates for different skill levels and qualities.</SimpleImprove_ShowSuccessRatesTooltip>
-  <SimpleImprove_SuccessRatePreview>Success Rate Preview</SimpleImprove_SuccessRatePreview>
-  <SimpleImprove_SkillLevel>Skill</SimpleImprove_SkillLevel>
   
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>Reset to Defaults</SimpleImprove_ResetToDefaults>
   
   <!-- Work messages -->
   <SimpleImprove_NoConstructionSkill>{0} has no construction skill.</SimpleImprove_NoConstructionSkill>
+  
+  <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_StoredMaterialsNotRequired>Stored materials (not required):</SimpleImprove_StoredMaterialsNotRequired>
+  <SimpleImprove_MinimumSkillFor>Minimum skill for {0}: {1}</SimpleImprove_MinimumSkillFor>
+  <SimpleImprove_AnySkillAccepted>Any skill level accepted (marked for any improvement)</SimpleImprove_AnySkillAccepted>
+  <SimpleImprove_MaterialsNotRequired>Materials not required (disabled in settings)</SimpleImprove_MaterialsNotRequired>
+  <SimpleImprove_SkillTooLow>Construction skill too low for {0}: needs {1}.</SimpleImprove_SkillTooLow>
+  <SimpleImprove_SkillTooLowDespiteBonus>Construction skill too low for {0}: needs {1}, or {2} with this pawn's inspiration or role.</SimpleImprove_SkillTooLowDespiteBonus>
   
 </LanguageData>

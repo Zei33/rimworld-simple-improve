@@ -34,18 +34,11 @@
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Любое улучшение</SimpleImprove_TargetAny>
-  <SimpleImprove_TargetQuality>Целевое качество: {0}</SimpleImprove_TargetQuality>
   
   <!-- Settings Menu -->
   <SimpleImprove_SettingsCategory>Simple Improve</SimpleImprove_SettingsCategory>
-  <SimpleImprove_SettingsSkillHeader>Минимальные требования к навыкам для улучшения до каждого уровня качества:</SimpleImprove_SettingsSkillHeader>
-  <SimpleImprove_SettingsCalculatorHeader>Калькулятор Распределения Качества:</SimpleImprove_SettingsCalculatorHeader>
-  <SimpleImprove_SettingsSuccessThreshold>Порог шанса успеха:</SimpleImprove_SettingsSuccessThreshold>
-  <SimpleImprove_SettingsCalculateButton>Рассчитать Требования к Навыкам</SimpleImprove_SettingsCalculateButton>
-  
   
   <!-- New Settings Menu (Version 2) - Russian translations -->
-  <SimpleImprove_SettingsTitle>Simple Improve - Настройка</SimpleImprove_SettingsTitle>
   <SimpleImprove_CurrentQualityStandards>Текущие стандарты качества: {0}</SimpleImprove_CurrentQualityStandards>
   
   <!-- Preset System -->
@@ -57,32 +50,13 @@
   <SimpleImprove_PresetExpert>Ремесленник</SimpleImprove_PresetExpert>
   <SimpleImprove_PresetCustom>Пользовательский</SimpleImprove_PresetCustom>
   
-  <!-- Preset Tooltips -->
-  <SimpleImprove_PresetVeryEasyTooltip>Мягкие требования к навыкам для попыток улучшений.</SimpleImprove_PresetVeryEasyTooltip>
-  <SimpleImprove_PresetEasyTooltip>Низкие требования к навыкам для попыток улучшений.</SimpleImprove_PresetEasyTooltip>
-  <SimpleImprove_PresetNormalTooltip>Сбалансированные требования к навыкам для попыток улучшений.</SimpleImprove_PresetNormalTooltip>
-  <SimpleImprove_PresetHardTooltip>Высокие требования к навыкам для попыток улучшений.</SimpleImprove_PresetHardTooltip>
-  <SimpleImprove_PresetExpertTooltip>Строгие требования к навыкам для попыток улучшений.</SimpleImprove_PresetExpertTooltip>
-  <SimpleImprove_PresetCustomTooltip>Пользовательская конфигурация. Позволяет установить индивидуальные требования к навыкам.</SimpleImprove_PresetCustomTooltip>
-  
   <!-- Skill Requirements Section -->
   <SimpleImprove_SkillRequirementsHeader>Пользовательские Требования к Навыкам</SimpleImprove_SkillRequirementsHeader>
-  <SimpleImprove_PresetPreviewHeader>Текущие Требования к Навыкам</SimpleImprove_PresetPreviewHeader>
-  <SimpleImprove_SkillRequirementTooltip>Минимальный навык Строительства для попытки улучшения до качества {0}.</SimpleImprove_SkillRequirementTooltip>
-  <SimpleImprove_SkillSuccessRate>Навык {0}: {1}% успешность\n</SimpleImprove_SkillSuccessRate>
   
   <!-- Advanced Settings -->
-  <SimpleImprove_AdvancedSettings>Дополнительные Настройки</SimpleImprove_AdvancedSettings>
   <SimpleImprove_RequireMaterials>Требовать материалы для улучшения</SimpleImprove_RequireMaterials>
-  <SimpleImprove_RequireMaterialsTooltip>Когда включено, улучшения требуют материалы как обычное строительство. Когда отключено, улучшения требуют только работу.</SimpleImprove_RequireMaterialsTooltip>
   <SimpleImprove_MaterialCostMultiplier>Процент стоимости материалов</SimpleImprove_MaterialCostMultiplier>
   <SimpleImprove_MaterialCostMultiplierTooltip>Процент от нормальной стоимости материалов (10% до 500%, по умолчанию 100%). Меньшие значения делают улучшения дешевле, большие - дороже.</SimpleImprove_MaterialCostMultiplierTooltip>
-  
-  <!-- Success Rate Preview -->
-  <SimpleImprove_ShowSuccessRates>Показать предварительный просмотр успешности</SimpleImprove_ShowSuccessRates>
-  <SimpleImprove_ShowSuccessRatesTooltip>Показать таблицу с показателями успешности для разных уровней навыков и качества.</SimpleImprove_ShowSuccessRatesTooltip>
-  <SimpleImprove_SuccessRatePreview>Предварительный Просмотр Успешности</SimpleImprove_SuccessRatePreview>
-  <SimpleImprove_SkillLevel>Навык</SimpleImprove_SkillLevel>
   
   <!-- Buttons and Actions -->
   <SimpleImprove_ResetToDefaults>Сбросить к Умолчаниям</SimpleImprove_ResetToDefaults>
@@ -90,4 +64,13 @@
   <!-- Work messages -->
   <SimpleImprove_NoConstructionSkill>{0} не имеет навыка строительства.</SimpleImprove_NoConstructionSkill>
   
+  <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_StoredMaterialsNotRequired>Хранящиеся материалы (не требуются):</SimpleImprove_StoredMaterialsNotRequired>
+  <SimpleImprove_MinimumSkillFor>Минимальный навык для {0}: {1}</SimpleImprove_MinimumSkillFor>
+  <SimpleImprove_AnySkillAccepted>Принимается любой уровень навыка (отмечено для любого улучшения)</SimpleImprove_AnySkillAccepted>
+  <SimpleImprove_MaterialsNotRequired>Материалы не требуются (отключено в настройках)</SimpleImprove_MaterialsNotRequired>
+  <SimpleImprove_SkillTooLow>Навык строительства слишком низок для {0}: требуется {1}.</SimpleImprove_SkillTooLow>
+  <SimpleImprove_SkillTooLowDespiteBonus>Навык строительства слишком низок для {0}: требуется {1}, или {2} с учётом вдохновения или роли этого колониста.</SimpleImprove_SkillTooLowDespiteBonus>
+  
 </LanguageData>
+  
