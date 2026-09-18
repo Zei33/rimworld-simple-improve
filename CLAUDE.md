@@ -204,6 +204,40 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   returns -1. The role half is simpler: `PawnComponentsUtility` creates `pawn.ideo` only inside
   `if (pawn.RaceProps.Humanlike)`, so `Pawn.Ideo` is null for a mechanoid. An auditor diffing the two
   sites will otherwise "fix" this one to match.
+- **Nothing in this mod may hand a completed `Building` to `GenConstruct.CanConstruct`, and
+  `ImproveSite` exists to keep it that way.** Every one of vanilla's seven call sites passes a
+  `Blueprint` or a `Frame`, the only two implementors of `IConstructible`, and both always carry a
+  non-null `def.entityDefToBuild`. A finished building carries none, so a third-party postfix reading
+  that field throws here and nowhere else, and the exception kills the whole work giver rather than
+  reading as a fault in the patch. Two players reported it a month apart in 2025 with the same mod in
+  the stack.
+  - **A null `jobForReservation` is not the unusual part.** Two of the seven vanilla sites pass null,
+    `JobDriver_ConstructFinishFrame` and `WorkGiver_ConstructFinishFrames`, so passing a job def
+    would have changed the shape without touching what differs and fixed neither report.
+  - **There were two call sites, not one.** The issue named only `WorkGiver_Improve`.
+    `JobDriver_Improve` made the same call from inside a `FailOn` lambda, which runs while the pawn
+    works rather than once per scan, and which a search for the call in that method does not find
+    because the compiler hoists the lambda into a nested type. A test now asserts the whole assembly
+    makes no such call, for that reason.
+  - **Hand-rolling is not reimplementing.** With `checkSkills: false` and a finished building exactly
+    five of `CanConstruct`'s checks are reachable, and all five are public vanilla methods called
+    directly: `FirstBlockingThing`, `CanTouchTargetFromValidCell`, `CanReserveAndReach`, `IsBurning`
+    and `Ideo.MembersCanBuild`. The skill block is the one this mod bypasses on purpose, and the
+    trailing blueprint-or-frame block is dead code for something that already exists.
+  - **The cost is Humanoid Alien Races.** Most postfixes on this method never answered for a finished
+    building anyway: Vanilla Expanded Framework's three bail on a null `entityDefToBuild` and Alpha
+    Genes' compares it against a def, so it is false for the very building it gates. HAR's is
+    `RaceRestrictionSettings.CanBuild(t.def.entityDefToBuild ?? t.def, p.def)`, which answers
+    correctly, so a race forbidden to build something was also forbidden to improve it and now is
+    not. Invisible in game, so it needs a release note.
+  - **`FirstBlockingThing` still gets the finished building, and one line keeps that safe.** It
+    reaches `BlocksConstruction`, which dereferences `BlueprintDefOf(constructible).entityDefToBuild`,
+    and `BlueprintDefOf` returns `def.blueprintDef` for anything that is neither blueprint nor frame.
+    So a marked building whose def has no blueprint throws inside vanilla as soon as anything else
+    occupies one of its cells, including the worker, because `BlocksConstruction` is evaluated before
+    the `!= pawnToIgnore` test. Nothing in vanilla holds that shut; `ImprovableDefs.Qualifies` and the
+    two marking guards do. `CanWorkOn` now refuses such a building itself rather than relying on them.
+
 - **Unity never takes keyboard focus off a text field when the player clicks somewhere else, and
   neither does RimWorld's window code.** `GUI.HandleTextFieldEventForDesktop` assigns
   `GUIUtility.keyboardControl` only when a mouse down lands inside the field, `GUI.DoControl` behind
@@ -368,8 +402,8 @@ consistent. The same applies to anything else that puts a thing in a container.
 | ~~No `ShouldSkip`, no `PotentialWorkThingsGlobal`~~ | fixed 2026-09-18, issue #3 | Was: every pawn reachability-scanned every `BuildingArtificial` on the map on every job search, even with nothing marked. `ShouldSkip` now exits on the designation count, and the search set is the designated buildings with `PotentialWorkThingRequest` left `Undefined` so no region walk is built |
 | `HasJobOnThing` delegates to `JobOnThing` | `1.6/Jobs/WorkGiver_Improve.cs:49` | Full job construction runs as the scan validator, then again on the winner |
 | Nested `GenClosest.ClosestThingReachable` inside that validator | `1.6/Jobs/WorkGiver_Improve.cs:186` | Unbounded (9999f) map search per required material, per candidate |
-| A completed `Building` is handed to `GenConstruct.CanConstruct` | `1.6/Jobs/WorkGiver_Improve.cs:105` | An argument shape no vanilla caller produces. Any third-party postfix that assumes a blueprint or frame throws and kills the whole scan |
-| Chairs cannot be improved (likely) | `1.6/Jobs/WorkGiver_Improve.cs:105` | `CanConstruct(..., checkSkills: true, ...)` enforces `constructionSkillPrerequisite`, which `DiningChair` (4), `Armchair` (5) and `Couch` (5) declare and beds, stools and dressers do not |
+| ~~A completed `Building` is handed to `GenConstruct.CanConstruct`~~ | fixed 2026-09-18, issue #7 | Was: an argument shape no vanilla caller produces, from **two** call sites rather than the one the issue named. `ImproveSite.CanWorkOn` calls the same five public vanilla methods in the same order instead. Costs Humanoid Alien Races players its building restriction on improvement; needs a release note |
+| ~~Chairs cannot be improved~~ | fixed 2026-09-17, confirmed in game | Was: `CanConstruct(..., checkSkills: true, ...)` enforcing `constructionSkillPrerequisite`, which `DiningChair` (4), `Armchair` (5) and `Couch` (5) declare and beds, stools and dressers do not. There is no `checkSkills` argument anywhere in the mod since #7: the block that read it is not transcribed into `ImproveSite` at all, so the regression cannot return by flipping a flag |
 | ~~Unguarded `pawn.skills` dereference~~ | fixed 2026-09-18, issue #9 | Was: any non-humanlike worker NREs, every tick during the job. All five sites and both `workSettings` sites now go through `WorkerSkill` and `ImproveWorkers` |
 | ~~Mechs can never take the work type~~ | fixed 2026-09-18, issue #8 | Was: `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`. `1.6/Patches/MechWorkTypes.xml` appends the improving work type to it |
 | Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history, while three published descriptions advertise the tab |
@@ -404,7 +438,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 136 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 229 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 

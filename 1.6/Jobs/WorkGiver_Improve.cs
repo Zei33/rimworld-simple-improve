@@ -174,23 +174,26 @@ namespace SimpleImprove.Jobs
                 return null;
             }
 
-            // checkSkills is deliberately false. It gates ThingDef.constructionSkillPrerequisite,
-            // which exists to gate BUILDING a thing from scratch, not working on one that already
-            // exists. Leaving it true made improvement inherit the build requirement: a DiningChair
-            // declares 4 and an Armchair 5, so a Construction 3 pawn was refused with "Construction
-            // skill too low" while a Stool, which declares none, was accepted. That is the chair bug
-            // users reported. Confirmed in game on 2026-09-17 as a clean staircase across
-            // Stool/DiningChair/Armchair at Construction 3, 4 and 5.
+            // This used to be GenConstruct.CanConstruct(thing, pawn, checkSkills: false, forced).
+            // ImproveSite.CanWorkOn asks the same five questions of the same five vanilla methods in
+            // the same order; what it does not do is route them through CanConstruct, which every
+            // vanilla caller hands a Blueprint or a Frame and which this mod was handing a completed
+            // Building. ImproveSite carries why that mattered and what dropping the call gives up.
+            //
+            // The skill prerequisite is still bypassed, and still deliberately. checkSkills gated
+            // ThingDef.constructionSkillPrerequisite, which exists to gate BUILDING a thing from
+            // scratch rather than working on one that already exists. Leaving it on made improvement
+            // inherit the build requirement: a DiningChair declares 4 and an Armchair 5, so a
+            // Construction 3 pawn was refused with "Construction skill too low" while a Stool, which
+            // declares none, was accepted. That is the chair bug users reported, confirmed in game on
+            // 2026-09-17 as a clean staircase across Stool/DiningChair/Armchair at Construction 3, 4
+            // and 5. It cannot come back by accident now, because the block that read it is not
+            // transcribed at all rather than switched off by an argument that is easy to transpose.
             //
             // Vanilla's own work giver for an already-built Building, RimWorld.WorkGiver_Repair,
-            // never calls CanConstruct at all and imposes no such prerequisite. This mod has its own
-            // skill model keyed to the target quality, just below, which is the gate that should
-            // apply. Note the third parameter is checkSkills, not forced; they are easy to transpose.
-            //
-            // Everything else CanConstruct does is still wanted and still runs: FirstBlockingThing
-            // (so a pawn sitting on the furniture still blocks it), reachability, reservation,
-            // burning and the Ideology building restriction.
-            if (!GenConstruct.CanConstruct(thing, pawn, checkSkills: false, forced: forced))
+            // never calls CanConstruct either and imposes no such prerequisite. This mod's own skill
+            // model, keyed to the target quality, is just below and is the gate that should apply.
+            if (!ImproveSite.CanWorkOn(thing, pawn, forced))
                 return null;
 
             // The skill gate. Both halves live in WorkerSkill.FirstBlocker so their order is a

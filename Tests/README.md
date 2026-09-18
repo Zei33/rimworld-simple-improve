@@ -63,9 +63,10 @@ decision over it), `WorkerSkill` (the skill gate that keeps a skill-less worker 
 quality roll), `ImproveWorkers` (the mech priority correction), `ImproveDesignations` (the work
 giver's search set and the designation re-sync), `StoredMaterials` (when hauled materials come
 back), `MaterialCostField` (the material cost range and the two decisions that drive its text
-field), `QualityBonuses` (the best case behind the skill warning), the work giver's declared surface,
-the shipped `PatchOperation` XML, and the target quality field and container allocation behaviour on
-`SimpleImproveComp`.
+field), `QualityBonuses` (the best case behind the skill warning), `ImproveSite` (the replacement for
+`GenConstruct.CanConstruct`, whose one runnable guard is covered and whose five vanilla calls are
+pinned by reading the compiled IL), the work giver's declared surface, the shipped `PatchOperation`
+XML, and the target quality field and container allocation behaviour on `SimpleImproveComp`.
 
 `WorkerSkill` is the worked example of the split this harness rewards, and it is worth copying. The
 readings that cannot be tested (`pawn.skills`, `RaceProps.IsMechanoid`, `mechFixedSkillLevel`) are
@@ -233,6 +234,70 @@ needs IMGUI: deleting the `GUI.SetNextControlName` call so the focus test never 
 the focus test itself, and deleting the `UI.UnfocusCurrentControl()` call that notices a click
 landing outside the field.
 
+For the `CanConstruct` replacement, sixteen mutations were measured on 2026-09-18 against the suite
+at 228 tests, and an adversarial review then found four more ways these tests could hold nothing,
+which is why the suite is 229 and several of the assertions are wider than the mutation runs alone
+would have made them. The four are worth naming, because three are shapes that will recur:
+
+- **`Assume.That` deletes a test and reports success.** The three preconditions in
+  `ABuildingWithNoBlueprintIsRefusedBeforeVanillaIsAsked` were `Assume`. NUnit turns a failed
+  assumption into Inconclusive, the runner drops an inconclusive test from the totals rather than
+  failing, and the run still prints `Passed!` with the count one lower. So the fixture's only
+  executable test could stop running and say nothing. They are assertions now. **Do not use `Assume`
+  for a premise whose failure means the test has stopped testing.**
+- **A whitelist assertion is blind in both directions.** The order test used to filter the extracted
+  call list down to six interesting names before comparing, so it pinned those six and could not see
+  any other call arriving or leaving. It compares the whole sequence of calls into the game assembly
+  now, seventeen of them, which is the mod's entire vanilla contact surface for this decision.
+- **A positive control has to cover the ground the negative test guards.** The control proving the IL
+  scan can see anything at all was anchored in `SimpleImprove.Core`, while the defect and both former
+  call sites are in `SimpleImprove.Jobs`, one inside a hoisted lambda. A filter matching a subset of
+  the mod rather than nothing would have left the control green. It now asserts both specifically.
+- **The check that catches everything else was itself unchecked.** The branch-target check is the
+  only thing that catches a misaligned walk that happens to end on the last byte, and deleting it was
+  silent across the whole suite. It has its own test now, over hand-built bytes, because no real
+  method can be deliberately malformed and `DynamicMethod.GetMethodBody` throws here.
+
+Five more were measured after those fixes, making twenty-one, of which eighteen are caught: the
+`blueprintDef` guard deleted (1) or moved below `FirstBlockingThing` (2); either call site calling
+`GenConstruct.CanConstruct` again (3, 4); any one of the five checks dropped, `FirstBlockingThing`
+(5), `CanTouchTargetFromValidCell` (6), `IsBurning` (7) or the whole Ideology branch (8); the
+Ideology fail-reason loop dropped while the decision stays (9); `IsBurning` reordered to the front
+(10); the work giver checking skill before site (11); a sixth vanilla check quietly added to
+`CanWorkOn` (18); and five against the IL reader itself, mishandling the `switch` operand length
+(12), the mod-method scan matching no types (13), reaching `SimpleImprove.Core` but not
+`SimpleImprove.Jobs` (19), skipping compiler-generated nested types and so the job driver's lambda
+(20), and the guard test's own premise going stale (21).
+
+Mutations 2 and 12 are worth naming because the first draft of these tests missed both, and each is a
+way a test can look right and hold nothing:
+
+- **Moving the `blueprintDef` guard below the vanilla call survived.** The test built its def with
+  `FormatterServices.GetUninitializedObject`, which bypasses field initialisers, so `ThingDef.size`
+  arrived as `(0, 0)` rather than its declared `IntVec2.One`. A thing that occupies no cells walks
+  out of `FirstBlockingThing`'s loop before touching the null `Map`, so vanilla never got the chance
+  to throw and the guard's position did not matter. The test sets the size now.
+- **Breaking the IL walker's `switch` handling survived the walker's own integrity check.** Ending
+  exactly on the last byte looked like proof of alignment and is not, for the jump-table reason
+  above. The branch-target check is what catches it, and mutation 12 and "delete the branch-target
+  check" are therefore not independent: the second hides the first. That is why the check now has a
+  test of its own (17) rather than only being the reason another mutation fails.
+
+  Note also that the mod does compile three jump tables today, `SimpleImproveSettings`
+  `.GetPresetDisplayName` and the two `MakeNewToils` iterator state machines, so mutation 12 fails
+  five tests rather than one. The work giver's `switch` over `WorkerSkill.FirstBlocker` is not among
+  them: too few cases, and the compiler emits a comparison chain. The dense switch in
+  `ImproveSiteTests` exists so the branch stays exercised by code this suite owns even if those three
+  change shape, because whether a `switch` statement becomes a jump table is the compiler's decision
+  and not the source's.
+
+Three survive, and all three are limits of reading IL rather than gaps that can be closed here.
+Hardcoding `forced` to `false` at the work giver's call site survives, because the call list is the
+same call list; so does discarding the answer entirely, because the `if` around a call is not
+something IL reading can see. Both join the in-game checks below. The third, dropping `ldftn` from
+the walker's call-shaped set, survives because no assertion depends on it: the job driver's lambda is
+found by walking the generated nested type directly, which is the more robust route anyway.
+
 **Inverting the focus test is the most important in-game check this suite cannot do.** It normalises
 the box while the player is typing and leaves the raw text alone once they are out of it, which is
 the reported defect back with the fix apparently in place, and every test of `Typing` and `Unfocused`
@@ -249,11 +314,58 @@ still passes. Three checks settle the whole control:
    the setting must be 500%. That is `SimpleImproveMod.WriteSettings`, which is the commit point for
    every ordinary way out of the window, none of which moves keyboard focus.
 
-The reflection tests hold the *declarations*, not the bodies, and no test can reach the bodies
+**The `CanConstruct` replacement owes three in-game checks of its own**, because reading IL proves
+the five calls are there and proves nothing about what is done with the answer. Two mutations
+survived on exactly that.
+
+4. Sit a pawn on a marked dining chair and confirm it still cannot be improved while they sit there.
+   That is `FirstBlockingThing`, it was confirmed as wanted in game on 2026-09-17, and it is the
+   check a mutation that discards `CanWorkOn`'s result would silently remove.
+5. Right-click a marked building with a pawn who cannot reach it, and confirm the float menu says
+   what it said before. The three access checks set no fail reason, so the correct result is the
+   generic one, and an Ideology colony that forbids the building should still name the ideoligions
+   that would allow it.
+6. Improve something to completion. The job driver re-checks on every tick through the same method,
+   and it passes `forced: false` where the work giver passes the real value, so a forced job is the
+   one worth watching: it must not fail on the first tick of work the giver just handed out.
+
+The reflection tests hold the *declarations*, not the bodies, and no test can **run** the bodies
 either: `Map` is unconstructible outside a running game, `DesignationManager` needs one, `Scribe` is
-static game state, and Harmony cannot patch on this runtime at all. What the split buys is that the
-decisions those bodies delegate to are covered; what it does not buy is any assurance they still
-call them. Only an in-game check closes that, and it is the largest outstanding gap in this suite.
+static game state, and Harmony cannot patch on this runtime at all.
+
+An earlier version of this paragraph went on to say that nothing could give any assurance those
+bodies still call the decisions they delegate to, and that only an in-game check closed it. That is
+no longer true and the sentence has been retired with the gap it described. A body that cannot be
+run can still be **read**: `ILCalls` walks the compiled IL and reports which methods a method calls
+and in what order, which is enough to hold "the work giver still asks `WorkerSkill`" and "nothing
+hands a completed building to `GenConstruct.CanConstruct`". It was added for issue #7, where the
+whole defect was which vanilla method the mod was calling. Be exact about what it establishes,
+because it is easy to read as more:
+
+- It pins **which methods appear in a body and in what textual order**, and the assertion built on it
+  decides how much of that is actually held. Asserting the whole sequence catches a call being
+  deleted or added; filtering to a whitelist of interesting names first, which the order test used to
+  do, catches only those names moving or going missing. Reordering two calls is caught either way. A
+  call moving into a lambda is caught, if you ask the assembly rather than the method.
+- It does **not** pin arguments. Changing `checkSkills: false` to `true` at a call site is invisible
+  to it, which matters because that is the shape of the chair-bug fix.
+- It does **not** pin control flow. Inverting the `if` around a call, or discarding the result,
+  changes nothing it can see. Both were measured as surviving mutations.
+- IL order is not execution order in a method with branches, so it can say "A appears before B",
+  never "A runs before B".
+- It reads the **test** build, not the shipped assembly. The sources are compiled into
+  `SimpleImprove.Tests.dll`, so tokens and offsets differ from `SimpleImprove.dll`. Measured on
+  2026-09-18 across three methods: Debug and Release disagree about length, locals, `nop` count and
+  every offset, and their extracted call sequences are identical. That holds only while nothing in
+  `1.6/` sits inside a `#if`, and nothing does.
+
+Two things make it trustworthy rather than merely clever, and both were put there after a mutation
+showed the first draft was not. The walk throws rather than returning a short list, because a short
+list reads as "this method does not call that" and passes. And it checks that every branch target
+lands on an offset it saw an instruction begin at, because ending on the last byte is not enough:
+a jump table is a run of small numbers, small numbers decode as short operand-free instructions, and
+a walk that reads one as code can drift back into alignment and finish cleanly. Mutating the `switch`
+operand length survived the end-of-body check and is caught by the branch-target check.
 
 Quote coverage against those nine types, never the repo: most of this mod needs a spawned `Thing` on
 a `Map` and a whole-repo figure would be misleading.

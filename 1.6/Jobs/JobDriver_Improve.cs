@@ -138,11 +138,21 @@ namespace SimpleImprove.Jobs
             improveToil.WithEffect(TargetThingA.def.repairEffect, TargetIndex.A);
             improveToil.FailOnDespawnedNullOrForbidden(TargetIndex.A);
             improveToil.FailOnCannotTouch(TargetIndex.A, PathEndMode.Touch);
-            // checkSkills: false must match WorkGiver_Improve.JobOnThing. This overload defaults it
-            // to true, so leaving it implicit would let the work giver hand out a job that this toil
-            // then failed on the first tick, for any thing whose def carries a
-            // constructionSkillPrerequisite above the pawn's Construction level.
-            improveToil.FailOn(() => !GenConstruct.CanConstruct(TargetThingA, pawn, checkSkills: false));
+            // The same check the work giver makes, and it has to stay the same check or this toil
+            // fails on the first tick of a job the giver just handed out. It used to be
+            // GenConstruct.CanConstruct(TargetThingA, pawn, checkSkills: false), which is the call
+            // issue #7 is about: a completed Building is an argument no vanilla caller produces, and
+            // a third-party postfix reading def.entityDefToBuild throws on it. This site is the less
+            // obvious half of that. It sits inside a FailOn predicate, so it runs every tick the pawn
+            // is working rather than once per scan, and it is invisible to a search for the call in
+            // this method because the compiler hoists the lambda into a nested class.
+            //
+            // forced is left at false, which is what the CanConstruct overload defaulted it to. The
+            // work giver passes the real value, so the two disagree about the danger threshold and
+            // about ignoring other pawns' reservations. That asymmetry predates this change and is
+            // preserved rather than quietly corrected, because changing it is a decision about forced
+            // work rather than about the argument shape.
+            improveToil.FailOn(() => !ImproveSite.CanWorkOn(TargetThingA, pawn, forced: false));
             improveToil.WithProgressBar(TargetIndex.A, () => {
                 var comp = TargetComp;
                 return comp?.WorkDone / comp?.WorkToBuild ?? 0f;
