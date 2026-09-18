@@ -64,6 +64,11 @@
   <!-- Work messages -->
   <SimpleImprove_NoConstructionSkill>{0}没有建造技能。</SimpleImprove_NoConstructionSkill>
   
+  <!-- Punctuation. Chinese and Japanese use a fullwidth colon, and French puts a
+       non-breaking space before it, so appending an ASCII one to a translated label
+       was wrong typography rather than a missing string. -->
+  <SimpleImprove_LabelColon>：</SimpleImprove_LabelColon>
+  
   <!-- Inspect pane and work giver messages -->
   <SimpleImprove_StoredMaterialsNotRequired>已存材料（非必需）：</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>{0} 所需最低技能：{1}</SimpleImprove_MinimumSkillFor>

@@ -56,16 +56,6 @@ namespace SimpleImprove.Core
         private QualityStandardsPreset currentPreset = QualityStandardsPreset.Default;
         
         /// <summary>
-        /// Whether to show advanced settings section.
-        /// </summary>
-        private bool showAdvancedSettings = false;
-        
-        /// <summary>
-        /// Whether to show detailed success rate information.
-        /// </summary>
-        private bool showSuccessRatePreview = true;
-        
-        /// <summary>
         /// Whether improvements should require materials (like construction).
         /// </summary>
         public bool requireMaterials = true;
@@ -98,15 +88,6 @@ namespace SimpleImprove.Core
         private const string MaterialCostControlName = "SimpleImprove_MaterialCostField";
         
 
-        
-        #endregion
-
-        #region Legacy Support (for migration from version 1)
-        
-        /// <summary>
-        /// Legacy trial cutoff threshold - kept for migration from version 1.
-        /// </summary>
-        private float trialCutoff = 0.05f;
         
         #endregion
 
@@ -568,8 +549,6 @@ namespace SimpleImprove.Core
             ApplyPreset(QualityStandardsPreset.Default);
             requireMaterials = true;
             materialCostMultiplier = MaterialCostField.DefaultMultiplier;
-            showAdvancedSettings = false;
-            showSuccessRatePreview = true;
 
             // The text buffers are never written out by hand here. This line used to put the
             // multiplier "1.0" into a field that displays percentages, so after a reset the box read
@@ -619,20 +598,33 @@ namespace SimpleImprove.Core
 
             // Calculate column dimensions
             float columnWidth = (inRect.width - 20f) / 2f; // 20f gap between columns
-            float currentY = listing.CurHeight + inRect.y;
+
+            // Coordinates below are relative to inRect, not absolute. Listing.Begin calls
+            // Widgets.BeginGroup(inRect), so everything drawn until Listing.End is already offset by
+            // inRect's origin. Adding inRect.y applied that offset a second time, and
+            // Dialog_ModSettings passes a rect at y = 40, so the two columns were drawn 40px below
+            // where the code intended. The magic 80f added to columnsHeight further down is what kept
+            // the reset button from landing on top of them, which is why nothing looked wrong.
+            //
+            // ColumnTopGap is 40f so that the rendered layout is byte-identical to what shipped. The
+            // change is that the gap is now a number this mod chose, rather than a coordinate
+            // belonging to a vanilla window that is free to move. Rationalising it against the 80f
+            // needs somebody to open the settings window and look, so it is on the in-game list.
+            const float ColumnTopGap = 40f;
+            float currentY = listing.CurHeight + ColumnTopGap;
             const float rowHeight = 24f;
             const float rowGap = 4f;
 
             // Left column - Quality input fields
-            Rect leftColumn = new Rect(inRect.x, currentY, columnWidth, 0f);
+            Rect leftColumn = new Rect(0f, currentY, columnWidth, 0f);
             DrawQualityInputs(leftColumn, rowHeight, rowGap);
 
             // Right column - Preset buttons
-            Rect rightColumn = new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, 0f);
+            Rect rightColumn = new Rect(columnWidth + 20f, currentY, columnWidth, 0f);
             currentY = DrawPresetButtons(rightColumn, rowHeight, rowGap);
 			
 			currentY += rowHeight + rowGap + 8f;
-			Widgets.CheckboxLabeled(new Rect(inRect.x + columnWidth + 20f, currentY, columnWidth, rowHeight), "SimpleImprove_RequireMaterials".Translate(), ref requireMaterials);
+			Widgets.CheckboxLabeled(new Rect(columnWidth + 20f, currentY, columnWidth, rowHeight), "SimpleImprove_RequireMaterials".Translate(), ref requireMaterials);
 
 			// Material cost multiplier input (only show if materials are required)
 			if (requireMaterials)
@@ -644,14 +636,14 @@ namespace SimpleImprove.Core
 				const float inputWidth = 80f;
 				const float percentWidth = 20f;
 				
-				Rect labelRect = new Rect(inRect.x + columnWidth + 20f, currentY, labelWidth, rowHeight);
-				Widgets.Label(labelRect, "SimpleImprove_MaterialCostMultiplier".Translate() + ":");
+				Rect labelRect = new Rect(columnWidth + 20f, currentY, labelWidth, rowHeight);
+				Widgets.Label(labelRect, "SimpleImprove_MaterialCostMultiplier".Translate() + "SimpleImprove_LabelColon".Translate());
 				
 				// Input field. Naming the control is what lets the two cases below be told apart:
 				// while the player is typing the box keeps exactly what they typed, and it is only
 				// normalised once they are somewhere else. Clamping and rewriting on the same keystroke
 				// is what made every percentage starting 0 to 4 untypable, the default among them.
-				Rect inputRect = new Rect(inRect.x + columnWidth + 20f + labelWidth + 5f, currentY, inputWidth, rowHeight);
+				Rect inputRect = new Rect(columnWidth + 20f + labelWidth + 5f, currentY, inputWidth, rowHeight);
 
 				// The field has to notice a click landing elsewhere, because nothing else will. Unity
 				// assigns GUIUtility.keyboardControl when a mouse down lands inside a text field and
@@ -731,7 +723,7 @@ namespace SimpleImprove.Core
             {
                 // Quality label
                 Rect labelRect = new Rect(columnRect.x, currentY, labelWidth, rowHeight);
-                Widgets.Label(labelRect, quality.GetLabel().CapitalizeFirst() + ":");
+                Widgets.Label(labelRect, quality.GetLabel().CapitalizeFirst() + "SimpleImprove_LabelColon".Translate());
 
                 // Input field
                 Rect inputRect = new Rect(columnRect.x + labelWidth + 5f, currentY, inputWidth, rowHeight);
@@ -809,15 +801,26 @@ namespace SimpleImprove.Core
             
             // Core settings
             Scribe_Collections.Look(ref skillRequirements, "skillRequirements", LookMode.Value, LookMode.Value);
-            Scribe_Values.Look(ref currentPreset, "currentPreset", QualityStandardsPreset.Default);
+            // Scribed as text on purpose, which is what Scribe_Values.Look writes for an enum
+            // anyway, so the file is unchanged in both directions. Reading it as the enum was the
+            // defect: a value this build cannot parse leaves the field at default(T), and
+            // QualityStandardsPreset's zero member is Apprentice, the LOOSEST preset. Enum.IsDefined
+            // in ValidateAndFixLoadedData then returns true for it, because Apprentice is perfectly
+            // defined, so the guard there could never fire and a player downgrading from a build with
+            // an extra preset silently had their skill requirements relaxed.
+            string presetName = currentPreset.ToString();
+            Scribe_Values.Look(ref presetName, "currentPreset", QualityStandardsPreset.Default.ToString());
+
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            {
+                currentPreset = Enum.TryParse(presetName, out QualityStandardsPreset parsedPreset)
+                                && Enum.IsDefined(typeof(QualityStandardsPreset), parsedPreset)
+                    ? parsedPreset
+                    : QualityStandardsPreset.Default;
+            }
             Scribe_Values.Look(ref requireMaterials, "requireMaterials", true);
             Scribe_Values.Look(ref materialCostMultiplier, "materialCostMultiplier", MaterialCostField.DefaultMultiplier);
-            Scribe_Values.Look(ref showAdvancedSettings, "showAdvancedSettings", false);
-            Scribe_Values.Look(ref showSuccessRatePreview, "showSuccessRatePreview", true);
-            
-            // Legacy settings (for migration from version 1)
-            Scribe_Values.Look(ref trialCutoff, "trialCutoff", 0.05f);
-            
+
             // Handle version migration on loading
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
@@ -867,8 +870,6 @@ namespace SimpleImprove.Core
             // Set new version 2 defaults for new settings
             requireMaterials = true;
             materialCostMultiplier = MaterialCostField.DefaultMultiplier;
-            showAdvancedSettings = false;
-            showSuccessRatePreview = true;
             
             // Update version
             settingsVersion = 2;
@@ -917,6 +918,16 @@ namespace SimpleImprove.Core
         /// </summary>
         private void ValidateAndFixLoadedData()
         {
+            // MigrateFromVersion1 builds this when it runs, but it returns immediately when
+            // settingsVersion is already 2, so a config carrying version 2 and no skillRequirements
+            // node reaches here with a null and throws on the ContainsKey below. That is a hand-edited
+            // or truncated config rather than anything the mod writes, which is why it is low, but the
+            // failure is a red error on every settings load rather than a degraded default.
+            if (skillRequirements == null)
+            {
+                skillRequirements = new Dictionary<QualityCategory, int>();
+            }
+
             // Ensure all quality categories are present
             var defaultRequirements = PresetConfigurations[QualityStandardsPreset.Default];
             foreach (var quality in Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>())
