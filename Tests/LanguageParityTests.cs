@@ -146,6 +146,135 @@ namespace SimpleImprove.Tests
             }
         }
 
+        [Test]
+        public void EveryLanguageShipsTheSameDefInjectedDirectoriesAndKeys()
+        {
+            // The Keyed files have always been in parity, which is exactly why the missing
+            // DefInjected/WorkGiverDef went unnoticed for so long: a player reported a missing
+            // Chinese translation on 28 October 2025 and every Keyed key WAS present in all nine, so
+            // the report looked wrong. The injections are the other half and need the same guard.
+            Dictionary<string, Dictionary<string, List<string>>> byLanguage = Languages.ToDictionary(
+                language => language, language => InjectionsFor(language));
+
+            Dictionary<string, List<string>> english = byLanguage["English"];
+
+            Assert.That(english.Keys, Is.Not.Empty, "English injects nothing at all.");
+
+            foreach (string language in Languages)
+            {
+                Assert.That(
+                    byLanguage[language].Keys, Is.EquivalentTo(english.Keys),
+                    language + " does not inject the same def types as English. Missing: "
+                    + string.Join(", ", english.Keys.Except(byLanguage[language].Keys))
+                    + "; extra: " + string.Join(", ", byLanguage[language].Keys.Except(english.Keys)));
+
+                foreach (string defType in english.Keys)
+                {
+                    if (!byLanguage[language].ContainsKey(defType))
+                    {
+                        continue;
+                    }
+
+                    Assert.That(
+                        byLanguage[language][defType], Is.EquivalentTo(english[defType]),
+                        language + "/" + defType + " does not inject the same fields as English, so "
+                        + "those fields render in English in that language.");
+                }
+            }
+        }
+
+        [Test]
+        public void TheWorkGiverIsInjectedInEveryLanguageAndNamesTheShippedDef()
+        {
+            // Issue #17. WorkGiverDef.verb and .gerund carry [MustTranslate] and .label inherits it
+            // from Def, and the mod's def XML sets all three in English, so without an injection the
+            // improve entry renders part-English everywhere.
+            //
+            // The defName is checked against the shipped def rather than hardcoded twice, because a
+            // wrong defName here fails SOFTLY: DefInjectionPackage appends it to loadErrors and all
+            // that reaches the player is one aggregate yellow warning telling them to generate a
+            // translation report. Nothing goes red, and the mod keeps rendering English.
+            string defName = XDocument
+                .Load(Path.Combine(RepoRoot(), "1.6/Defs/WorkGiverDefs/WorkGivers_Improve.xml"))
+                .Root.Elements("WorkGiverDef").Select(d => (string)d.Element("defName")).Single();
+
+            var expected = new[] { defName + ".label", defName + ".gerund", defName + ".verb" };
+
+            foreach (string language in Languages)
+            {
+                Dictionary<string, List<string>> injections = InjectionsFor(language);
+
+                Assert.That(
+                    injections.ContainsKey("WorkGiverDef"), Is.True,
+                    language + " has no DefInjected/WorkGiverDef, so the improve entry in its float "
+                    + "menu and work tab renders in English.");
+
+                Assert.That(injections["WorkGiverDef"], Is.EquivalentTo(expected));
+            }
+        }
+
+        [Test]
+        public void NoTwoLanguagesShareAnInjectedValue()
+        {
+            // A translation that is byte-identical to the English is usually a file copied and not
+            // translated. The three WorkGiverDef fields are the ones this test can speak for: every
+            // language has a distinct word for improving, and Chinese and Japanese, which do share
+            // the character pair, differ on the label and on the particle.
+            Dictionary<string, Dictionary<string, string>> values = Languages.ToDictionary(
+                language => language, language => InjectedValues(language, "WorkGiverDef"));
+
+            foreach (string language in Languages.Where(l => l != "English"))
+            {
+                Assert.That(
+                    values[language].Values.SequenceEqual(values["English"].Values), Is.False,
+                    language + "/WorkGiverDef is identical to English, which means the file was "
+                    + "copied rather than translated.");
+            }
+        }
+
+        private static Dictionary<string, List<string>> InjectionsFor(string language)
+        {
+            string root = Path.Combine(RepoRoot(), "1.6", "Languages", language, "DefInjected");
+            var found = new Dictionary<string, List<string>>();
+
+            if (!Directory.Exists(root))
+            {
+                return found;
+            }
+
+            foreach (string directory in Directory.GetDirectories(root))
+            {
+                var keys = new List<string>();
+
+                foreach (string file in Directory.GetFiles(directory, "*.xml", SearchOption.AllDirectories))
+                {
+                    keys.AddRange(XDocument.Load(file).Root.Elements().Select(e => e.Name.LocalName));
+                }
+
+                found[Path.GetFileName(directory)] = keys;
+            }
+
+            return found;
+        }
+
+        private static Dictionary<string, string> InjectedValues(string language, string defType)
+        {
+            string directory = Path.Combine(
+                RepoRoot(), "1.6", "Languages", language, "DefInjected", defType);
+
+            var values = new Dictionary<string, string>();
+
+            foreach (string file in Directory.GetFiles(directory, "*.xml", SearchOption.AllDirectories))
+            {
+                foreach (XElement element in XDocument.Load(file).Root.Elements())
+                {
+                    values[element.Name.LocalName] = element.Value;
+                }
+            }
+
+            return values;
+        }
+
         private static string KeyedPath(string language)
         {
             return Path.Combine(RepoRoot(), "1.6", "Languages", language, "Keyed", "SimpleImprove_Keys.xml");
