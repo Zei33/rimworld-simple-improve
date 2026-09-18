@@ -19,10 +19,10 @@
   <SimpleImprove_ImprovedTo>Melhorado para {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Aviso: Nenhum colonista pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Aviso: Nenhum colonista pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_SkillWarningIdeology>
-  <SimpleImprove_TargetQualitySkillWarning>Aviso: Nenhum colonista pode alcançar qualidade {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_TargetQualitySkillWarning>
-  <SimpleImprove_TargetQualitySkillWarningIdeology>Aviso: Nenhum colonista pode alcançar qualidade {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_TargetQualitySkillWarningIdeology>
+  <SimpleImprove_SkillWarning>Aviso: Nenhum colonista designado para melhoria pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Aviso: Nenhum colonista designado para melhoria pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Aviso: Nenhum colonista designado para melhoria pode alcançar qualidade {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Aviso: Nenhum colonista designado para melhoria pode alcançar qualidade {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Melhorias lendárias requerem circunstâncias especiais como inspirações ou funções especialistas ideológicas.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->

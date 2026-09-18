@@ -19,10 +19,10 @@
   <SimpleImprove_ImprovedTo>Amélioré en {0} !</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Attention : Aucun colon ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_SkillWarningIdeology>
-  <SimpleImprove_TargetQualitySkillWarning>Attention : Aucun colon ne peut atteindre la qualité {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_TargetQualitySkillWarning>
-  <SimpleImprove_TargetQualitySkillWarningIdeology>Attention : Aucun colon ne peut atteindre la qualité {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_TargetQualitySkillWarningIdeology>
+  <SimpleImprove_SkillWarning>Attention : Aucun colon affecté à l'amélioration ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Attention : Aucun colon affecté à l'amélioration ne peut améliorer ce {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Attention : Aucun colon affecté à l'amélioration ne peut atteindre la qualité {0} (nécessite Construction {1}, ou {2} avec inspiration).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Attention : Aucun colon affecté à l'amélioration ne peut atteindre la qualité {0} (nécessite Construction {1}, ou {2} avec inspiration/rôle de production).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Les améliorations légendaires nécessitent des circonstances spéciales comme des inspirations ou des rôles de spécialistes idéologiques.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->

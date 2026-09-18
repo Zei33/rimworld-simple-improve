@@ -19,7 +19,7 @@
   <SimpleImprove_ImprovedTo>Improved to {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Warning: No colonist can assigned to improvement improve this {0} (requires Construction {1}, or {2} with inspiration).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarning>Warning: No colonist assigned to improvement can improve this {0} (requires Construction {1}, or {2} with inspiration).</SimpleImprove_SkillWarning>
   <SimpleImprove_SkillWarningIdeology>Warning: No colonist assigned to improvement can improve this {0} (requires Construction {1}, or {2} with inspiration/production role).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Warning: No colonist assigned to improvement can achieve {0} quality (requires Construction {1}, or {2} with inspiration).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Warning: No colonist assigned to improvement can achieve {0} quality (requires Construction {1}, or {2} with inspiration/production role).</SimpleImprove_TargetQualitySkillWarningIdeology>

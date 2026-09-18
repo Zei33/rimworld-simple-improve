@@ -19,10 +19,10 @@
   <SimpleImprove_ImprovedTo>Ulepszono do {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Ostrzeżenie: Żaden kolonista nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_SkillWarningIdeology>
-  <SimpleImprove_TargetQualitySkillWarning>Ostrzeżenie: Żaden kolonista nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_TargetQualitySkillWarning>
-  <SimpleImprove_TargetQualitySkillWarningIdeology>Ostrzeżenie: Żaden kolonista nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_TargetQualitySkillWarningIdeology>
+  <SimpleImprove_SkillWarning>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Legendarne ulepszenia wymagają specjalnych okoliczności takich jak inspiracje lub ideologiczne role specjalistów.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->

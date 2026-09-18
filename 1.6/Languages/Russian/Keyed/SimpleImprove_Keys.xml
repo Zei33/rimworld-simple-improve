@@ -19,10 +19,10 @@
   <SimpleImprove_ImprovedTo>Улучшено до {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Предупреждение: Ни один колонист не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Предупреждение: Ни один колонист не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением/производственной ролью).</SimpleImprove_SkillWarningIdeology>
-  <SimpleImprove_TargetQualitySkillWarning>Предупреждение: Ни один колонист не может достичь качества {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_TargetQualitySkillWarning>
-  <SimpleImprove_TargetQualitySkillWarningIdeology>Предупреждение: Ни один колонист не может достичь качества {0} (требуется Строительство {1}, или {2} с вдохновением/ролью производителя).</SimpleImprove_TargetQualitySkillWarningIdeology>
+  <SimpleImprove_SkillWarning>Предупреждение: Ни один колонист, назначенный на улучшение, не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Предупреждение: Ни один колонист, назначенный на улучшение, не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением/производственной ролью).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Предупреждение: Ни один колонист, назначенный на улучшение, не может достичь качества {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Предупреждение: Ни один колонист, назначенный на улучшение, не может достичь качества {0} (требуется Строительство {1}, или {2} с вдохновением/ролью производителя).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Легендарные улучшения требуют особых обстоятельств, таких как вдохновение или идеологические роли специалистов.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->

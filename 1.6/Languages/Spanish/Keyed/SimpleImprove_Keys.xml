@@ -19,10 +19,10 @@
   <SimpleImprove_ImprovedTo>¡Mejorado a {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Advertencia: Ningún colono puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Advertencia: Ningún colono puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_SkillWarningIdeology>
-  <SimpleImprove_TargetQualitySkillWarning>Advertencia: Ningún colono puede alcanzar calidad {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_TargetQualitySkillWarning>
-  <SimpleImprove_TargetQualitySkillWarningIdeology>Advertencia: Ningún colono puede alcanzar calidad {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_TargetQualitySkillWarningIdeology>
+  <SimpleImprove_SkillWarning>Advertencia: Ningún colono asignado a la mejora puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_SkillWarning>
+  <SimpleImprove_SkillWarningIdeology>Advertencia: Ningún colono asignado a la mejora puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_SkillWarningIdeology>
+  <SimpleImprove_TargetQualitySkillWarning>Advertencia: Ningún colono asignado a la mejora puede alcanzar calidad {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_TargetQualitySkillWarning>
+  <SimpleImprove_TargetQualitySkillWarningIdeology>Advertencia: Ningún colono asignado a la mejora puede alcanzar calidad {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Las mejoras legendarias requieren circunstancias especiales como inspiraciones o roles especialistas ideológicos.</SimpleImprove_LegendaryWarning>
   
   <!-- Gizmo Labels and Tooltips -->
