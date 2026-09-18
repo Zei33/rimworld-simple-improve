@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Simple Improve</name>
+  <name>Simple Improve [1.6]</name>
   <author>Zei33</author>
-  <modVersion>1.0.8</modVersion>
+  <modVersion>1.1.0</modVersion>
   <packageId>Zei33.SimpleImprove</packageId>
-  <description>Simple Improve lets colonists raise the quality of furniture and other buildings that already have a quality rating, using the same construction work and the same roll as building one fresh.
+  <description>Simple Improve lets colonists raise the quality of a building you have already built, using the same construction work and the same roll as building one fresh. A building qualifies if it has a quality rating and is built from a blueprint, which excludes sculptures, statues and musical instruments.
 
 CORE FEATURES:
 • Mark a building for improvement from its own Improve button, one at a time or a whole selection at once

@@ -2,12 +2,12 @@ Amélioration Simple [1.6] (Simple Improve)
 
 [h1]Amélioration Simple[/h1]
 
-Transformez l'infrastructure de votre colonie au fil du temps ! Amélioration Simple vous permet d'améliorer la qualité des meubles et autres bâtiments avec qualité grâce à un travail de construction qualifié.
+Amélioration Simple permet à vos colons d'augmenter la qualité d'un bâtiment déjà construit, avec la même quantité de travail et le même jet de qualité que s'ils le construisaient à neuf.
 
 [h2]FONCTIONNALITÉS PRINCIPALES[/h2]
 [list]
 [*] Marquez n'importe quel meuble ou bâtiment avec qualité pour amélioration
-[*] Les colons utilisent la compétence construction pour améliorer les bâtiments de qualité Affreuse à Légendaire
+[*] Les colons utilisent la compétence construction pour améliorer les bâtiments de qualité horrible à légendaire
 [*] Sélection intelligente multi-bâtiments avec contrôles consolidés
 [*] Exigences de compétences configurables avec 5 préréglages de standards de qualité
 [/list]
@@ -36,7 +36,7 @@ Transformez l'infrastructure de votre colonie au fil du temps ! Amélioration Si
 [*] Mode travail uniquement : Les améliorations ne coûtent que du temps et des compétences
 [*] Fonctionne avec n'importe quel meuble ou bâtiment moddé qui a une qualité
 [*] Nouveau type de travail "Améliorer" avec priorité séparée de la construction (pour les colons qui travaillent sur l'amélioration d'objets)
-[*] Mécas de la colonie : les constructoïdes peuvent faire le travail d'amélioration
+[*] Mécanoïdes de la colonie : les constructoïdes peuvent faire le travail d'amélioration
 [/list]
 
 [h2]CONFIGURER LE TYPE DE TRAVAIL[/h2]
@@ -45,8 +45,8 @@ Transformez l'infrastructure de votre colonie au fil du temps ! Amélioration Si
 [*] Dans une colonie qui existait avant l'ajout du mod, il est désactivé pour tous les colons. RimWorld attribue la priorité 0 à un type de travail ajouté dans une sauvegarde existante, et la priorité 0 signifie que le travail n'est jamais pris en charge.
 [*] Ouvrez l'onglet "Travail" et définissez une priorité dans la colonne "Améliorer" pour les colons que vous voulez y affecter.
 [*] Pour un colon apparu après l'ajout du mod, RimWorld n'active que les six types de travail dans lesquels il est le meilleur, donc "Améliorer" peut rester désactivé pour un colon dont la construction est faible.
-[*] Pour les mécas de la colonie, le mod l'active lui-même au chargement d'une sauvegarde. L'onglet "Travail" de RimWorld ne liste que les colons et n'affiche jamais un méca, il n'y a donc nulle part où le régler à la main.
-[*] Un méca est jugé sur le niveau de compétence fixe que les mécanoïdes utilisent pour tous les travaux, soit 10, donc avec le préréglage "Par défaut" un constructoïde se voit confier les bâtiments marqués pour une amélioration quelconque ou pour une qualité cible allant jusqu'à "bon", et pas ceux marqués pour "excellent" ou au-dessus.
+[*] Pour les mécanoïdes de la colonie, le mod l'active lui-même au chargement d'une sauvegarde. L'onglet "Travail" de RimWorld ne liste que les colons et n'affiche jamais un mécanoïde, il n'y a donc nulle part où le régler à la main.
+[*] Un mécanoïde est jugé sur le niveau de compétence fixe que les mécanoïdes utilisent pour tous les travaux, soit 10, donc avec le préréglage "Normal" un constructoïde se voit confier les bâtiments marqués pour une amélioration quelconque ou pour une qualité cible allant jusqu'à "bon", et pas ceux marqués pour "excellent" ou au-dessus.
 [/list]
 
 [h2]INTERFACE AMÉLIORÉE[/h2]

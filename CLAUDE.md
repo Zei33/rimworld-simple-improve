@@ -1,6 +1,6 @@
 # Simple Improve
 
-Workshop 3538863870, 6356 subscribers, released, About.xml `modVersion` 1.0.8. 3194 lines of C#
+Workshop 3538863870, 6356 subscribers, released, About.xml `modVersion` 1.1.0 (1.0.8 is live). 3194 lines of C#
 across 14 files, the largest mod in the workspace and the one with the most defects. packageId
 `Zei33.SimpleImprove`, Harmony id `com.zei33.simpleimprove`, namespace `SimpleImprove`.
 

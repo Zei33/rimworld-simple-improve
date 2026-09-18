@@ -2,12 +2,13 @@ Mejora Simple [1.6] (Simple Improve)
 
 [h1]Mejora Simple[/h1]
 
-¡Transforma la infraestructura de tu colonia con el tiempo! Mejora Simple te permite actualizar la calidad de los muebles y otros edificios con calidad a través de trabajo de construcción especializado.
+Mejora Simple permite a tus colonos aumentar la calidad de un edificio que ya has construido: la mejora requiere el mismo trabajo de construcción y se decide con la misma tirada que al construirlo desde cero.
 
 [h2]CARACTERÍSTICAS PRINCIPALES[/h2]
 [list]
-[*] Marca cualquier mueble o edificio con calidad para mejora
-[*] Los colonos usan la habilidad de construcción para mejorar edificios de calidad Terrible a Legendaria
+[*] Marca cualquier edificio que tenga calidad y se construya a partir de un anteproyecto
+[*] Las esculturas, las estatuas, el arpa, el clavecín y el piano se fabrican en una mesa de trabajo en lugar de construirse, así que no se pueden mejorar
+[*] Los colonos usan la habilidad de construcción para mejorar edificios de calidad Horrible a Legendaria
 [*] Selección inteligente de múltiples edificios con controles consolidados
 [*] Requisitos de habilidad configurables con 5 ajustes predefinidos de estándares de calidad
 [/list]
@@ -34,7 +35,7 @@ Mejora Simple [1.6] (Simple Improve)
 [*] Modo tradicional: Requiere materiales como la construcción normal (por defecto)
 [*] Costes de materiales ajustables: Establece costes de mejora entre el 10% y el 500% del coste de construcción original (100% por defecto = igual al coste de construcción)
 [*] Modo solo trabajo: Las mejoras cuestan solo tiempo y habilidad
-[*] Funciona con cualquier mueble o edificio modificado que tenga calidad
+[*] Funciona con edificios de otros mods en las mismas condiciones: que tengan calidad y un anteproyecto
 [*] Nuevo tipo de trabajo "Mejorar" con prioridad separada de la construcción (para colonos que trabajan mejorando objetos)
 [*] Mecas de la colonia: los constructoides pueden hacer trabajo de mejora
 [/list]
@@ -77,7 +78,7 @@ Echa un vistazo a mis otros mods:
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Desintoxicación Biosculptor[/url][/h3]
 Añade a la cápsula de bioescultura un ciclo de desintoxicación que cura las adicciones a las drogas y elimina las tolerancias que hay detrás.
 
-[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Save[/url][/h3]
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Guardado[/url][/h3]
 Añade un sistema de guardado automático separado que guarda basándose en el paso del tiempo del mundo real en lugar del tiempo del juego. Esto funciona independientemente del sistema de guardado automático vanilla.
 
 [hr][/hr] 

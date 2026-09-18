@@ -2,12 +2,13 @@ Melhoria Simples [1.6] (Simple Improve)
 
 [h1]Melhoria Simples[/h1]
 
-Transforme a infraestrutura da sua colônia ao longo do tempo! Melhoria Simples permite que você melhore a qualidade dos móveis e outros edifícios com qualidade através de trabalho de construção especializado.
+Melhoria Simples permite que seus colonos aumentem a qualidade de um edifício que você já construiu, com o mesmo trabalho de construção e o mesmo sorteio de qualidade de construí-lo do zero.
 
 [h2]RECURSOS PRINCIPAIS[/h2]
 [list]
-[*] Marque qualquer móvel ou edifício com qualidade para melhoria
-[*] Os colonos usam habilidade de construção para melhorar edifícios de qualidade Terrível até Lendária
+[*] Marque para melhoria qualquer edifício que tenha qualidade e seja construído a partir de um projeto
+[*] Esculturas, estátuas e instrumentos musicais são fabricados em uma bancada em vez de construídos, então não podem ser melhorados
+[*] Os colonos usam habilidade de construção para melhorar edifícios de qualidade Horrível até Lendária
 [*] Seleção inteligente de múltiplos edifícios com controles consolidados
 [*] Requisitos de habilidade configuráveis com 5 predefinições de padrões de qualidade
 [/list]
@@ -22,7 +23,7 @@ Transforme a infraestrutura da sua colônia ao longo do tempo! Melhoria Simples 
 [h2]PREDEFINIÇÕES DE PADRÕES DE QUALIDADE[/h2]
 [list]
 [*] Aprendiz: Requisitos de habilidade flexíveis (altas taxas de falha, mas qualquer colono designado pode tentar)
-[*] Iniciante: Baixos requisitos de habilidade (taxas de sucesso moderadas, e a maioria dos colonos pode tentar)
+[*] Novato: Baixos requisitos de habilidade (taxas de sucesso moderadas, e a maioria dos colonos pode tentar)
 [*] Padrão: Requisitos equilibrados (taxas de sucesso razoáveis para todos os níveis)
 [*] Mestre: Altos requisitos de habilidade (maior taxa de sucesso, apenas colonos bem preparados podem tentar)
 [*] Artesão: Requisitos de habilidade rigorosos (desperdício mínimo, apenas colonos com alta probabilidade de sucesso podem tentar)
@@ -34,7 +35,7 @@ Transforme a infraestrutura da sua colônia ao longo do tempo! Melhoria Simples 
 [*] Modo tradicional: Requer materiais como construção normal (padrão)
 [*] Custos de materiais ajustáveis: Defina custos de melhoria de 10% a 500% do custo de construção original (100% padrão = igual ao custo de construção)
 [*] Modo somente trabalho: Melhorias custam apenas tempo e habilidade
-[*] Funciona com qualquer móvel ou edifício modificado que tenha qualidade
+[*] Funciona com edifícios de mods nas mesmas condições: precisam ter qualidade e ser construídos a partir de um projeto
 [*] Novo tipo de trabalho "Melhorar" com prioridade separada da construção (para colonos que trabalham melhorando itens)
 [*] Mecanoides da colônia: construtóides podem fazer trabalho de melhoria
 [/list]
@@ -77,7 +78,7 @@ Confira meus outros mods:
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Desintoxicação Biosculptor[/url][/h3]
 Adiciona ao bioescultor um ciclo de desintoxicação que cura vícios em drogas e limpa as tolerâncias por trás deles.
 
-[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Save[/url][/h3]
+[h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3549864494]Chrono Salvamento[/url][/h3]
 Adiciona um sistema de salvamento automático separado que salva baseado na passagem do tempo do mundo real ao invés do tempo do jogo. Isso funciona independentemente do sistema de salvamento automático vanilla.
 
 [hr][/hr] 

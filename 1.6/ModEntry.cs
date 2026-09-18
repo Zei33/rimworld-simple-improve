@@ -39,7 +39,15 @@ namespace SimpleImprove
             harmony = new Harmony("com.zei33.simpleimprove");
             harmony.PatchAll();
 
-            Log.Message("[SimpleImprove] Loaded version 1.0.8 successfully.");
+            // Read from the metadata rather than written out, so the number cannot be
+            // written down in two places and drift. A log line claiming the wrong version is
+            // worse than no log line when somebody is reading a player's output_log to work
+            // out what they ran. Gated on dev mode: informational logging is for whoever is
+            // debugging.
+            if (Prefs.DevMode)
+            {
+                Log.Message($"[SimpleImprove] Loaded version {pack.ModMetaData.ModVersion}.");
+            }
         }
 
         /// <summary>
