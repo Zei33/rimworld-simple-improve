@@ -22,10 +22,10 @@ Amélioration Simple permet à vos colons d'augmenter la qualité d'un bâtiment
 [h2]PRÉRÉGLAGES DES STANDARDS DE QUALITÉ[/h2]
 [list]
 [*] Apprenti : Exigences de compétences souples (taux d'échec élevé, mais tout colon assigné peut faire des tentatives)
-[*] Novice : Faibles exigences de compétences (taux de succès modéré, et la plupart des colons peuvent faire des tentatives)
+[*] Compagnon : Faibles exigences de compétences (taux de succès modéré, et la plupart des colons peuvent faire des tentatives)
 [*] Par défaut : Exigences équilibrées (taux de succès raisonnables pour tous les niveaux)
-[*] Maître : Exigences de compétences élevées (taux de succès plus élevé, seuls les colons bien préparés peuvent faire des tentatives)
-[*] Artisan : Exigences de compétences strictes (gaspillage minimal, seuls les colons avec une forte probabilité de succès peuvent faire des tentatives)
+[*] Chevronné : Exigences de compétences élevées (taux de succès plus élevé, seuls les colons bien préparés peuvent faire des tentatives)
+[*] Perfectionniste : Exigences de compétences strictes (gaspillage minimal, seuls les colons avec une forte probabilité de succès peuvent faire des tentatives)
 [*] Personnalisé : Définissez vos propres seuils de compétences (contrôle total sur les exigences de compétences pour chaque niveau de qualité)
 [/list]
 
@@ -46,7 +46,7 @@ Amélioration Simple permet à vos colons d'augmenter la qualité d'un bâtiment
 [*] Ouvrez l'onglet "Travail" et définissez une priorité dans la colonne "Améliorer" pour les colons que vous voulez y affecter.
 [*] Pour un colon apparu après l'ajout du mod, RimWorld n'active que les six types de travail dans lesquels il est le meilleur, donc "Améliorer" peut rester désactivé pour un colon dont la construction est faible.
 [*] Pour les mécanoïdes de la colonie, le mod l'active lui-même au chargement d'une sauvegarde. L'onglet "Travail" de RimWorld ne liste que les colons et n'affiche jamais un mécanoïde, il n'y a donc nulle part où le régler à la main.
-[*] Un mécanoïde est jugé sur le niveau de compétence fixe que les mécanoïdes utilisent pour tous les travaux, soit 10, donc avec le préréglage "Normal" un constructoïde se voit confier les bâtiments marqués pour une amélioration quelconque ou pour une qualité cible allant jusqu'à "bon", et pas ceux marqués pour "excellent" ou au-dessus.
+[*] Un mécanoïde est jugé sur le niveau de compétence fixe que les mécanoïdes utilisent pour tous les travaux, soit 10, donc avec le préréglage "Par défaut" un constructoïde se voit confier les bâtiments marqués pour une amélioration quelconque ou pour une qualité cible allant jusqu'à "bon", et pas ceux marqués pour "excellent" ou au-dessus.
 [/list]
 
 [h2]INTERFACE AMÉLIORÉE[/h2]
