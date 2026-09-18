@@ -97,7 +97,7 @@ another mod gives quality to.
 - **Quality Standards Presets**: Pre-configured skill requirement levels (Apprentice, Novice, Default, Master, Artisan, Custom)
 - **Settings Migration**: Automatic upgrade from Version 1 to Version 2 settings format
 - **Material Requirements Toggle**: Optional material costs for improvements
-- **Material Cost Percentage**: Adjustable improvement costs from 5% of original build cost upwards
+- **Material Cost Percentage**: Adjustable improvement costs from 10% to 500% of the original build cost
 - **Quality Distribution Calculator**: Testing tool for different skill configurations
 - **Support for Pawn Modifiers**: Inspirations and ideological roles
 
@@ -108,7 +108,7 @@ another mod gives quality to.
 
 ### Material Management
 - **Flexible Material Requirements**: Configurable system allows disabling material costs entirely
-- **Adjustable Material Costs**: Material cost percentage setting allows scaling costs from 5% of original build cost upwards
+- **Adjustable Material Costs**: Material cost percentage setting scales costs between 10% and 500% of the original build cost
 - **Custom MaterialStorage Class**: Restricts what can be stored when materials are required
 - **Smart Material Handling**: Only accepts materials needed for improvement when enabled
 - **Cost Calculation**: Material costs are calculated as a percentage of the full original build cost (e.g. 85 wood at 50% becomes 43 wood, rounded up)
@@ -205,4 +205,4 @@ the defs removed the reason for the split, and version 1.0.9 removed the split.
 14. **Robust Data Management**: Automatic cleanup and validation prevent data corruption and memory leaks
 15. **Enhanced Mod Compatibility**: Dual-storage pattern provides better compatibility with other mods
 16. **Save File Integrity**: Clean separation ensures saves remain valid even if mod is disabled
-17. **Adjustable Material Costs**: Material cost percentage setting (5% >) allows fine-tuning improvement expenses for different playstyles
+17. **Adjustable Material Costs**: Material cost percentage setting (10% to 500%) allows fine-tuning improvement expenses for different playstyles

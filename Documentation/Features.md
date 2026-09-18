@@ -11,10 +11,10 @@
 
 ### Material Requirements
 - **Configurable Material Costs**: Option to require materials like normal construction, or just time and labor
-- **Material Cost Percentage**: Adjustable cost from 5% of the original build cost upwards (default 100%)
+- **Material Cost Percentage**: Adjustable cost from 10% to 500% of the original build cost (default 100%)
 - **Traditional Mode** (materials required):
   - Improvement requires materials equal to a percentage of the item's original build cost (default the same as normal build cost)
-  - Material cost can be adjusted from 5% (very cheap) upwards. 
+  - Material cost can be adjusted anywhere from 10% (very cheap) to 500% (punishing)
   - Default setting of 100% means improvements cost the same as building the item from scratch
   - Materials are stored in the item temporarily during the improvement process
   - If improvement is cancelled, materials are dropped nearby
@@ -100,7 +100,7 @@ Choose from pre-configured skill requirement levels:
 - **Custom Configuration**: Full control over individual skill requirements when using Custom preset
 - **Advanced Settings**: 
   - Toggle material requirements on/off
-  - Adjust material cost percentage (5% or higher, default 100%)
+  - Adjust material cost percentage (10% to 500%, default 100%)
 - **Quality Distribution Calculator**: Test different skill configurations and success rates
 - **Interactive Preview**: Real-time display of current skill requirements and success rates
 - **Settings Migration**: Automatic upgrade from legacy settings format

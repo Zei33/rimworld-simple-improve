@@ -57,5 +57,25 @@ namespace SimpleImprove
         {
             Settings.DoSettingsWindowContents(inRect);
         }
+
+        /// <summary>
+        /// Saves the settings when the settings window closes.
+        /// </summary>
+        /// <remarks>
+        /// <c>Dialog_ModSettings.PreClose</c> calls this, and it is the only notice the mod gets
+        /// that the window has gone. The material cost field is settled here because closing is the
+        /// one exit that always happens, and because none of the ways of closing move keyboard
+        /// focus off a text field: Unity assigns <c>GUIUtility.keyboardControl</c> on a mouse down
+        /// inside a field and never clears it on one outside, the close button, the close X and the
+        /// click-outside path all go through <c>GUI.Button</c>, which does not touch it, and
+        /// Escape reaches <c>WindowStack.Notify_PressedCancel</c>, which does not either. So an out
+        /// of range percentage typed and then closed on would otherwise be saved as neither the old
+        /// setting nor the clamped new one, and its text would outlive the window.
+        /// </remarks>
+        public override void WriteSettings()
+        {
+            Settings.SettleMaterialCostField();
+            base.WriteSettings();
+        }
     }
 }

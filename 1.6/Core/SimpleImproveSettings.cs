@@ -71,9 +71,9 @@ namespace SimpleImprove.Core
         public bool requireMaterials = true;
         
         /// <summary>
-        /// Material cost multiplier (0.1 to 5.0, default 1.0 = 100%).
+        /// Material cost multiplier. <see cref="MaterialCostField"/> owns its range and its default.
         /// </summary>
-        private float materialCostMultiplier = 1.0f;
+        private float materialCostMultiplier = MaterialCostField.DefaultMultiplier;
         
         #endregion
 
@@ -87,7 +87,15 @@ namespace SimpleImprove.Core
         /// <summary>
         /// Buffer for material cost multiplier input (as percentage).
         /// </summary>
-        private string materialCostBuffer = "100";
+        private string materialCostBuffer = MaterialCostField.Format(MaterialCostField.DefaultMultiplier);
+
+        /// <summary>
+        /// The IMGUI control name of the material cost field, used to tell whether the player is
+        /// typing in it. Vanilla's <c>Widgets.TextFieldNumeric</c> names its controls after their
+        /// screen position, which two mods drawing at the same coordinates would share, so this one
+        /// carries the mod's own prefix instead.
+        /// </summary>
+        private const string MaterialCostControlName = "SimpleImprove_MaterialCostField";
         
 
         
@@ -109,6 +117,18 @@ namespace SimpleImprove.Core
         /// These modifiers account for inspirations, roles, and other factors that affect quality generation.
         /// </summary>
         public static List<Func<Pawn, int>> PawnQualityModifiers { get; } = new List<Func<Pawn, int>>();
+
+        /// <summary>
+        /// The highest <see cref="QualityCategory"/> index, and so the upper bound on any lookup
+        /// into the skill requirement table.
+        /// </summary>
+        /// <remarks>
+        /// Derived from <see cref="GetQualityCategoriesInOrder"/> rather than written out, because
+        /// that method is already the one list of qualities the rest of the class agrees on. It used
+        /// to be a literal 5, which is Masterwork, so the Legendary row of the table was unreachable
+        /// and a Legendary target was silently gated on the Masterwork number.
+        /// </remarks>
+        private static readonly int HighestQualityIndex = GetQualityCategoriesInOrder().Length - 1;
 
         /// <summary>
         /// Predefined quality standards preset configurations.
@@ -264,7 +284,10 @@ namespace SimpleImprove.Core
                 }
             }
 
-            baseQuality = Mathf.Clamp(baseQuality, 0, 5);
+            // Every QualityCategory has a row, so the only job of this clamp is to absorb a modifier
+            // that has taken the index below Awful. ValidateAndFixLoadedData fills any key a save is
+            // missing from the Default preset, so the lookup below cannot throw.
+            baseQuality = Mathf.Clamp(baseQuality, 0, HighestQualityIndex);
             return skillRequirements[(QualityCategory)baseQuality];
         }
         
@@ -312,7 +335,10 @@ namespace SimpleImprove.Core
             
             // Calculate what quality level they'd need to achieve before bonuses
             // If target is Excellent (3) and they get +3 bonus, they only need to achieve Awful (0)
-            int baseQualityNeeded = Mathf.Clamp((int)quality - bestTotalBonus, 0, 5);
+            // Shares the bound above for consistency rather than as a fix. The inspiration bonus of
+            // 2 is added unconditionally, so this expression never exceeds 4 and the upper bound has
+            // never been reached from here.
+            int baseQualityNeeded = Mathf.Clamp((int)quality - bestTotalBonus, 0, HighestQualityIndex);
             
             // Return the skill requirement for that base quality
             return skillRequirements[(QualityCategory)baseQualityNeeded];
@@ -448,10 +474,37 @@ namespace SimpleImprove.Core
         {
             ApplyPreset(QualityStandardsPreset.Default);
             requireMaterials = true;
-            materialCostMultiplier = 1.0f;
-            materialCostBuffer = "1.0";
+            materialCostMultiplier = MaterialCostField.DefaultMultiplier;
             showAdvancedSettings = false;
             showSuccessRatePreview = true;
+
+            // The text buffers are never written out by hand here. This line used to put the
+            // multiplier "1.0" into a field that displays percentages, so after a reset the box read
+            // 1.0 % while the setting was still 100%, and the next keystroke re-parsed that text as
+            // about 1% and quietly dropped the real setting to the minimum. The one control that
+            // could recover from the untypable field was what sprang the trap.
+            UpdateUIBuffers();
+        }
+
+        /// <summary>
+        /// Settles the material cost field as though the player had just left it: an out of range
+        /// percentage is clamped and the box is rewritten to match the stored setting.
+        /// </summary>
+        /// <remarks>
+        /// Called from the settings window on every frame the field does not have focus, and from
+        /// <c>SimpleImproveMod.WriteSettings</c> when the window closes. The second caller is the
+        /// one that matters. Unity leaves keyboard focus on a text field when the player clicks the
+        /// close button, presses Escape or clicks outside the window, so on every ordinary way out
+        /// of the settings the field still holds focus and the first caller has never run. Without
+        /// this the last thing typed would be saved as neither the old setting nor the clamped new
+        /// one, and its text would outlive the window on a settings object the game keeps for the
+        /// rest of the session.
+        /// </remarks>
+        public void SettleMaterialCostField()
+        {
+            MaterialCostEdit edit = MaterialCostField.Unfocused(materialCostBuffer, materialCostMultiplier);
+            materialCostMultiplier = edit.Multiplier;
+            materialCostBuffer = edit.Buffer;
         }
 
         /// <summary>
@@ -501,21 +554,38 @@ namespace SimpleImprove.Core
 				Rect labelRect = new Rect(inRect.x + columnWidth + 20f, currentY, labelWidth, rowHeight);
 				Widgets.Label(labelRect, "SimpleImprove_MaterialCostMultiplier".Translate() + ":");
 				
-				// Input field
+				// Input field. Naming the control is what lets the two cases below be told apart:
+				// while the player is typing the box keeps exactly what they typed, and it is only
+				// normalised once they are somewhere else. Clamping and rewriting on the same keystroke
+				// is what made every percentage starting 0 to 4 untypable, the default among them.
 				Rect inputRect = new Rect(inRect.x + columnWidth + 20f + labelWidth + 5f, currentY, inputWidth, rowHeight);
-				string newBuffer = Widgets.TextField(inputRect, materialCostBuffer);
-				if (newBuffer != materialCostBuffer)
+
+				// The field has to notice a click landing elsewhere, because nothing else will. Unity
+				// assigns GUIUtility.keyboardControl when a mouse down lands inside a text field and
+				// never clears it when one lands outside, GUI.DoControl behind every button and checkbox
+				// does not touch it, and Dialog_ModSettings makes no focus call of its own. Without this
+				// the only way out of this box is to click one of the skill boxes. Vanilla's own
+				// delayed-commit field, Widgets.DelayedTextField, does the same test for the same reason,
+				// and reads OriginalEventUtility because an earlier widget may already have consumed the
+				// event, which is exactly what a click on a preset button does.
+				if (OriginalEventUtility.EventType == EventType.MouseDown
+					&& !inputRect.Contains(Event.current.mousePosition)
+					&& GUI.GetNameOfFocusedControl() == MaterialCostControlName)
 				{
-					materialCostBuffer = newBuffer;
-					if (float.TryParse(newBuffer, out float percentage))
-					{
-						// Convert percentage to multiplier and clamp
-						float newMultiplier = percentage / 100f;
-						materialCostMultiplier = Mathf.Clamp(newMultiplier, 0.05f, 1000.0f);
-						
-						// Update buffer to show clamped value
-						materialCostBuffer = (materialCostMultiplier * 100f).ToString("F0");
-					}
+					UI.UnfocusCurrentControl();
+				}
+
+				GUI.SetNextControlName(MaterialCostControlName);
+				materialCostBuffer = Widgets.TextField(inputRect, materialCostBuffer);
+				if (GUI.GetNameOfFocusedControl() == MaterialCostControlName)
+				{
+					MaterialCostEdit edit = MaterialCostField.Typing(materialCostBuffer, materialCostMultiplier);
+					materialCostMultiplier = edit.Multiplier;
+					materialCostBuffer = edit.Buffer;
+				}
+				else
+				{
+					SettleMaterialCostField();
 				}
 				
 				// Percentage symbol
@@ -648,7 +718,7 @@ namespace SimpleImprove.Core
             Scribe_Collections.Look(ref skillRequirements, "skillRequirements", LookMode.Value, LookMode.Value);
             Scribe_Values.Look(ref currentPreset, "currentPreset", QualityStandardsPreset.Default);
             Scribe_Values.Look(ref requireMaterials, "requireMaterials", true);
-            Scribe_Values.Look(ref materialCostMultiplier, "materialCostMultiplier", 1.0f);
+            Scribe_Values.Look(ref materialCostMultiplier, "materialCostMultiplier", MaterialCostField.DefaultMultiplier);
             Scribe_Values.Look(ref showAdvancedSettings, "showAdvancedSettings", false);
             Scribe_Values.Look(ref showSuccessRatePreview, "showSuccessRatePreview", true);
             
@@ -703,7 +773,7 @@ namespace SimpleImprove.Core
             
             // Set new version 2 defaults for new settings
             requireMaterials = true;
-            materialCostMultiplier = 1.0f;
+            materialCostMultiplier = MaterialCostField.DefaultMultiplier;
             showAdvancedSettings = false;
             showSuccessRatePreview = true;
             
@@ -767,8 +837,10 @@ namespace SimpleImprove.Core
             // Validate and clamp all values
             ValidateSkillRequirements();
             
-            // Clamp material cost multiplier
-            materialCostMultiplier = Mathf.Clamp(materialCostMultiplier, 0.05f, 1000.0f);
+            // Bring the material cost multiplier inside the range the tooltip promises. Until
+            // version 1.0.9 the bounds here said 5% to 100000% while the tooltip said 10% to 500%,
+            // so a save holding a value outside the promised band is brought back into it here.
+            materialCostMultiplier = MaterialCostField.Clamp(materialCostMultiplier);
             
             // Ensure preset is valid
             if (!Enum.IsDefined(typeof(QualityStandardsPreset), currentPreset))
@@ -788,7 +860,7 @@ namespace SimpleImprove.Core
                 skillEntryBuffers[kvp.Key] = kvp.Value.ToString();
             }
             
-            materialCostBuffer = (materialCostMultiplier * 100f).ToString("F0");
+            materialCostBuffer = MaterialCostField.Format(materialCostMultiplier);
         }
         
         #endregion

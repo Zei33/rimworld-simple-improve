@@ -32,7 +32,7 @@ Verwandeln Sie die Infrastruktur Ihrer Kolonie im Laufe der Zeit! Einfache Verbe
 [h2]FLEXIBLES GAMEPLAY[/h2]
 [list]
 [*] Traditioneller Modus: Benötigt Materialien wie normale Konstruktion (Standard)
-[*] Anpassbare Materialkosten: Setze Verbesserungskosten ab 5% der ursprünglichen Baukosten aufwärts (100% Standard = gleich Baukosten)
+[*] Anpassbare Materialkosten: Setze Verbesserungskosten zwischen 10% und 500% der ursprünglichen Baukosten (100% Standard = gleich Baukosten)
 [*] Nur-Arbeit-Modus: Verbesserungen kosten nur Zeit und Fertigkeit
 [*] Funktioniert mit allen modifizierten Möbeln oder Gebäuden mit Qualität
 [*] Neuer Arbeitstyp "Verbessern" mit separater Priorität vom Bauen (für Kolonisten, die an der Verbesserung von Gegenständen arbeiten)

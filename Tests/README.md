@@ -62,7 +62,8 @@ Covered today: `ImprovableDefs` (the decision the save/load fix rests on),
 decision over it), `WorkerSkill` (the skill gate that keeps a skill-less worker away from the
 quality roll), `ImproveWorkers` (the mech priority correction), `ImproveDesignations` (the work
 giver's search set and the designation re-sync), `StoredMaterials` (when hauled materials come
-back), the work giver's declared surface, the shipped `PatchOperation` XML, and the target quality
+back), `MaterialCostField` (the material cost range and the two decisions that drive its text
+field), the work giver's declared surface, the shipped `PatchOperation` XML, and the target quality
 field and container allocation behaviour on `SimpleImproveComp`.
 
 `WorkerSkill` is the worked example of the split this harness rewards, and it is worth copying. The
@@ -103,6 +104,19 @@ naming. `MapComponent.FinalizeInit` is an empty virtual and `EnableImprovingForC
 early on a null map, so the whole override runs against `new SimpleImproveMapComponent(null)` and the
 discard it performs is tested rather than inferred.
 
+`ValidateAndFixLoadedData` is reachable as well, by reflection, and that was found by mutation rather
+than by reading. It is private and the public route to it is `ExposeData` under
+`Scribe.mode == LoadingVars`, which is unreachable, so it looked untestable and a mutation deleting
+its clamp passed the suite. The method itself touches only the settings object, the preset table and
+`MaterialCostField`, so invoking it directly is honest rather than a workaround. It is worth checking
+this way round before writing something off: the barrier was the caller, not the method.
+
+`MaterialCostFieldTests` also reads the mod's own nine shipped `Keyed` files and asserts each tooltip
+names the bounds `MaterialCostField` declares. That is the only test here that pins shipped copy to
+code, and it exists because this workspace has been burned four times by a description of something
+the code does not do. It finds the repository root by walking up from `AppContext.BaseDirectory`, and
+it fails rather than passes vacuously if it does not find nine files.
+
 `WorkGiverSurfaceTests` is a different kind of test and the reason it exists is worth repeating. A
 performance fix has no functional signature: re-adding the `PotentialWorkThingRequest` override would
 restore the thirty-region scan that was this mod's most-reported defect, and every other test here
@@ -120,6 +134,33 @@ test failures rather than as compile errors, which is a distinction worth keepin
 For the container, three more: reverting `GetDirectlyHeldThings` to the raw field, widening
 `ShouldScribeContainer` back to a non-null test, and making `GetChildHolders` allocate.
 
+For the material cost field and the Legendary clamp, twenty-five mutations were measured on
+2026-09-18 against the suite at 189 tests and twenty-one are caught: the Legendary clamp reverting to
+a literal 5, or going off by one in either direction; either `MaterialCostField` bound moving;
+`Typing` rewriting the box, rewriting only in-range text, or clamping instead of deferring an out of
+range value; `Unfocused` not clamping, keeping the multiplier that produced its text rather than
+reading it back, or losing its NaN guard; `Clamp` losing its NaN guard; `ResetToDefaults` not
+rebuilding the buffers, or writing the multiplier into them by hand again; `UpdateUIBuffers`
+formatting in multiplier units; `ValidateAndFixLoadedData` not clamping, or not filling a missing
+quality row; `SettleMaterialCostField` doing nothing; `SimpleImproveMod` no longer overriding
+`WriteSettings`; and `About/About.xml` reverting to the range it used to advertise.
+
+Three of those were added because an adversarial review found the first draft of this suite could not
+catch them, and the fourth (the reset test) was found by mutation. They are worth naming because each
+is a way a test can look right and hold nothing:
+
+- **`Typing` rewriting only in-range text survived.** Every keystroke test used whole percentages,
+  and for those the rewritten text is the same text. It is caught now by typing `12.5`, where the
+  intermediate `12.` parses, is in range, and would have its decimal point eaten.
+- **The keystroke helper fed in prefixes rather than chaining the box.** `TypeAll` built each
+  keystroke as `text.Substring(0, i)`, which assumes the very thing the fix provides. It appends to
+  the buffer the previous call returned now, so it fails against the code that has the bug.
+- **`HighestQualityIndex` off by one upward survived.** The bound only bites when a modifier is
+  negative, and nothing passed a pawn at all. `new Pawn()` turns out to be constructible here, so a
+  test registers a negative modifier and asserts the lookup does not fall off the end of the table.
+- **`ResetToDefaults` doing nothing survived**, because the test reset a fresh instance, which
+  already reads `100`. A test that asserts a default it was handed for free asserts nothing.
+
 For the material return and the target quality move, measured on 2026-09-18 against the suite at 136
 tests, eighteen more are caught: `OnDeSpawn` ignoring the gravship flag, the map, or whether
 anything is staged, or answering unconditionally; `OnUnmark` ignoring the map;
@@ -129,11 +170,13 @@ removing what it read; `DiscardUnclaimedTargetQualities` doing nothing, not bein
 target behind, or clearing it when marking rather than unmarking; the `TargetQuality` setter
 becoming a no-op; and the `PostDeSpawn` override being removed.
 
-One mutation that was expected to be caught and is not, which is worth recording rather than
-quietly dropping: rewriting `OnUnmark` to call `OnDeSpawn` with a hardcoded `false` passes the
-suite. That is because it is behaviour preserving, not because of a gap.
-`TheTwoDecisionsDisagreeAboutAGravship` says so in the fixture rather than implying it catches
-something it does not.
+Two mutations that were expected to be caught and are not, both because they are behaviour
+preserving rather than because of a gap. Rewriting `OnUnmark` to call `OnDeSpawn` with a hardcoded
+`false` passes the suite, and `TheTwoDecisionsDisagreeAboutAGravship` says so in the fixture rather
+than implying it catches something it does not. So does reverting the second clamp in
+`GetBestCaseSkillRequirement` to a literal 5: the inspiration bonus of 2 is added unconditionally, so
+that expression never exceeds 4 and both bounds give the same answer for every input. It moved for
+consistency with the first clamp, not as a fix, and no test can distinguish it.
 
 **Be precise about what that does not cover, because the list above makes it look wider than it is.**
 Several method bodies are unreachable, and mutations inside them were measured to pass the suite
@@ -143,7 +186,26 @@ replacing `PotentialWorkThingsGlobal`'s body with `ScanTargets(null)`, and delet
 `PostDeSpawn`'s body, emptying `ReturnStoredMaterialsWhileSpawned`'s body, deleting the target
 quality migration call, hardcoding `true` for the mark argument it passes, deleting the
 `Scribe_Values.Look` for `targetQuality`, and making the designation-cancel prefix stop returning
-materials.
+materials. Against the suite at 189 tests, three more, all inside `DoSettingsWindowContents`, which
+needs IMGUI: deleting the `GUI.SetNextControlName` call so the focus test never matches, inverting
+the focus test itself, and deleting the `UI.UnfocusCurrentControl()` call that notices a click
+landing outside the field.
+
+**Inverting the focus test is the most important in-game check this suite cannot do.** It normalises
+the box while the player is typing and leaves the raw text alone once they are out of it, which is
+the reported defect back with the fix apparently in place, and every test of `Typing` and `Unfocused`
+still passes. Three checks settle the whole control:
+
+1. Click into the material cost field and type `100` one digit at a time. The box must read `1`,
+   then `10`, then `100`, never rewriting itself.
+2. Type `5` and click the Require-materials checkbox. The box must snap to `10`. This is the
+   `UI.UnfocusCurrentControl()` call: Unity assigns keyboard focus on a mouse down inside a text
+   field and never clears it on one outside, `GUI.DoControl` behind every button and checkbox does
+   not touch it, and `Dialog_ModSettings` makes no focus call of its own, so without that call the
+   only way out of this box is to click one of the skill boxes.
+3. Type `1000`, close the window with the Close button, and reopen it. The box must read `500` and
+   the setting must be 500%. That is `SimpleImproveMod.WriteSettings`, which is the commit point for
+   every ordinary way out of the window, none of which moves keyboard focus.
 
 The reflection tests hold the *declarations*, not the bodies, and no test can reach the bodies
 either: `Map` is unconstructible outside a running game, `DesignationManager` needs one, `Scribe` is

@@ -15,7 +15,7 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 - **Mark any furniture or constructed item** with quality for improvement
 - **Skill-based outcomes** - Higher construction skill increases success chances
 - **Flexible material requirements** - Option to require materials like normal construction, or just time and labor
-- **Adjustable material costs** - Set improvement costs from 5% of the original build cost upwards (100% default = same as build cost)
+- **Adjustable material costs** - Set improvement costs anywhere from 10% to 500% of the original build cost (100% default = same as build cost)
 - **Smart failure handling** - Failed improvements consume materials (if required) but preserve the item
 
 ### 🎯 Flexible Skill Requirements
@@ -144,7 +144,7 @@ Choose from pre-configured pawn skill requirements for different improvement str
 #### Advanced Settings
 
 - **Require Materials for Improvement**: Toggle whether improvements need materials like normal construction, or just require work time
-- **Material Cost Percentage**: Adjust improvement costs from 5% of original build cost upwards (default 100%)
+- **Material Cost Percentage**: Adjust improvement costs from 10% to 500% of the original build cost (default 100%)
 - **Skill Requirements**: Adjust minimum construction skill needed for each quality tier (Custom preset only)
 - **Quality Calculator**: Test different success rates and skill requirements
 - **Success Thresholds**: Set desired success percentages to automatically calculate skill requirements

@@ -164,10 +164,34 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   a building that is off a map went into a container, and `ThingOwner.NotifyAdded` clears its
   designations and so its mark. The migration is additionally gated on the mark for the same reason,
   because before 1.0.9 cancelling an improvement left the target behind in this dictionary.
-- `Mathf.Clamp(baseQuality, 0, 5)` at `SimpleImproveSettings.cs:261` indexes the skill table, but
-  `QualityCategory.Legendary` is 6, so the configured Legendary requirement is dead and the Masterwork
-  row is used instead. Fixing it raises the default preset from 18 to 20 for every existing colony: a
-  live balance change, not a quiet bug fix.
+- **The material cost range lives in `MaterialCostField`, and nothing else is allowed to write a
+  bound.** Until 1.0.9 the range was spelled out in four places that disagreed: the settings window
+  clamp and the `ValidateAndFixLoadedData` clamp both said 5% to 100000%, the field's doc comment
+  said 0.1 to 5.0, the tooltip said 10% to 500% in all nine languages and the store copy said 5% and
+  upwards in all nine. The tooltip's band won because three of the four sources agreed on it, so the
+  clamp moved rather than the copy. `MaterialCostFieldTests` reads the nine shipped Keyed files and
+  fails if any of them stops naming the constants, which is the only automated defence this repo has
+  against shipped copy drifting from the code.
+- **A text field that clamps and rewrites its own buffer on the same keystroke is untypable below
+  its minimum.** The old material cost field replaced a typed `1` with the clamped `5` before the
+  player could reach `100`, so every percentage starting 0 to 4 was unreachable, the default among
+  them. `MaterialCostField.Typing` hands the text back untouched and `MaterialCostField.Unfocused`
+  does the clamping once the control loses focus, told apart by a `GUI.SetNextControlName` name
+  compared against `GUI.GetNameOfFocusedControl()`. **Vanilla's `Widgets.TextFieldNumeric<T>` has
+  the same trap**, because `ResolveParseNow` clamps and rewrites as soon as the text is a fully
+  typed number; it gets away with it only because its float fields are nearly all minimum 0.
+  `SetSkillBuffer` is sound for that same reason and was deliberately left alone.
+- **Unity never takes keyboard focus off a text field when the player clicks somewhere else, and
+  neither does RimWorld's window code.** `GUI.HandleTextFieldEventForDesktop` assigns
+  `GUIUtility.keyboardControl` only when a mouse down lands inside the field, `GUI.DoControl` behind
+  every button and checkbox never touches it, `Dialog_ModSettings` makes no focus call, and the close
+  button, the close X, the click-outside path and Escape all leave it where it was. So anything built
+  on "the field lost focus" has to arrange that itself. `Widgets.DelayedTextField` is vanilla's own
+  proof: it detects the outside mouse down and forces focus onto a dummy label. The material cost
+  field does the same test through `OriginalEventUtility.EventType`, which has to be read rather than
+  `Event.current.type` because a click on a preset button has already consumed the event, and
+  `SimpleImproveMod.WriteSettings` is the backstop for closing the window, because
+  `Dialog_ModSettings.PreClose` calls it on every exit.
 - The gizmo acts on the selection, not on `parent`. `CompGetGizmosExtra` (`:677`) re-analyses the
   whole of `Find.Selector` once per selected comp per frame and only the group `Representative` yields
   a gizmo. `ApplyQualityTargetToGroup` deliberately applies to every selected building when the acting
@@ -326,7 +350,8 @@ consistent. The same applies to anything else that puts a thing in a container.
 | ~~Unguarded `pawn.skills` dereference~~ | fixed 2026-09-18, issue #9 | Was: any non-humanlike worker NREs, every tick during the job. All five sites and both `workSettings` sites now go through `WorkerSkill` and `ImproveWorkers` |
 | ~~Mechs can never take the work type~~ | fixed 2026-09-18, issue #8 | Was: `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`. `1.6/Patches/MechWorkTypes.xml` appends the improving work type to it |
 | Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history, while three published descriptions advertise the tab |
-| Legendary skill requirement unreachable | `1.6/Core/SimpleImproveSettings.cs:261` | See traps |
+| ~~Legendary skill requirement unreachable~~ | fixed 2026-09-18, issue #14 | Was: `Mathf.Clamp(baseQuality, 0, 5)` indexed the skill table while `QualityCategory.Legendary` is 6, so the configured Legendary number was never read. The bound is `HighestQualityIndex` now. Raises an ordinary pawn's Default requirement from 18 to 20: a live balance change, and a pawn with an inspiration or a role bonus was already getting the right number |
+| ~~The material cost percentage cannot be typed~~ | fixed 2026-09-18, issue #15 | Was: three defects locking each other in. The field rewrote its own buffer to the clamped value on every keystroke, `ResetToDefaults` wrote the multiplier into a percentage buffer, and the clamp, the tooltip and the store copy named three different ranges. See traps |
 | Two unrelated DLLs ship inside the published mod | fixed in the repo 2026-09-17 | The 17 Aug 2025 Workshop file carries `ISharpZipLib.dll` and `com.rlabrecque.steamworks.net.dll` beside `SimpleImprove.dll`, and RimWorld loads them as mod assemblies for all 6356 subscribers. `build.sh` now deletes everything in the staged output bar `SimpleImprove.dll` and every csproj `<Reference>` is `<Private>false</Private>`, so the repo no longer produces them. Live until the next upload, so it is a reason to ship one |
 
 ## Open user reports
@@ -370,7 +395,8 @@ root file has the detail.
 
 The best test that does not need the game: `SimpleImproveSettings.GetSkillRequirement(q, pawn: null)`
 is pure over the skill dictionary, so a table test across all seven `QualityCategory` values catches
-the Legendary clamp. `DetermineClosestPreset`, `ValidateAndFixLoadedData`, `StoredMaterials`, and the
+the Legendary clamp. `MaterialCostField`, `DetermineClosestPreset`, `ValidateAndFixLoadedData`,
+`StoredMaterials`, and the
 `SimpleImproveMapComponent` migration methods (constructible with `new SimpleImproveMapComponent(null)`)
 are equally pure. Verifying the save/load round-trip end to end still needs the game: a dev-mode
 debug action that saves, reloads and asserts `WorkDone`.

@@ -32,7 +32,7 @@ Przekształć infrastrukturę swojej kolonii z czasem! Prosta Poprawa pozwala ul
 [h2]ELASTYCZNA ROZGRYWKA[/h2]
 [list]
 [*] Tryb tradycyjny: Wymaga materiałów jak zwykła budowa (domyślny)
-[*] Regulowane koszty materiałów: Ustaw koszty ulepszeń od 5% pierwotnego kosztu budowy wzwyż (domyślnie 100% = równe kosztowi budowy)
+[*] Regulowane koszty materiałów: Ustaw koszty ulepszeń od 10% do 500% pierwotnego kosztu budowy (domyślnie 100% = równe kosztowi budowy)
 [*] Tryb tylko pracy: Ulepszenia kosztują tylko czas i umiejętności
 [*] Działa z dowolnymi zmodyfikowanymi meblami lub budynkami z jakością
 [*] Nowy typ pracy "Ulepszanie" z oddzielnym priorytetem od budowy (dla kolonistów pracujących nad ulepszaniem przedmiotów)
