@@ -329,6 +329,39 @@ survived on exactly that.
    and it passes `forced: false` where the work giver passes the real value, so a forced job is the
    one worth watching: it must not fail on the first tick of work the giver just handed out.
 
+**The 2026-09-18 issue sweep added six more, and every one of them is a change that was reasoned
+from the source rather than observed.** Nothing in this tree runs RimWorld, so these are the parts
+of that work that are still a claim.
+
+7. Open the settings window and look at it. The two columns used to be drawn 40px lower than the
+   code intended, because `Listing.Begin` opens a GUI group and the layout added `inRect.y` on top
+   of a coordinate that was already relative. The gap is a named constant of the same value now, so
+   the window should be pixel-identical to what shipped. If anything has moved, the constant and
+   the magic `80f` below it need rationalising together, which is the one part of #21 that was
+   deliberately left for somebody who can see the result.
+8. Mark a building, then raise its quality to Legendary by some other means while the mark is live,
+   and confirm a cancel button appears on it. That is the only genuinely reachable state of the four
+   #23 described; the other three need dev tools or cannot occur at all.
+9. Select several such stranded buildings at once and confirm they show ONE cancel button that
+   clears all of them. That is vanilla's own `Command.GroupsWith` merging them, which only happens
+   while the label, the icon reference, the hotkey and the group key all match, so it is the check
+   that the shared static icon is really shared.
+10. Right-click a marked building that another pawn has already reserved, and confirm the greyed
+    reason names the reservation rather than missing materials. That message was wrong for as long
+    as the reservation test sat inside the material loop.
+11. With a hand-edited Custom skill table, press a preset button and confirm the confirmation dialog
+    appears and defaults to cancel, and that cancelling really does leave the table alone.
+12. Type a percentage starting 0 to 4 into the material cost box, and confirm it is still typable.
+    Nothing in this sweep touched `MaterialCostField`, but the settings window's layout and its
+    focus handling did move, and that field's whole defect class was focus-dependent.
+
+Two things these checks cannot be replaced by, and it is worth saying which. A quiet log is not
+evidence for #5: the desync it guards is reported by `Log.ErrorOnce` on a key shared with every work
+giver in the game, so another mod may have consumed it before this one ever ran. And a frame that
+looks right is not evidence for #19's cache: the failure is one frame long and needs the selection
+changed mid-frame, which means dragging a new selection over an existing one and watching the
+button's count rather than glancing at it.
+
 The reflection tests hold the *declarations*, not the bodies, and no test can **run** the bodies
 either: `Map` is unconstructible outside a running game, `DesignationManager` needs one, `Scribe` is
 static game state, and Harmony cannot patch on this runtime at all.
