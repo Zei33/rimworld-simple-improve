@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "slug": "simple-improve",
+  "languages": {
+    "English": {
+      "title": "Simple Improve [1.6]",
+      "name": "Simple Improve",
+      "blurb": "Adds an improve job that allows pawns to attempt to improve the quality of buildings."
+    },
+    "ChineseSimplified": {
+      "title": "简单改良 [1.6] (Simple Improve)",
+      "name": "简单改良",
+      "blurb": "添加改良工作，允许小人尝试提升建筑的品质。"
+    },
+    "French": {
+      "title": "Amélioration Simple [1.6] (Simple Improve)",
+      "name": "Amélioration Simple",
+      "blurb": "Ajoute un travail d'amélioration qui permet aux colons de tenter d'améliorer la qualité des bâtiments."
+    },
+    "German": {
+      "title": "Einfache Verbesserung [1.6] (Simple Improve)",
+      "name": "Einfache Verbesserung",
+      "blurb": "Fügt einen Verbesserungsauftrag hinzu, der es Kolonisten ermöglicht, die Qualität von Gebäuden zu verbessern."
+    },
+    "Japanese": {
+      "title": "シンプル改善 [1.6] (Simple Improve)",
+      "name": "シンプル改善",
+      "blurb": "ポーンが建物の品質向上を試みることができる改善ジョブを追加します。"
+    },
+    "Polish": {
+      "title": "Prosta Poprawa [1.6] (Simple Improve)",
+      "name": "Prosta Poprawa",
+      "blurb": "Dodaje pracę poprawy, która pozwala kolonistom próbować poprawić jakość budynków."
+    },
+    "PortugueseBrazilian": {
+      "title": "Melhoria Simples [1.6] (Simple Improve)",
+      "name": "Melhoria Simples",
+      "blurb": "Adiciona um trabalho de melhoria que permite aos colonos tentar melhorar a qualidade dos edifícios."
+    },
+    "Russian": {
+      "title": "Простое Улучшение [1.6] (Simple Improve)",
+      "name": "Простое Улучшение",
+      "blurb": "Добавляет работу улучшения, которая позволяет поселенцам пытаться улучшить качество зданий."
+    },
+    "Spanish": {
+      "title": "Mejora Simple [1.6] (Simple Improve)",
+      "name": "Mejora Simple",
+      "blurb": "Añade un trabajo de mejora que permite a los colonos intentar mejorar la calidad de los edificios."
+    }
+  },
+  "required_strings": [
+    {
+      "why": "mirrors EveryShippedDescriptionNamesTheRangeTheCodeEnforces in rimworld-simple-improve/Tests/MaterialCostFieldTests.cs, which pins MaterialCostField.MinimumMultiplier and MaximumMultiplier over the ten shipped files. The selector reproduces that test's own `l.Contains(minimum) || l.Contains(\"5%\")`, substring trap included: a bullet reading '25% faster' would be picked instead and fail both assertions.",
+      "languages": "all",
+      "select_first_line_containing_any": [
+        "10%",
+        "5%"
+      ],
+      "and_that_line_must_contain_all": [
+        "10%",
+        "500%"
+      ],
+      "also_files": [
+        "About/About.xml"
+      ]
+    }
+  ]
+}
