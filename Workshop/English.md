@@ -67,7 +67,7 @@ Please report any issues to https://github.com/Zei33/rimworld-simple-improve/iss
 
 [b]Supporting this mod[/b]
 The time this takes is paid for by the software I write at [url=https://hex.pro]Hex Pro[/url].
-[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: Everything the others charge for. Free. iPhone · iOS 17+. Coming to the App Store.
+[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: A professional grade NFC app for everyone. iPhone · iOS 17+. Coming to the App Store.
 [i]Having a look is the whole of the ask, and it is genuinely optional.[/i]
 
 [hr][/hr] 

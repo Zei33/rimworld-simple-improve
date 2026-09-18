@@ -67,7 +67,7 @@ Por favor, reporta cualquier problema en https://github.com/Zei33/rimworld-simpl
 
 [b]Apoyar este mod[/b]
 El tiempo que dedico a esto lo paga el software que escribo en [url=https://hex.pro]Hex Pro[/url].
-[url=https://apps.hex.pro/es/hex-nfc?from=rimworld]Hex NFC[/url]: Todo lo que otros cobran. Gratis. iPhone · iOS 17+. Próximamente en el App Store.
+[url=https://apps.hex.pro/es/hex-nfc?from=rimworld]Hex NFC[/url]: Una app NFC de nivel profesional, para todo el mundo. iPhone · iOS 17+. Próximamente en el App Store.
 [i]Con mirar la app me basta, y ni eso es obligatorio.[/i]
 
 [hr][/hr] 

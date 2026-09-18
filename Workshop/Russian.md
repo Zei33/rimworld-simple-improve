@@ -67,7 +67,7 @@
 
 [b]Поддержка этого мода[/b]
 Время на это оплачивают программы, которые я пишу в [url=https://hex.pro]Hex Pro[/url].
-[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: Всё, за что другие берут деньги. Бесплатно. iPhone · iOS 17+. Скоро в App Store.
+[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: Приложение профессионального уровня для работы с NFC, доступное каждому. iPhone · iOS 17+. Скоро в App Store.
 [i]Прошу только заглянуть, но это совершенно необязательно.[/i]
 
 [hr][/hr] 

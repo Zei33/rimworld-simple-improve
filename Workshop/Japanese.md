@@ -67,7 +67,7 @@
 
 [b]このModへの支援について[/b]
 このModにかける時間は、[url=https://hex.pro]Hex Pro[/url] で作っているソフトウェアの収入でまかなっています。
-[url=https://apps.hex.pro/ja/hex-nfc?from=rimworld]Hex NFC[/url]：他社が有料にしている機能を、すべて無料で。iPhone · iOS 17 以降、App Store で近日公開。
+[url=https://apps.hex.pro/ja/hex-nfc?from=rimworld]Hex NFC[/url]：どなたでも使える、プロ仕様の NFC アプリです。iPhone · iOS 17 以降、App Store で近日公開。
 お願いするのは見ていただくことだけで、本当に任意です。
 
 [hr][/hr] 

@@ -67,7 +67,7 @@
 
 [b]关于支持本模组[/b]
 我有时间维护本模组，靠的是我在 [url=https://hex.pro]Hex Pro[/url] 开发的软件带来的收入。
-[url=https://apps.hex.pro/zh/hex-nfc?from=rimworld]Hex NFC[/url]：别人收费的功能，这里全部免费。iPhone · iOS 17 及以上，即将登陆 App Store。
+[url=https://apps.hex.pro/zh/hex-nfc?from=rimworld]Hex NFC[/url]：具备专业级功能的 NFC 应用，人人都能使用。iPhone · iOS 17 及以上，即将登陆 App Store。
 我想请你做的就只有去看一眼，不看也完全没关系。
 
 [hr][/hr] 
