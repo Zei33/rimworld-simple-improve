@@ -959,13 +959,23 @@ namespace SimpleImprove.Core
         /// <returns>An enumerable of gizmos to display in the UI.</returns>
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
-            if (parent.Faction != Faction.OfPlayer) yield break;
-            
-            var compQuality = parent.TryGetComp<CompQuality>();
-            if (compQuality == null || compQuality.Quality == QualityCategory.Legendary) yield break;
-            
-            if (parent.def.blueprintDef == null) yield break; // Items without blueprints can't be improved
-            
+            if (!CanBeOfferedImprovement())
+            {
+                // The building cannot be offered improvement any more, but it may still be carrying a
+                // mark from when it could. Yielding nothing at all was issue #23: the designation
+                // overlay stayed on the building, a pawn would still work on it, and selecting it
+                // offered no button to explain or remove the mark. The player was not stuck, since
+                // Designation_Improve does not override designateCancelable and so Architect, Orders,
+                // Cancel clears it, but that means knowing a vanilla tool clears a mark whose own
+                // button has disappeared.
+                if (isMarkedForImprovement)
+                {
+                    yield return CreateStrandedCancelGizmo();
+                }
+
+                yield break;
+            }
+
             var groups = AnalyzeSelection();
             
             // Only yield gizmos if this comp is the representative for its group
@@ -976,6 +986,87 @@ namespace SimpleImprove.Core
                     yield return CreateGroupGizmo(group, groups);
                 }
             }
+        }
+
+        /// <summary>
+        /// Decides whether this building can be offered an improvement gizmo at all.
+        /// </summary>
+        /// <returns><c>true</c> when the full improve control belongs on this building.</returns>
+        /// <remarks>
+        /// <para>
+        /// Only two of these four gates are reachable on a building that is currently marked, and it
+        /// is worth recording which, because the issue assumed all four were and that made the fix
+        /// look bigger than it is.
+        /// </para>
+        /// <para>
+        /// The two comp tests are effectively dead. <see cref="ImprovableDefs"/> declares this
+        /// component only on a def that has BOTH a <c>blueprintDef</c> and a <c>CompQuality</c>, and
+        /// <c>ThingWithComps.InitializeComps</c> rebuilds a thing's comps strictly from
+        /// <c>def.comps</c> on load. So a def that loses either one loses this component too, its
+        /// scribed state is orphaned XML that nothing reads, and this method never runs. They are
+        /// kept as cheap guards against another mod stripping comps after injection, not because the
+        /// state the issue described can occur.
+        /// </para>
+        /// <para>
+        /// The faction test is reachable only through dev tools or another mod: no vanilla path turns
+        /// a spawned player building into a non-player one. The Legendary test is genuinely
+        /// reachable, because the mod's own loop clears the mark when IT reaches Legendary, so it
+        /// needs quality raised there by something else while marked.
+        /// </para>
+        /// </remarks>
+        private bool CanBeOfferedImprovement()
+        {
+            if (parent.Faction != Faction.OfPlayer)
+            {
+                return false;
+            }
+
+            if (parent.def.blueprintDef == null)
+            {
+                return false;
+            }
+
+            var compQuality = parent.TryGetComp<CompQuality>();
+            return compQuality != null && compQuality.Quality != QualityCategory.Legendary;
+        }
+
+        /// <summary>
+        /// Creates the cancel-only button for a building that is marked but can no longer be improved.
+        /// </summary>
+        /// <returns>A command that clears the mark.</returns>
+        /// <remarks>
+        /// <para>
+        /// The shape is vanilla's. <c>CompPlantable</c> yields a cancel-only <c>Command_Action</c>
+        /// from <c>CompGetGizmosExtra</c> gated purely on "the state that needs cancelling exists",
+        /// as an independent branch rather than an else-arm of the start button, and
+        /// <c>CompHoldingPlatformTarget</c> does the same twice. There is no vanilla gizmo anywhere
+        /// that removes a <c>Designation</c>, so the precedent is the shape, not the effect.
+        /// </para>
+        /// <para>
+        /// This deliberately does NOT go through the group machinery, and does not need to. Vanilla
+        /// merges gizmos itself: <c>Command.GroupsWith</c> returns true when the hotkey, label, icon
+        /// reference and group key all match, and <c>GizmoGridDrawer</c> then draws one button and
+        /// fires every member's action on click, because <c>alsoClickIfOtherInGroupClicked</c>
+        /// defaults true. Selecting six stranded buildings therefore shows one cancel button that
+        /// clears all six, with no representative to pick. That is why the icon is a shared static
+        /// and the label takes no count: giving it a per-building count would split the merge.
+        /// </para>
+        /// <para>
+        /// Setting the property rather than the field is deliberate. The setter is what removes the
+        /// designation and returns the staged materials through the <c>Notify_Removing</c> prefix,
+        /// which is the whole point of offering the button.
+        /// </para>
+        /// </remarks>
+        private Command_Action CreateStrandedCancelGizmo()
+        {
+            return new Command_Action
+            {
+                defaultLabel = "SimpleImprove_CancelImprovement".Translate(),
+                defaultDesc = "SimpleImprove_CancelImprovementStranded".Translate(),
+                icon = ImproveSelection.CancelIcon,
+                hotKey = KeyBindingDefOf.Designator_Cancel,
+                action = () => IsMarkedForImprovement = false
+            };
         }
 
         /// <summary>

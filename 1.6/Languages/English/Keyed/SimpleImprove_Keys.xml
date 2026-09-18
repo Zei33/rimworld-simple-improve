@@ -5,6 +5,7 @@
   <SimpleImprove_DesignateForImprovement>Designate for improvement</SimpleImprove_DesignateForImprovement>
   <SimpleImprove_DesignateForImprovementDesc>Mark items to have their quality improved by skilled workers</SimpleImprove_DesignateForImprovementDesc>
   <SimpleImprove_CancelImprovement>Cancel improvement</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementStranded>This building is marked for improvement but can no longer be improved. Cancel the mark and return any materials that were delivered.</SimpleImprove_CancelImprovementStranded>
   <SimpleImprove_CancelImprovementDesc>Cancel improvement orders and return any stored materials</SimpleImprove_CancelImprovementDesc>
   
   <!-- Acceptance Report Messages -->

@@ -69,6 +69,39 @@ namespace SimpleImprove.Core
             }
         }
 
+        /// <summary>Backing field for <see cref="CancelIcon"/>.</summary>
+        private static Texture2D cancelIcon;
+
+        /// <summary>
+        /// The texture vanilla uses for every cancel button, resolved once.
+        /// </summary>
+        /// <remarks>
+        /// The path is vanilla's own. All three vanilla cancel gizmos yielded from a comp
+        /// (<c>CompPlantable</c>, <c>CompHoldingPlatformTarget</c> and <c>UnfinishedThing</c>) use
+        /// <c>UI/Designators/Cancel</c>, and the first two hold it in a static exactly like this.
+        /// <para>
+        /// Holding one shared reference is not only about the lookup cost here. <c>Command.GroupsWith</c>
+        /// merges two gizmos only when their hotkey, label, group key and <c>icon</c> all match, and
+        /// <c>icon</c> is compared by reference. Fetching the texture per gizmo would still return the
+        /// same object today, but a static makes the merge independent of that.
+        /// </para>
+        /// <para>
+        /// The <c>== null</c> test is deliberate for the same fake-null reason as <see cref="Icon"/>.
+        /// </para>
+        /// </remarks>
+        public static Texture2D CancelIcon
+        {
+            get
+            {
+                if (cancelIcon == null)
+                {
+                    cancelIcon = ContentFinder<Texture2D>.Get("UI/Designators/Cancel", true);
+                }
+
+                return cancelIcon;
+            }
+        }
+
         /// <summary>
         /// Gets the improvement groups for whatever is selected right now.
         /// </summary>

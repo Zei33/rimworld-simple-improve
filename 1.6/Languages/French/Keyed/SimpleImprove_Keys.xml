@@ -5,6 +5,7 @@
   <SimpleImprove_DesignateForImprovement>Désigner pour amélioration</SimpleImprove_DesignateForImprovement>
   <SimpleImprove_DesignateForImprovementDesc>Marquer les objets pour que des ouvriers qualifiés améliorent leur qualité</SimpleImprove_DesignateForImprovementDesc>
   <SimpleImprove_CancelImprovement>Annuler l'amélioration</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementStranded>Ce bâtiment est marqué pour amélioration mais ne peut plus être amélioré. Annule la marque et rend les matériaux déjà livrés.</SimpleImprove_CancelImprovementStranded>
   <SimpleImprove_CancelImprovementDesc>Annuler les ordres d'amélioration et retourner les matériaux stockés</SimpleImprove_CancelImprovementDesc>
   
   <!-- Acceptance Report Messages -->

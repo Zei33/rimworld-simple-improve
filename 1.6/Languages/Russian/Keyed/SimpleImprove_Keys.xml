@@ -5,6 +5,7 @@
   <SimpleImprove_DesignateForImprovement>Назначить для улучшения</SimpleImprove_DesignateForImprovement>
   <SimpleImprove_DesignateForImprovementDesc>Отметить предметы для улучшения качества квалифицированными рабочими</SimpleImprove_DesignateForImprovementDesc>
   <SimpleImprove_CancelImprovement>Отменить улучшение</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementStranded>Это здание отмечено для улучшения, но больше не может быть улучшено. Отменяет отметку и возвращает доставленные материалы.</SimpleImprove_CancelImprovementStranded>
   <SimpleImprove_CancelImprovementDesc>Отменить приказы на улучшение и вернуть сохранённые материалы</SimpleImprove_CancelImprovementDesc>
   
   <!-- Acceptance Report Messages -->

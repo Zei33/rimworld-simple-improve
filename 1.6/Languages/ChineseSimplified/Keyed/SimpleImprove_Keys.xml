@@ -5,6 +5,7 @@
   <SimpleImprove_DesignateForImprovement>指定改良</SimpleImprove_DesignateForImprovement>
   <SimpleImprove_DesignateForImprovementDesc>标记物品由熟练工人提升质量</SimpleImprove_DesignateForImprovementDesc>
   <SimpleImprove_CancelImprovement>取消改良</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementStranded>此建筑已标记为改良，但现在已无法改良。取消标记并返还已送达的材料。</SimpleImprove_CancelImprovementStranded>
   <SimpleImprove_CancelImprovementDesc>取消改良命令并返还储存的材料</SimpleImprove_CancelImprovementDesc>
   
   <!-- Acceptance Report Messages -->

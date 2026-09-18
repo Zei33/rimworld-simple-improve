@@ -5,6 +5,7 @@
   <SimpleImprove_DesignateForImprovement>Oznacz do ulepszenia</SimpleImprove_DesignateForImprovement>
   <SimpleImprove_DesignateForImprovementDesc>Oznacz przedmioty do poprawy jakości przez wykwalifikowanych pracowników</SimpleImprove_DesignateForImprovementDesc>
   <SimpleImprove_CancelImprovement>Anuluj ulepszenie</SimpleImprove_CancelImprovement>
+  <SimpleImprove_CancelImprovementStranded>Ten budynek jest oznaczony do ulepszenia, ale nie można go już ulepszyć. Anuluje oznaczenie i zwraca dostarczone materiały.</SimpleImprove_CancelImprovementStranded>
   <SimpleImprove_CancelImprovementDesc>Anuluj polecenia ulepszenia i zwróć przechowywane materiały</SimpleImprove_CancelImprovementDesc>
   
   <!-- Acceptance Report Messages -->
