@@ -181,6 +181,29 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   the same trap**, because `ResolveParseNow` clamps and rewrites as soon as the text is a fully
   typed number; it gets away with it only because its float fields are nearly all minimum 0.
   `SetSkillBuffer` is sound for that same reason and was deliberately left alone.
+- **A quality modifier says which kind it is; never infer it from the pawn.** `PawnQualityModifiers`
+  entries are `PawnQualityModifier.Attainable(worth, f)` or `PawnQualityModifier.Carried(f)`.
+  Attainable means any pawn could come to have it, so `GetBestCaseSkillRequirement` counts it once
+  for the colony whether or not anybody has it (inspired creativity, worth 2). Carried means only
+  the pawns who have it, so the best case is the best of them (the Ideology production role, whose
+  offset is def data). Until 1.0.9 the best-case scan told them apart by asking whether the pawn was
+  inspired, which skipped **every** modifier belonging to an inspired pawn, so a colony whose only
+  production specialist happened to be inspired had them counted for nothing. `GetSkillRequirement`
+  reads `BonusFor(pawn)`, what this pawn is getting now; the best case reads `Worth`, what it would
+  be worth to somebody who had it. Both go through one `RequirementForBonus`, so there is one clamp
+  and one table lookup rather than two of each.
+- **The best case scans `FreeColonistsSpawned`, not `ImproveWorkers.PotentialOnMap`, and that is
+  deliberate.** The two call sites use `PotentialOnMap` when deciding whether to warn, because a
+  colony mech can do the work. The bonus scan excludes mechs because a mech can hold neither bonus,
+  and the reason is not in the quality roll. `QualityUtility.GenerateQualityCreatedByPawn` reads
+  `pawn.InspirationDef` with **no race test**, and its `IsMechanoid` ternary picks the skill level
+  and nothing else, so that method would happily add two tiers to an inspired mechanoid. The gate is
+  upstream: `InspirationWorker.InspirationCanOccur` rejects `!pawn.IsColonist` unless the def sets
+  `allowedOnNonColonists`, `Inspired_Creativity` does not set it, and `Pawn.IsColonist` requires
+  `RaceProps.Humanlike`; a mech also has no mood need, so `InspirationHandler.StartInspirationMTBDays`
+  returns -1. The role half is simpler: `PawnComponentsUtility` creates `pawn.ideo` only inside
+  `if (pawn.RaceProps.Humanlike)`, so `Pawn.Ideo` is null for a mechanoid. An auditor diffing the two
+  sites will otherwise "fix" this one to match.
 - **Unity never takes keyboard focus off a text field when the player clicks somewhere else, and
   neither does RimWorld's window code.** `GUI.HandleTextFieldEventForDesktop` assigns
   `GUIUtility.keyboardControl` only when a mouse down lands inside the field, `GUI.DoControl` behind
@@ -351,6 +374,8 @@ consistent. The same applies to anything else that puts a thing in a container.
 | ~~Mechs can never take the work type~~ | fixed 2026-09-18, issue #8 | Was: `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`. `1.6/Patches/MechWorkTypes.xml` appends the improving work type to it |
 | Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history, while three published descriptions advertise the tab |
 | ~~Legendary skill requirement unreachable~~ | fixed 2026-09-18, issue #14 | Was: `Mathf.Clamp(baseQuality, 0, 5)` indexed the skill table while `QualityCategory.Legendary` is 6, so the configured Legendary number was never read. The bound is `HighestQualityIndex` now. Raises an ordinary pawn's Default requirement from 18 to 20: a live balance change, and a pawn with an inspiration or a role bonus was already getting the right number |
+| ~~The best case drops the production specialist when inspired~~ | fixed 2026-09-18, issue #16 | Was: the best-case scan used the pawn's inspiration state as a proxy for which modifier it held, so an inspired pawn's modifiers were all skipped and the warning quoted a number up to six Construction levels too high. Modifiers declare their kind now. See traps |
+| The skill warning drops "assigned to improvement" in eight languages | issue #24, open | The four warning strings say "no colonist can improve this" outside English, while the check only ever looked at pawns with the work type switched on. Bound to the #17/#18 locale pass by constraint 11a |
 | ~~The material cost percentage cannot be typed~~ | fixed 2026-09-18, issue #15 | Was: three defects locking each other in. The field rewrote its own buffer to the clamped value on every keystroke, `ResetToDefaults` wrote the multiplier into a percentage buffer, and the clamp, the tooltip and the store copy named three different ranges. See traps |
 | Two unrelated DLLs ship inside the published mod | fixed in the repo 2026-09-17 | The 17 Aug 2025 Workshop file carries `ISharpZipLib.dll` and `com.rlabrecque.steamworks.net.dll` beside `SimpleImprove.dll`, and RimWorld loads them as mod assemblies for all 6356 subscribers. `build.sh` now deletes everything in the staged output bar `SimpleImprove.dll` and every csproj `<Reference>` is `<Private>false</Private>`, so the repo no longer produces them. Live until the next upload, so it is a reason to ship one |
 

@@ -113,10 +113,29 @@ namespace SimpleImprove.Core
         #region Static Configuration
         
         /// <summary>
-        /// List of functions that calculate quality tier bonuses for pawns.
-        /// These modifiers account for inspirations, roles, and other factors that affect quality generation.
+        /// The sources of quality tier bonus a pawn can have: inspirations, Ideology roles, and
+        /// anything a third party adds.
         /// </summary>
-        public static List<Func<Pawn, int>> PawnQualityModifiers { get; } = new List<Func<Pawn, int>>();
+        /// <remarks>
+        /// Each entry says whether it is <see cref="PawnQualityBonusKind.Attainable"/> or
+        /// <see cref="PawnQualityBonusKind.Carried"/>, because the mod asks two different questions
+        /// of them. <see cref="GetSkillRequirement"/> wants what one pawn is getting right now and
+        /// reads every entry; <see cref="GetBestCaseSkillRequirement"/> wants what the best pawn in
+        /// the colony could get and has to treat the two kinds differently.
+        /// </remarks>
+        public static List<PawnQualityModifier> PawnQualityModifiers { get; } = new List<PawnQualityModifier>();
+
+        /// <summary>
+        /// How many quality tiers inspired creativity is worth, which is vanilla's own number.
+        /// </summary>
+        /// <remarks>
+        /// <c>QualityUtility.GenerateQualityCreatedByPawn</c> clamps its base roll to Masterwork and
+        /// then adds two tiers for <c>Inspired_Creativity</c>, so a bonus of some kind is what
+        /// reaches Legendary. Not only this one: the Ideology role offset is applied by a second,
+        /// separate <c>AddLevels</c> in the same method, and the one offset vanilla ships is +1, so
+        /// an uninspired production specialist rolling a Masterwork base gets there too.
+        /// </remarks>
+        private const int InspiredCreativityBonus = 2;
 
         /// <summary>
         /// The highest <see cref="QualityCategory"/> index, and so the upper bound on any lookup
@@ -217,18 +236,22 @@ namespace SimpleImprove.Core
         {
             PawnQualityModifiers.Clear();
 
-            // Inspired Creativity bonus
-            PawnQualityModifiers.Add(pawn =>
-            {
-                if (pawn?.InspirationDef == InspirationDefOf.Inspired_Creativity)
-                    return 2; // Boosts quality by 2 tiers
-                return 0;
-            });
+            // Inspired Creativity. Attainable, because any colonist can be struck by it, so the
+            // best case counts it whether or not anybody has it right now. The worth is stated once
+            // and used twice, which is what keeps the best case from carrying its own copy of the
+            // number: it used to, in another method, as a bare 2.
+            PawnQualityModifiers.Add(PawnQualityModifier.Attainable(
+                InspiredCreativityBonus,
+                pawn => pawn?.InspirationDef == InspirationDefOf.Inspired_Creativity
+                    ? InspiredCreativityBonus
+                    : 0));
 
-            // Production Specialist role bonus (Ideology DLC)
+            // Production Specialist role bonus (Ideology DLC). Carried, because a colony either has
+            // somebody in the role or it does not, and the offset is def data, so the only honest
+            // way to know what it is worth here is to look at the pawns.
             if (ideologyActive)
             {
-                PawnQualityModifiers.Add(pawn =>
+                PawnQualityModifiers.Add(PawnQualityModifier.Carried(pawn =>
                 {
                     if (pawn?.Ideo != null)
                     {
@@ -242,7 +265,7 @@ namespace SimpleImprove.Core
                         }
                     }
                     return 0;
-                });
+                }));
             }
         }
         
@@ -274,74 +297,144 @@ namespace SimpleImprove.Core
         /// <returns>The minimum Construction skill level required.</returns>
         public int GetSkillRequirement(QualityCategory quality, Pawn pawn = null)
         {
-            int baseQuality = (int)quality;
-            
+            int bonus = 0;
+
             if (pawn != null)
             {
                 foreach (var modifier in PawnQualityModifiers)
                 {
-                    baseQuality -= modifier(pawn);
+                    bonus += modifier.BonusFor(pawn);
                 }
             }
 
-            // Every QualityCategory has a row, so the only job of this clamp is to absorb a modifier
-            // that has taken the index below Awful. ValidateAndFixLoadedData fills any key a save is
-            // missing from the Default preset, so the lookup below cannot throw.
-            baseQuality = Mathf.Clamp(baseQuality, 0, HighestQualityIndex);
-            return skillRequirements[(QualityCategory)baseQuality];
+            return RequirementForBonus(quality, bonus);
+        }
+
+        /// <summary>
+        /// Looks up the skill requirement for a target quality once a bonus has been allowed for.
+        /// </summary>
+        /// <param name="quality">The target quality level.</param>
+        /// <param name="bonus">The quality tiers the pawn gets for free.</param>
+        /// <returns>The minimum Construction skill level required.</returns>
+        /// <remarks>
+        /// Shared by the per-pawn requirement and the colony best case, which used to hold two
+        /// copies of this arithmetic and two copies of the clamp. Every <c>QualityCategory</c> has a
+        /// row, so the clamp's only job is to absorb a bonus that has taken the index past either
+        /// end, and <c>ValidateAndFixLoadedData</c> fills any key a save is missing from the Default
+        /// preset, so the lookup cannot throw.
+        /// </remarks>
+        private int RequirementForBonus(QualityCategory quality, int bonus)
+        {
+            int index = Mathf.Clamp((int)quality - bonus, 0, HighestQualityIndex);
+            return skillRequirements[(QualityCategory)index];
         }
         
         /// <summary>
-        /// Gets the minimum skill requirement considering the best possible bonuses available on the map.
-        /// This calculates what skill level would be needed if a pawn had inspiration and the best available role bonus.
+        /// Gets the lowest skill requirement any pawn in the colony could get away with, allowing
+        /// for an inspiration and for the best Ideology production role on the map.
         /// </summary>
         /// <param name="quality">The target quality level.</param>
-        /// <param name="map">The map to search for pawns with bonuses (optional).</param>
-        /// <returns>The minimum Construction skill level required with best available bonuses.</returns>
+        /// <param name="map">The map whose colonists to read. Optional.</param>
+        /// <returns>The minimum Construction skill level the best case would need.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is the second number in the skill warning, the one after "or". It is a claim about
+        /// the player's own colony, so it has to be right: quoting it too high tells them nothing
+        /// can reach a target that somebody standing there can reach.
+        /// </para>
+        /// <para>
+        /// Colonists rather than <c>ImproveWorkers.PotentialOnMap</c>, which is deliberate and the
+        /// opposite of the choice the two call sites make when they decide whether to warn at all.
+        /// They include colony mechs, because a mech can do the work. This does not, because a mech
+        /// can hold neither bonus. <c>PawnComponentsUtility</c> creates <c>pawn.ideo</c> only inside
+        /// <c>if (pawn.RaceProps.Humanlike)</c>, so <c>Pawn.Ideo</c> is null for a mechanoid and it
+        /// can hold no role. And an inspiration cannot start on one:
+        /// <c>InspirationWorker.InspirationCanOccur</c> rejects <c>!pawn.IsColonist</c> unless the
+        /// def sets <c>allowedOnNonColonists</c>, which <c>Inspired_Creativity</c> does not, and
+        /// <c>IsColonist</c> requires <c>RaceProps.Humanlike</c>; a mech also has no mood need, so
+        /// <c>InspirationHandler.StartInspirationMTBDays</c> returns -1 and the random path never
+        /// fires either. Note that the gate is there and not in the quality roll:
+        /// <c>GenerateQualityCreatedByPawn</c> reads <c>InspirationDef</c> with no race test at all,
+        /// and its mechanoid ternary picks the skill level and nothing else. Adding mechs here would
+        /// change nothing and cost a scan.
+        /// </para>
+        /// <para>
+        /// With no map this answers with the attainable bonuses alone. The version before 1.0.9
+        /// invented a role bonus of 1 here when Ideology was active, on the grounds that it was
+        /// typical, which was a guess about a colony it had not looked at, and reading
+        /// <c>ModsConfig</c> to make it was also what kept this whole method out of the test
+        /// harness. Neither call site passes a null map.
+        /// </para>
+        /// </remarks>
         public int GetBestCaseSkillRequirement(QualityCategory quality, Map map = null)
         {
-            // Calculate the best possible quality bonus available
-            int bestTotalBonus = 0;
-            
-            // Inspiration is always potentially available (+2 quality levels)
-            int inspirationBonus = 2;
-            
-            // Find the best role bonus available on the map
-            int bestRoleBonus = 0;
-            if (map?.mapPawns?.FreeColonistsSpawned != null)
+            return BestCaseRequirementFor(quality, map?.mapPawns?.FreeColonistsSpawned);
+        }
+
+        /// <summary>
+        /// The best case over a given set of pawns, which is everything
+        /// <see cref="GetBestCaseSkillRequirement"/> does once the map has been read.
+        /// </summary>
+        /// <param name="quality">The target quality level.</param>
+        /// <param name="colonists">The pawns to consider, which may be empty or null.</param>
+        /// <returns>The minimum Construction skill level the best case would need.</returns>
+        internal int BestCaseRequirementFor(QualityCategory quality, IEnumerable<Pawn> colonists)
+        {
+            return RequirementForBonus(
+                quality, QualityBonuses.BestCase(AttainableBonusTotal(), CarriedBonusesOf(colonists)));
+        }
+
+        /// <summary>
+        /// Adds up the bonuses any pawn could come to have.
+        /// </summary>
+        /// <returns>The quality tiers the best case may assume for the whole colony.</returns>
+        internal static int AttainableBonusTotal()
+        {
+            int total = 0;
+
+            foreach (var modifier in PawnQualityModifiers)
             {
-                foreach (var pawn in map.mapPawns.FreeColonistsSpawned)
+                if (modifier.Kind == PawnQualityBonusKind.Attainable)
                 {
-                    // Get role bonuses for this pawn (not inspiration, which we count separately)
-                    foreach (var modifier in PawnQualityModifiers)
-                    {
-                        int modifierValue = modifier(pawn);
-                        // Check if this is a role bonus (not inspiration)
-                        if (pawn?.InspirationDef != InspirationDefOf.Inspired_Creativity && modifierValue > 0)
-                        {
-                            bestRoleBonus = Mathf.Max(bestRoleBonus, modifierValue);
-                        }
-                    }
+                    total += modifier.Worth;
                 }
             }
-            else if (ModsConfig.IdeologyActive)
+
+            return total;
+        }
+
+        /// <summary>
+        /// What each pawn's carried bonuses add up to, one entry per pawn.
+        /// </summary>
+        /// <param name="pawns">The pawns to measure, which may be null.</param>
+        /// <returns>One total per pawn, in the order given.</returns>
+        /// <remarks>
+        /// A pawn is asked only about the bonuses they carry, and never about whether they happen to
+        /// be inspired. That is the defect this replaces: the old scan tested the pawn's inspiration
+        /// state as a proxy for which modifier it was looking at, so an inspired production
+        /// specialist had every one of their modifiers skipped and contributed nothing.
+        /// </remarks>
+        internal static IEnumerable<int> CarriedBonusesOf(IEnumerable<Pawn> pawns)
+        {
+            if (pawns == null)
             {
-                // If no map provided but Ideology is active, assume typical production role bonus
-                bestRoleBonus = 1;
+                yield break;
             }
-            
-            // Best case scenario: inspiration + best available role bonus
-            bestTotalBonus = inspirationBonus + bestRoleBonus;
-            
-            // Calculate what quality level they'd need to achieve before bonuses
-            // If target is Excellent (3) and they get +3 bonus, they only need to achieve Awful (0)
-            // Shares the bound above for consistency rather than as a fix. The inspiration bonus of
-            // 2 is added unconditionally, so this expression never exceeds 4 and the upper bound has
-            // never been reached from here.
-            int baseQualityNeeded = Mathf.Clamp((int)quality - bestTotalBonus, 0, HighestQualityIndex);
-            
-            // Return the skill requirement for that base quality
-            return skillRequirements[(QualityCategory)baseQualityNeeded];
+
+            foreach (var pawn in pawns)
+            {
+                int carried = 0;
+
+                foreach (var modifier in PawnQualityModifiers)
+                {
+                    if (modifier.Kind == PawnQualityBonusKind.Carried)
+                    {
+                        carried += modifier.BonusFor(pawn);
+                    }
+                }
+
+                yield return carried;
+            }
         }
         
         /// <summary>

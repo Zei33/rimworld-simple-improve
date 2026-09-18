@@ -63,8 +63,9 @@ decision over it), `WorkerSkill` (the skill gate that keeps a skill-less worker 
 quality roll), `ImproveWorkers` (the mech priority correction), `ImproveDesignations` (the work
 giver's search set and the designation re-sync), `StoredMaterials` (when hauled materials come
 back), `MaterialCostField` (the material cost range and the two decisions that drive its text
-field), the work giver's declared surface, the shipped `PatchOperation` XML, and the target quality
-field and container allocation behaviour on `SimpleImproveComp`.
+field), `QualityBonuses` (the best case behind the skill warning), the work giver's declared surface,
+the shipped `PatchOperation` XML, and the target quality field and container allocation behaviour on
+`SimpleImproveComp`.
 
 `WorkerSkill` is the worked example of the split this harness rewards, and it is worth copying. The
 readings that cannot be tested (`pawn.skills`, `RaceProps.IsMechanoid`, `mechFixedSkillLevel`) are
@@ -103,6 +104,22 @@ constructed or read without a map. It is a field now, so `TargetQuality` round-t
 naming. `MapComponent.FinalizeInit` is an empty virtual and `EnableImprovingForColonyMechs` returns
 early on a null map, so the whole override runs against `new SimpleImproveMapComponent(null)` and the
 discard it performs is tested rather than inferred.
+
+`GetBestCaseSkillRequirement` became reachable while being fixed, which is worth knowing because it
+was previously the clearest example of a method nothing here could touch. It threw
+`TypeInitializationException` on every call, from a null-map branch that read
+`ModsConfig.IdeologyActive` to invent a role bonus. That branch is gone, so the no-map case runs
+here; the with-pawns case runs through an `internal BestCaseRequirementFor` overload that takes the
+pawns instead of a `Map`, which is the only reading the method now makes.
+
+Two things about pawns in this project, both measured. `new Pawn()` constructs, which is more than
+the rest of this list suggests and is what lets the quality clamp be tested with a pawn at all. But a
+bare `Pawn` throws a `NullReferenceException` on `InspirationDef`, and the null is `health`, not
+`mindState`: the property tests `Dead` first and `Pawn.Dead` is `health.Dead`, so it never reaches
+the mind state. Naming `InspirationDefOf.Inspired_Creativity` throws a `TypeInitializationException`,
+because a `DefOf` class's static constructor cannot run outside a game. So **neither of the two
+quality modifiers the mod ships can be evaluated here**, and the tests register their own. What is covered is the machinery that reads modifiers and the arithmetic over
+what they return, not the two shipped lambdas.
 
 `ValidateAndFixLoadedData` is reachable as well, by reflection, and that was found by mutation rather
 than by reading. It is private and the public route to it is `ExposeData` under
@@ -145,6 +162,23 @@ formatting in multiplier units; `ValidateAndFixLoadedData` not clamping, or not 
 quality row; `SettleMaterialCostField` doing nothing; `SimpleImproveMod` no longer overriding
 `WriteSettings`; and `About/About.xml` reverting to the range it used to advertise.
 
+For the best case behind the skill warning, twelve mutations were measured on 2026-09-18 against the
+suite at 220 tests and eleven are caught: the carried scan filtering on the wrong kind (1), dropping
+its kind filter (2), or restoring the old behaviour of skipping a pawn whose attainable bonus is
+nonzero (3); `BestCase` comparing the two totals instead of adding them (4), losing its zero floor
+(5), summing every pawn instead of taking the best (6), or ignoring the pawns entirely (7);
+`RequirementForBonus` losing its lower clamp (8); and the per-pawn requirement reading `Worth`
+instead of `BonusFor` (9), ignoring the modifiers (10), or gaining a `Kind` filter of its own (11).
+
+Four of those needed tests the first draft did not have, and the fourth was the one that mattered.
+The lower clamp was never exercised with a pawn at all. Nothing distinguished `Worth` from
+`BonusFor`, which are equal in every case a careless test registers. And **nothing pinned that the
+per-pawn requirement counts carried bonuses**: two of the three loops over `PawnQualityModifiers`
+filter on `Kind` and this one deliberately does not, so the filter could be copied into it and the
+whole suite stayed green. Every other test registering a carried modifier was either asking the best
+case or landing on a clamp that hid the difference. An adversarial review found that one; the other
+three came out of the mutation runs.
+
 Three of those were added because an adversarial review found the first draft of this suite could not
 catch them, and the fourth (the reset test) was found by mutation. They are worth naming because each
 is a way a test can look right and hold nothing:
@@ -171,12 +205,20 @@ target behind, or clearing it when marking rather than unmarking; the `TargetQua
 becoming a no-op; and the `PostDeSpawn` override being removed.
 
 Two mutations that were expected to be caught and are not, both because they are behaviour
-preserving rather than because of a gap. Rewriting `OnUnmark` to call `OnDeSpawn` with a hardcoded
-`false` passes the suite, and `TheTwoDecisionsDisagreeAboutAGravship` says so in the fixture rather
-than implying it catches something it does not. So does reverting the second clamp in
-`GetBestCaseSkillRequirement` to a literal 5: the inspiration bonus of 2 is added unconditionally, so
-that expression never exceeds 4 and both bounds give the same answer for every input. It moved for
-consistency with the first clamp, not as a fix, and no test can distinguish it.
+preserving rather than because of a gap. Making `AttainableBonusTotal` add up every modifier's
+`Worth` rather than only the attainable ones passes the suite, and no test can catch it: a carried
+modifier is built through `PawnQualityModifier.Carried`, which is the only route to one and always
+sets `Worth` to zero, so the two sums are equal by construction. The filter states the intent and
+would start mattering the moment a carried modifier could declare a worth. Rewriting `OnUnmark` to
+call `OnDeSpawn` with a hardcoded `false` passes the suite for the same reason, and
+`TheTwoDecisionsDisagreeAboutAGravship` says so in the fixture rather than implying it catches
+something it does not.
+
+An earlier version of this paragraph also listed the second clamp in `GetBestCaseSkillRequirement`
+reverting to a literal 5. That entry is gone because the code is: the per-pawn and best-case paths
+share one `RequirementForBonus` now, so there is one clamp rather than two, and mutating it **is**
+caught. A claim about an uncovered mutation has to be retired with the code it described, or it reads
+as a live gap in something that no longer exists.
 
 **Be precise about what that does not cover, because the list above makes it look wider than it is.**
 Several method bodies are unreachable, and mutations inside them were measured to pass the suite

@@ -192,6 +192,231 @@ namespace SimpleImprove.Tests
         }
 
         [Test]
+        public void ThePerPawnRequirementCountsBothKindsOfBonus()
+        {
+            // The asymmetry that needs stating. Two of the three loops over PawnQualityModifiers
+            // filter on Kind, and this one deliberately does not: what a pawn is getting right now
+            // is every bonus they have, of either kind. Without this test a kind filter can be
+            // copied into the per-pawn loop and the whole suite stays green, because every other
+            // test that registers a Carried modifier is either asking the best case or landing on a
+            // clamp that hides the difference.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 2));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+            var settings = new SimpleImproveSettings();
+
+            // Masterwork is 5, less two for the inspiration and one for the role, so Normal.
+            Assert.That(
+                settings.GetSkillRequirement(QualityCategory.Masterwork, new Pawn()),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Normal)));
+        }
+
+        [Test]
+        public void ACarriedBonusAloneStillMovesThePerPawnRequirement()
+        {
+            // The same point without an attainable modifier in the list to mask it.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                settings.GetSkillRequirement(QualityCategory.Masterwork, new Pawn()),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Excellent)));
+        }
+
+        [Test]
+        public void ThePerPawnRequirementReadsThePawnAndNotWhatTheBonusCouldBeWorth()
+        {
+            // The distinction the whole change rests on, asserted where the two differ. Worth is
+            // what a bonus gives a pawn who has it; BonusFor is what this pawn is getting now. An
+            // uninspired pawn gets nothing from an inspiration modifier that is worth 2, so their
+            // requirement is the plain one. Reading Worth here would tell every colonist in the
+            // game they were permanently inspired.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                settings.GetSkillRequirement(QualityCategory.Masterwork, new Pawn()),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Masterwork)));
+        }
+
+        [Test]
+        public void ABonusCannotWalkThePawnOffTheBottomOfTheTable()
+        {
+            // The other end of the clamp from the Legendary bound, and the end that is actually
+            // reachable in play: an inspired pawn improving an Awful item asks for index -2. Awful
+            // is index 0 and there is no row below it, so without the lower clamp this is
+            // (QualityCategory)(-2) and a KeyNotFoundException on the warning path.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 2));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                () => settings.GetSkillRequirement(QualityCategory.Awful, new Pawn()), Throws.Nothing);
+            Assert.That(
+                settings.GetSkillRequirement(QualityCategory.Awful, new Pawn()),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Awful)));
+        }
+
+        [Test]
+        public void TheBestCaseCannotWalkOffTheBottomOfTheTableEither()
+        {
+            // Same clamp, reached through the other caller. Both go through RequirementForBonus now,
+            // which is the point of sharing it, but a warning about an Awful item is the case that
+            // used to reach two separate copies of this arithmetic.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 3));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                () => settings.BestCaseRequirementFor(QualityCategory.Awful, new[] { new Pawn() }),
+                Throws.Nothing);
+            Assert.That(
+                settings.BestCaseRequirementFor(QualityCategory.Awful, new[] { new Pawn() }),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Awful)));
+        }
+
+        [Test]
+        public void AnInspiredProductionSpecialistStillCountsAsAProductionSpecialist()
+        {
+            // Defect S-16, filed as simple-improve#16, and the reason the modifiers now carry a
+            // kind. The old scan asked whether the pawn in front of it was inspired and used the
+            // answer as a proxy for which modifier it was holding, so every modifier belonging to an
+            // inspired pawn was skipped. A colony whose only production specialist happened to be
+            // inspired reported its best case as inspiration alone, which is the one pawn the best
+            // case is actually about.
+            //
+            // Masterwork is index 5. With inspiration and a role the best pawn needs to roll index
+            // 2, Normal, which the Default preset puts at 4. The old code answered index 3, Good,
+            // which is 10: six Construction levels of warning that nobody can do a job somebody in
+            // the room can do right now.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 2));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+            var settings = new SimpleImproveSettings();
+
+            var best = settings.BestCaseRequirementFor(QualityCategory.Masterwork, new[] { new Pawn() });
+
+            Assert.That(best, Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Normal)));
+            Assert.That(best, Is.EqualTo(4));
+            Assert.That(best, Is.Not.EqualTo(settings.GetSkillRequirement(QualityCategory.Good)),
+                "The role bonus was dropped, which is the defect.");
+        }
+
+        [Test]
+        public void TheCarriedScanNeverAsksWhetherAPawnIsInspired()
+        {
+            // The same invariant stated against the mechanism rather than the symptom. Whatever the
+            // attainable modifier says about this pawn, the carried reading is the same.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 2));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+
+            Assert.That(
+                SimpleImproveSettings.CarriedBonusesOf(new[] { new Pawn() }),
+                Is.EqualTo(new[] { 1 }));
+        }
+
+        [Test]
+        public void AnUninspiredProductionSpecialistWasAlreadyCountedAndStillIs()
+        {
+            // The case the old code got right by accident, because an uninspired pawn passed its
+            // filter and their inspiration modifier returned zero anyway. It must not regress.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                settings.BestCaseRequirementFor(QualityCategory.Masterwork, new[] { new Pawn() }),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Normal)));
+        }
+
+        [Test]
+        public void TheBestCaseCountsInspirationWhenNobodyIsInspired()
+        {
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                settings.BestCaseRequirementFor(QualityCategory.Masterwork, new[] { new Pawn() }),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Good)));
+        }
+
+        [Test]
+        public void TheBestCaseWithNoMapNoLongerThrows()
+        {
+            // It used to, every time, with a TypeInitializationException. The null map branch read
+            // ModsConfig.IdeologyActive to invent a role bonus of 1 on the grounds that it was
+            // typical, which was a guess about a colony it had not looked at and which also kept the
+            // whole method out of this project. It answers with the attainable bonuses now.
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                () => settings.GetBestCaseSkillRequirement(QualityCategory.Masterwork), Throws.Nothing);
+            Assert.That(
+                settings.GetBestCaseSkillRequirement(QualityCategory.Masterwork),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Good)));
+        }
+
+        [Test]
+        public void AnEmptyColonyGetsNoCarriedBonus()
+        {
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 1));
+            var settings = new SimpleImproveSettings();
+
+            Assert.That(
+                settings.BestCaseRequirementFor(QualityCategory.Masterwork, new Pawn[0]),
+                Is.EqualTo(settings.GetSkillRequirement(QualityCategory.Good)));
+        }
+
+        [Test]
+        public void TheAttainableTotalIsWhatTheModifiersDeclare()
+        {
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(2, pawn => 0));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Attainable(1, pawn => 0));
+            SimpleImproveSettings.PawnQualityModifiers.Add(
+                PawnQualityModifier.Carried(pawn => 5));
+
+            Assert.That(SimpleImproveSettings.AttainableBonusTotal(), Is.EqualTo(3),
+                "A carried modifier must not be counted for a colony that may not have it.");
+        }
+
+        [Test]
+        public void TheShippedModifiersDeclareOneOfEachKind()
+        {
+            // Inspiration is attainable because any colonist can be struck by it. The production
+            // role is carried because a colony either has somebody in it or does not.
+            SimpleImproveSettings.InitializePawnModifiers(ideologyActive: true);
+
+            Assert.That(
+                SimpleImproveSettings.PawnQualityModifiers[0].Kind,
+                Is.EqualTo(PawnQualityBonusKind.Attainable));
+            Assert.That(SimpleImproveSettings.PawnQualityModifiers[0].Worth, Is.EqualTo(2),
+                "Vanilla gives inspired creativity two quality tiers.");
+            Assert.That(
+                SimpleImproveSettings.PawnQualityModifiers[1].Kind,
+                Is.EqualTo(PawnQualityBonusKind.Carried));
+        }
+
+        [Test]
         public void TheModDeclaresWriteSettings()
         {
             // The declaration, because the body cannot be run: SimpleImproveMod.Settings goes
@@ -216,7 +441,7 @@ namespace SimpleImprove.Tests
             // positive, but PawnQualityModifiers is a public static list and the Ideology role
             // offset it reads is def data, so a negative one is a modded save away. Without the
             // clamp that is (QualityCategory)7 and a KeyNotFoundException on every job scan.
-            SimpleImproveSettings.PawnQualityModifiers.Add(pawn => -1);
+            SimpleImproveSettings.PawnQualityModifiers.Add(PawnQualityModifier.Carried(pawn => -1));
             var settings = new SimpleImproveSettings();
 
             Assert.That(
@@ -231,7 +456,7 @@ namespace SimpleImprove.Tests
         {
             // The direction that does happen. Inspired creativity is worth two quality levels, so an
             // inspired pawn aiming at Legendary is judged against the Excellent row.
-            SimpleImproveSettings.PawnQualityModifiers.Add(pawn => 2);
+            SimpleImproveSettings.PawnQualityModifiers.Add(PawnQualityModifier.Attainable(2, pawn => 2));
             var settings = new SimpleImproveSettings();
 
             Assert.That(
