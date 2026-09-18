@@ -6,15 +6,47 @@ using Verse;
 namespace SimpleImprove.Core
 {
     /// <summary>
-    /// MapComponent that handles persistent storage of target quality data for improved buildings.
-    /// This ensures that target quality settings persist across save/load cycles even when
-    /// SimpleImproveComp components are added dynamically via Harmony patches.
+    /// Holds the target quality store that saves written before version 1.0.9 used, and switches
+    /// improvement work on for colony mechs.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The store is a migration shim and nothing writes to it any more. Target quality now lives on
+    /// <see cref="SimpleImproveComp"/> and is scribed with the rest of that component's state, which
+    /// is where it belongs and where it can survive a building that is not on a map. This dictionary
+    /// exists only so that a save written by an earlier version does not lose the targets the player
+    /// set; <see cref="SimpleImproveComp.PostSpawnSetup"/> drains an entry as each building spawns.
+    /// </para>
+    /// <para>
+    /// It had to live here in the first place because the improvement component used to be attached
+    /// at runtime by a Harmony patch and therefore could not persist anything of its own. That was
+    /// fixed by declaring the component on the defs, which is what makes the field on the component
+    /// possible now.
+    /// </para>
+    /// <para>
+    /// The store lives for exactly one load. <see cref="FinalizeInit"/> discards whatever is left
+    /// once every building on the map has spawned and had its chance to claim an entry, so the
+    /// dictionary is empty from the first save onwards and can never speak again. That bound is
+    /// load bearing rather than tidiness, and <see cref="DiscardUnclaimedTargetQualities"/> says
+    /// why.
+    /// </para>
+    /// <para>
+    /// This is not the orphan sweep that used to run here, which is the defect being fixed. That
+    /// one ran on every load forever, and deleted the target of any marked building that happened
+    /// to be minified, in a caravan or in any other container at the time. This runs once, after
+    /// the targets that can be rescued have been, and the state it discards belongs to buildings
+    /// that are not marked any more anyway.
+    /// </para>
+    /// <para>
+    /// The whole store can be removed in a later version, once saves that predate the move are no
+    /// longer a realistic concern.
+    /// </para>
+    /// </remarks>
     public class SimpleImproveMapComponent : MapComponent
     {
         /// <summary>
-        /// Dictionary mapping thing IDs to their target quality settings.
-        /// Uses thingIDNumber which is unique and persists across save/load.
+        /// Target qualities from a save written before the field moved onto the component, keyed by
+        /// <c>thingIDNumber</c>.
         /// </summary>
         private Dictionary<int, QualityCategory> targetQualities = new Dictionary<int, QualityCategory>();
 
@@ -27,100 +59,83 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
-        /// Sets the target quality for a specific thing.
+        /// Decides whether a spawning building should adopt a target quality from the legacy store.
         /// </summary>
-        /// <param name="thingID">The unique ID of the thing.</param>
-        /// <param name="quality">The target quality to set, or null to clear target quality.</param>
-        public void SetTargetQuality(int thingID, QualityCategory? quality)
+        /// <param name="respawningAfterLoad">Whether this spawn is a save being loaded.</param>
+        /// <param name="markedForImprovement">Whether the building is marked, as just loaded.</param>
+        /// <param name="targetAlreadyOnComp">Whether the component already carries a target.</param>
+        /// <returns><c>true</c> when the legacy store should be consulted.</returns>
+        /// <remarks>
+        /// <para>
+        /// The load test is what makes this a migration rather than a second source of truth, and it
+        /// is narrower than it looks. An ordinary spawn does not consult the store at all, and that
+        /// includes reinstalling a minified building, because <c>Frame.CompleteConstruction</c>
+        /// reaches <c>GenSpawn.Spawn</c> without the <c>respawningAfterLoad</c> argument and its
+        /// default is false. So the only thing that can claim an entry is a building standing on a
+        /// map at the moment a save is loaded.
+        /// </para>
+        /// <para>
+        /// The mark test holds the invariant that an unmarked building has no target. It matters for
+        /// real saves rather than in principle: before version 1.0.9 cancelling an improvement
+        /// cleared the flag and left the target in this dictionary, so an old save can easily hold
+        /// an entry for a building the player unmarked days earlier. The flag is readable here,
+        /// because <c>PostExposeData</c> has already run by the time anything spawns.
+        /// </para>
+        /// <para>
+        /// The component test stops the store overwriting a value the player set after the move. A
+        /// save written by this version carries the target on the component and leaves the
+        /// dictionary empty, so it is redundant today, but the three together hold for a save
+        /// written by either version.
+        /// </para>
+        /// </remarks>
+        public static bool ShouldMigrateTargetQuality(
+            bool respawningAfterLoad, bool markedForImprovement, bool targetAlreadyOnComp)
         {
-            if (quality.HasValue)
-            {
-                targetQualities[thingID] = quality.Value;
-            }
-            else
-            {
-                targetQualities.Remove(thingID);
-            }
+            return respawningAfterLoad && markedForImprovement && !targetAlreadyOnComp;
         }
 
         /// <summary>
-        /// Gets the target quality for a specific thing.
+        /// Reads a target quality out of the legacy store and removes it.
         /// </summary>
-        /// <param name="thingID">The unique ID of the thing.</param>
-        /// <returns>The target quality, or null if no target is set.</returns>
-        public QualityCategory? GetTargetQuality(int thingID)
+        /// <param name="thingID">The <c>thingIDNumber</c> of the building claiming its target.</param>
+        /// <returns>The stored target quality, or <c>null</c> when there is no entry.</returns>
+        /// <remarks>
+        /// Removing on read makes the claim a one-way move. The reason is load-clear-save-load, not
+        /// reinstalling: a reinstall spawns with <c>respawningAfterLoad</c> false and never reaches
+        /// the store at all. What it stops is the player loading an old save, clearing the target
+        /// back to "any improvement", saving and loading again, where the comp's target is null once
+        /// more and a surviving entry would be applied over the choice they just made.
+        /// <see cref="DiscardUnclaimedTargetQualities"/> closes the same hole from the other end, so
+        /// this is now belt and braces, but each of the two is correct on its own terms and neither
+        /// is a reason to drop the other.
+        /// </remarks>
+        public QualityCategory? TakeTargetQuality(int thingID)
         {
-            if (targetQualities.TryGetValue(thingID, out var quality))
+            if (!targetQualities.TryGetValue(thingID, out var quality))
             {
-                return quality;
+                return null;
             }
-            return null;
-        }
 
-        /// <summary>
-        /// Removes the target quality setting for a specific thing.
-        /// </summary>
-        /// <param name="thingID">The unique ID of the thing.</param>
-        public void RemoveTargetQuality(int thingID)
-        {
             targetQualities.Remove(thingID);
+            return quality;
         }
 
         /// <summary>
-        /// Gets all thing IDs that have target quality settings.
-        /// Used for cleanup and validation operations.
+        /// Saves and loads the legacy target quality store.
         /// </summary>
-        /// <returns>An enumerable of thing IDs with target quality settings.</returns>
-        public IEnumerable<int> GetAllTrackedThingIDs()
-        {
-            return targetQualities.Keys.ToList(); // ToList to avoid modification during iteration
-        }
-
-        /// <summary>
-        /// Cleans up orphaned entries for things that no longer exist on the map.
-        /// This prevents the dictionary from growing indefinitely with dead references.
-        /// </summary>
-        public void CleanupOrphanedEntries()
-        {
-            var validThingIDs = new HashSet<int>();
-            
-            // Collect all valid thing IDs from spawned things with improvement designations
-            foreach (var thing in map.listerThings.AllThings.OfType<ThingWithComps>())
-            {
-                if (thing.Faction == Faction.OfPlayer && 
-                    thing.TryGetComp<CompQuality>() != null &&
-                    thing.def.blueprintDef != null)
-                {
-                    validThingIDs.Add(thing.thingIDNumber);
-                }
-            }
-
-            // Remove entries for things that no longer exist
-            var keysToRemove = targetQualities.Keys.Where(id => !validThingIDs.Contains(id)).ToList();
-            foreach (var key in keysToRemove)
-            {
-                targetQualities.Remove(key);
-            }
-
-            if (keysToRemove.Count > 0 && Prefs.DevMode)
-            {
-                Log.Message($"[SimpleImprove] Cleaned up {keysToRemove.Count} orphaned target quality entries");
-            }
-        }
-
-        /// <summary>
-        /// Saves and loads the target quality data to/from the save file.
-        /// This method is automatically called by RimWorld's save/load system.
-        /// </summary>
+        /// <remarks>
+        /// This runs as part of <c>Map.ExposeComponents</c>, which <c>Verse.Game.LoadGame</c> reaches
+        /// through its <c>maps</c> collection before <c>Scribe.loader.FinalizeLoading</c> and well
+        /// before <c>Map.FinalizeLoading</c> spawns any things. The dictionary is therefore fully
+        /// populated by the time the first building asks it for a target.
+        /// </remarks>
         public override void ExposeData()
         {
             base.ExposeData();
-            
-            // Save/load the target qualities dictionary
-            Scribe_Collections.Look(ref targetQualities, "targetQualities", 
+
+            Scribe_Collections.Look(ref targetQualities, "targetQualities",
                 LookMode.Value, LookMode.Value);
-                
-            // Initialize dictionary if it was null after loading
+
             if (targetQualities == null)
             {
                 targetQualities = new Dictionary<int, QualityCategory>();
@@ -128,17 +143,47 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
-        /// Called after the map has finished loading.
-        /// Performs cleanup of orphaned entries to maintain data integrity.
+        /// Called after the map has finished loading, and after every thing on it has spawned.
         /// </summary>
         public override void FinalizeInit()
         {
             base.FinalizeInit();
 
-            // Clean up any orphaned entries after loading
-            CleanupOrphanedEntries();
-
+            DiscardUnclaimedTargetQualities();
             EnableImprovingForColonyMechs();
+        }
+
+        /// <summary>
+        /// Throws away any legacy target quality that no building claimed during this load.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The timing is the whole of it. <c>Map.FinalizeLoading</c> spawns every thing on the map
+        /// and then calls <c>Map.FinalizeInit</c> as its last statement, which is what reaches
+        /// <c>MapComponentUtility.FinalizeInit</c> and therefore this. So every building that could
+        /// claim an entry already has, and what is left belongs to something that is not on this map.
+        /// </para>
+        /// <para>
+        /// Keeping the remainder looks kinder and is not. An entry cannot be claimed later: a
+        /// reinstall spawns with <c>respawningAfterLoad</c> false, so the only other chance it gets
+        /// is the next load, by which time the player may have set a target of their own. The comp
+        /// writes nothing when the target is null, and null is also what "any improvement" means, so
+        /// a surviving entry would be applied over a deliberate choice with no way to tell the two
+        /// apart. That is a wrong setting applied silently, which is worse than a lost one.
+        /// </para>
+        /// <para>
+        /// Nothing marked is being discarded either. A building that is off a map is a building that
+        /// went into a container, and <c>ThingOwner.NotifyAdded</c> calls
+        /// <c>RemoveAllDesignationsOn</c> for every holder that
+        /// <c>ThingOwnerUtility.IsEnclosingContainer</c> accepts, which includes <c>MinifiedThing</c>.
+        /// That fires <c>Notify_Removing</c> and this mod's prefix clears the mark. So the entries
+        /// swept here are targets belonging to unmarked buildings, and an unmarked building has no
+        /// target by construction.
+        /// </para>
+        /// </remarks>
+        private void DiscardUnclaimedTargetQualities()
+        {
+            targetQualities.Clear();
         }
 
         /// <summary>
@@ -187,32 +232,6 @@ namespace SimpleImprove.Core
                 mech.workSettings.SetPriority(
                     SimpleImproveDefOf.WorkType_Improving, ImproveWorkers.DefaultMechPriority);
             }
-        }
-
-        /// <summary>
-        /// Called periodically to perform maintenance operations.
-        /// Performs periodic cleanup to prevent memory bloat.
-        /// </summary>
-        public override void MapComponentTick()
-        {
-            base.MapComponentTick();
-            
-            // Perform cleanup every 2 hours of game time (120,000 ticks)
-            if (Find.TickManager.TicksGame % 120000 == 0)
-            {
-                CleanupOrphanedEntries();
-            }
-        }
-
-        /// <summary>
-        /// Gets a debug string showing the current state of the component.
-        /// Used for debugging and development purposes.
-        /// </summary>
-        /// <returns>A string containing debug information.</returns>
-        public string GetDebugString()
-        {
-            return $"SimpleImproveMapComponent: {targetQualities.Count} tracked items\n" +
-                   string.Join("\n", targetQualities.Select(kvp => $"  Thing {kvp.Key}: {kvp.Value}"));
         }
     }
 }

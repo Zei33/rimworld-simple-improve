@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using RimWorld;
 using SimpleImprove.Core;
 using Verse;
 
@@ -129,6 +130,93 @@ namespace SimpleImprove.Tests
 
             Assert.That(comp.IsMarkedForImprovement, Is.False);
             Assert.That(comp.WorkDone, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void ANewComponentHasNoTargetQuality()
+        {
+            // Null is "any improvement is acceptable", which is a real setting and not an absence.
+            Assert.That(new SimpleImproveComp().TargetQuality, Is.Null);
+        }
+
+        [Test]
+        public void TargetQualityRoundTripsWithoutAMap()
+        {
+            // The defect this replaces, and the reason it can be tested at all now. The target used
+            // to live in a map component reached through parent?.Map?.GetComponent, so the getter
+            // returned null and the setter silently discarded the write for any building that was
+            // not standing on a map. That includes every building during loading, because
+            // Thing.ExposeData forces mapIndexOrState to -1 and things only spawn later in
+            // Map.FinalizeLoading, which is why the value could not be scribed from the component.
+            var comp = new SimpleImproveComp();
+
+            comp.TargetQuality = QualityCategory.Masterwork;
+
+            Assert.That(comp.TargetQuality, Is.EqualTo(QualityCategory.Masterwork));
+        }
+
+        [Test]
+        public void AwfulIsStoredRatherThanReadingAsNoTarget()
+        {
+            // QualityCategory is byte backed and Awful is zero, so this is the case a non-nullable
+            // field could not express. Nothing in the UI offers Awful as a target today, but the
+            // field is the thing being tested, not the menu in front of it.
+            var comp = new SimpleImproveComp();
+
+            comp.TargetQuality = QualityCategory.Awful;
+
+            Assert.That(comp.TargetQuality, Is.Not.Null);
+            Assert.That(comp.TargetQuality, Is.EqualTo(QualityCategory.Awful));
+        }
+
+        [Test]
+        public void ClearingTheMarkDirectlyAlsoClearsTheTarget()
+        {
+            // The invariant is that an unmarked building has no target. Without it a stale target
+            // outlives the mark: it can still show in the inspect pane while the building holds
+            // materials, and re-marking would silently re-aim at a quality the player last saw
+            // cancelled. This is the path vanilla's Designator_Cancel takes, through the mod's
+            // Notify_Removing prefix.
+            var comp = new SimpleImproveComp();
+            comp.TargetQuality = QualityCategory.Legendary;
+            comp.SetMarkedForImprovementDirect(true);
+
+            comp.SetMarkedForImprovementDirect(false);
+
+            Assert.That(comp.TargetQuality, Is.Null);
+        }
+
+        [Test]
+        public void SettingTheMarkDirectlyLeavesTheTargetAlone()
+        {
+            // The gizmos set a target and then mark, in that order, so clearing on the way up would
+            // throw away the thing the player just chose.
+            var comp = new SimpleImproveComp();
+            comp.TargetQuality = QualityCategory.Good;
+
+            comp.SetMarkedForImprovementDirect(true);
+
+            Assert.That(comp.TargetQuality, Is.EqualTo(QualityCategory.Good));
+        }
+
+        [Test]
+        public void TheComponentDeclaresPostDeSpawn()
+        {
+            // A declaration test rather than a behaviour one, for the same reason
+            // WorkGiverSurfaceTests exists: the fix has no functional signature this harness can
+            // reach. PostDeSpawn needs a spawned Thing on a Map, so deleting the override is
+            // invisible to every other test here, and its absence is precisely the defect. Before
+            // it existed, uninstalling a marked building left its hauled materials inside a
+            // component that nothing on the map could see.
+            var declared = typeof(SimpleImproveComp).GetMethod(
+                "PostDeSpawn",
+                new[] { typeof(Map), typeof(DestroyMode) });
+
+            Assert.That(declared, Is.Not.Null,
+                "SimpleImproveComp no longer has a PostDeSpawn(Map, DestroyMode) at all.");
+            Assert.That(declared.DeclaringType, Is.EqualTo(typeof(SimpleImproveComp)),
+                "SimpleImproveComp stopped overriding PostDeSpawn, which strands hauled materials "
+                + "in the component on every uninstall. That is issue #11.");
         }
 
         [Test]

@@ -13,7 +13,7 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 │   ├── SimpleImproveSettings.cs      # Mod settings and configuration
 │   ├── SimpleImproveComp.cs         # Component attached to improvable items
 │   ├── ImprovableDefs.cs            # Decides which defs carry the component, and declares it
-│   ├── SimpleImproveMapComponent.cs # Map-level persistent storage for target quality data
+│   ├── SimpleImproveMapComponent.cs # Colony mech work priorities, and the pre-1.0.9 target store
 │   ├── WorkerSkill.cs               # A worker's Construction level, and the skill gate over it
 │   ├── ImproveWorkers.cs            # Which pawns can be given improvement work
 │   ├── CompProperties_SimpleImprove.cs # Component properties
@@ -52,14 +52,18 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - **Intelligent Gizmo Consolidation**: Analyzes current selection to group buildings by improvement state
 - **Multi-Building Selection Support**: Provides consolidated UI controls when multiple buildings are selected
 - **Context-Aware Quality Options**: Filters available quality targets based on complex selection rules
-- **Persistent Target Quality**: Reads target quality settings from SimpleImproveMapComponent for cross-save persistence
+- **Target Quality**: Held as a field on the component and saved with the building, so it survives a building that is not on a map
 
 ### SimpleImproveMapComponent
-- **Map-Level Persistent Storage**: Stores target quality data that survives save/load cycles
-- **Dictionary-Based Storage**: Uses `Dictionary<int, QualityCategory>` mapping thing IDs to target qualities
-- **Automatic Save/Load**: Integrates with RimWorld's native `ExposeData()` system for seamless persistence
-- **Memory Management**: Periodic cleanup every 2 hours removes orphaned entries for destroyed items
-- **Data Integrity**: Validates and cleans up entries on map finalization and component destruction
+- **Colony Mech Work Priorities**: On every map load, switches improvement work on for colony mechs
+  that still have it stored at priority zero. There is no UI that lets a player do this for a mech
+- **Legacy Target Quality Store**: A `Dictionary<int, QualityCategory>` keyed on thing ID, kept only
+  so that saves written before version 1.0.9 do not lose the targets the player set. Nothing writes
+  to it; each building takes its own entry as it spawns, and the entry is removed when taken
+- **No Orphan Sweep**: The sweep this class used to run every two game days deleted any entry it
+  could not match to a spawned thing on that map, which silently discarded the target of every
+  marked building that happened to be minified, in a caravan or in any other container at the time.
+  Leaving the unclaimed entries costs an int and a byte each
 - **Performance Optimized**: Efficient O(1) lookups by thing ID with minimal memory overhead
 - **Mod Safety**: Graceful degradation if mod is disabled - no save corruption or data loss
 
@@ -108,16 +112,23 @@ another mod gives quality to.
 - **Custom MaterialStorage Class**: Restricts what can be stored when materials are required
 - **Smart Material Handling**: Only accepts materials needed for improvement when enabled
 - **Cost Calculation**: Material costs are calculated as a percentage of the full original build cost (e.g. 85 wood at 50% becomes 43 wood, rounded up)
-- **Automatic Cleanup**: Drops materials when improvement is cancelled
+- **Returning Materials**: Staged materials are dropped when the improvement is cancelled, and
+  when the building leaves the map for any reason: deconstructed, uninstalled, minified, burnt down
+  or replaced. The one exception is a gravship jump, where they travel with the building
 - **Settings Integration**: Material requirement checks throughout the system respect user preferences
 
 ### Persistent Storage System
-- **Target Quality Persistence**: Target quality settings survive save/load cycles without data loss
-- **Separation of Concerns**: Improvement state (work progress, materials) is stored on the component and saved with the building; target quality is stored in the MapComponent
-- **Automatic Cleanup**: Orphaned entries automatically removed when items are destroyed or maps are unloaded
-- **Data Integrity**: Validation ensures consistency between designations and stored target quality data
-- **Compatibility**: Works seamlessly with save files created before this system was implemented
-- **Performance**: Minimal memory footprint with efficient cleanup cycles
+- **One Owner**: The marked flag, work progress, hauled materials and target quality are all fields
+  on the component, written flat onto the building's own save node by `PostExposeData`
+- **Off-Map Buildings**: The state travels with the building rather than with the map, so a
+  minified or caravanned building keeps its work progress and its hauled materials. It does not keep
+  its mark or its target: putting a building in a container makes vanilla remove its designations,
+  which clears both. That is unchanged behaviour, and it is why a reinstalled building comes back
+  unmarked
+- **Designation Repair**: The designation and the marked flag have to agree, because the work giver
+  is designation-driven. `PostSpawnSetup` restores a designation that a gravship jump left behind
+- **Older Saves**: A save written before version 1.0.9 has its target qualities migrated out of the
+  map component as each building spawns
 - **Robustness**: Handles edge cases like mid-save thing destruction and map transitions
 
 ### Quality Standards Preset System
@@ -150,14 +161,13 @@ another mod gives quality to.
 ### Component Pattern
 - Uses RimWorld's component system to attach functionality to existing items
 - The component is declared on the defs at startup, so it saves and loads with the building
-- Target quality is the one piece of state still held separately, in the MapComponent
+- All of the per-building state, including target quality, is scribed by the component
 
 ### MapComponent Pattern
-- **Persistent Storage**: Uses RimWorld's native MapComponent system for reliable save/load
-- **Centralized Data**: Single source of truth for target quality settings per map
-- **Automatic Lifecycle**: RimWorld manages creation, saving, loading, and cleanup
-- **Performance Optimized**: Dictionary-based storage with O(1) access times
-- **Memory Safe**: Automatic cleanup prevents memory leaks from destroyed items
+- **Per-Map Work**: RimWorld constructs the component for every map and calls `FinalizeInit` after
+  the map loads, which is where the colony mech priorities are corrected
+- **Migration Only**: The target quality dictionary it still carries is read on load and never
+  written, and can be deleted once saves predating version 1.0.9 stop mattering
 
 ### Job Driver Pattern
 - Follows RimWorld's job system architecture
@@ -169,14 +179,13 @@ another mod gives quality to.
 - Persistent storage via RimWorld's settings system
 - Runtime modifiable without restarts
 
-### Dual-Storage Pattern
-- **Component**: Holds work progress, hauled materials and the marked flag, saved with the building
-- **MapComponent**: Holds target quality settings, keyed by thing ID
-- **Automatic Synchronization**: Components read from MapComponent on-demand
+### Single-Storage Pattern
+- **Component**: Holds the marked flag, work progress, hauled materials and target quality, all
+  saved with the building
 
-The split is historical. The component is now declared on the defs and saves like any other
-component, so target quality no longer needs a separate store and the MapComponent is scheduled
-for removal.
+There used to be a split, with target quality in the map component, because the component was
+attached at runtime by a Harmony patch and could not persist anything of its own. Declaring it on
+the defs removed the reason for the split, and version 1.0.9 removed the split.
 
 ## Improvements Over Original
 

@@ -46,13 +46,20 @@ Choose from pre-configured skill requirement levels:
 - Legendary quality cannot be achieved through normal improvement (requires special circumstances)
 
 ### Target Quality Persistence
-- **Cross-Save Persistence**: Target quality settings automatically survive save/load cycles
-- **MapComponent Storage**: Uses RimWorld's native save system for reliable data persistence
-- **Automatic Restoration**: Target qualities restored when loading saves with improvement designations
-- **Data Integrity**: Automatic validation and cleanup prevent corruption from destroyed items
-- **Mod Safety**: Save files remain valid and uncorrupted even if mod is disabled/uninstalled
-- **Performance Optimized**: Efficient storage with minimal memory footprint and periodic cleanup
-- **Backward Compatibility**: Works seamlessly with saves created before this persistence system
+- **Saved With The Building**: The target is a field on the improvement component, written onto the
+  building's own node in the save
+- **Survives A Reload**: The target is read back with the building, wherever the building is.
+  Before version 1.0.9 it lived in a map component reached through the building's map, so it was
+  unreadable and unwritable for anything not standing on one, and a load swept the entry for any
+  marked building that happened to be in a container
+- **Uninstalling Still Clears It**: Putting a building in a container makes vanilla remove its
+  designations, which clears the mark, and the target goes with the mark. A reinstalled building
+  comes back unmarked and untargeted, as it did before
+- **Older Saves**: Targets set before version 1.0.9 are carried over the first time each building
+  loads. A building that is inside something at that moment gets its target back when it is next
+  installed
+- **Disabling The Mod**: The keys are written flat onto the building and RimWorld ignores nodes it
+  has no field for, so a save stays loadable if the mod is removed
 
 ### Pawn Modifiers
 - **Inspired Creativity**: Boosts quality roll by 2 tiers
@@ -179,11 +186,12 @@ Choose from pre-configured skill requirement levels:
 - All other functionality uses standard RimWorld systems
 
 ### Save File Integrity
-- **MapComponent Storage**: Uses RimWorld's native save system for maximum compatibility
-- **Component Storage**: Work progress and hauled materials save and load with the building
-- **Graceful Degradation**: Save files remain valid if mod is disabled or uninstalled
-- **No Save Corruption**: Robust cleanup prevents orphaned data from causing issues
-- **Version Tolerance**: Works with saves created across different mod versions
+- **Component Storage**: The mark, work progress, hauled materials and target quality all save and
+  load with the building, written onto its own node
+- **Graceful Degradation**: Save files remain valid if the mod is disabled or uninstalled, because
+  RimWorld ignores nodes it has no field for
+- **Version Tolerance**: A save written before version 1.0.9 has its target qualities carried over
+  the first time each building loads
 
 ### Mod Support
 - Automatically works with any modded items that have quality
@@ -200,7 +208,7 @@ Choose from pre-configured skill requirement levels:
 
 ## Known Issues Resolved
 
-- **Target Quality Persistence**: ✅ **FIXED** - Target quality settings now persist correctly across save/load cycles
-  - Previous issue: Target quality would reset to "Any" after loading a save
-  - Solution: MapComponent-based persistent storage system ensures settings survive save/load
-  - Impact: Players can now set specific quality targets and have them maintained between game sessions
+- **Target Quality Persistence**: Fixed. Target quality settings persist across save and load
+  - Previous issue: target quality reset to "any improvement" after loading a save
+  - Solution: the target is a field on the improvement component, saved onto the building's own node
+  - Impact: a quality target set on a building is still there in the next session

@@ -58,13 +58,12 @@ calls, and in this mod it is wide:
 
 Covered today: `ImprovableDefs` (the decision the save/load fix rests on),
 `SimpleImproveSettings` (skill table, presets, modifier registration),
-`SimpleImproveMapComponent` (the target quality store), `WorkerSkill` (the skill gate that keeps a
-skill-less worker away from the quality roll), `ImproveWorkers` (the mech priority correction),
-`ImproveDesignations` (the work giver's search set and the designation re-sync), the work giver's
-declared surface, the shipped `PatchOperation` XML, and the container allocation behaviour on
-`SimpleImproveComp`. That last one is small and matters more than its size: `GetDirectlyHeldThings`
-must report null until something is hauled, because declaring the component on the defs puts every
-quality building into `ThingRequestGroup.ThingHolder` and vanilla traversals call it on all of them.
+`SimpleImproveMapComponent` (what is left of the legacy target quality store, and the migration
+decision over it), `WorkerSkill` (the skill gate that keeps a skill-less worker away from the
+quality roll), `ImproveWorkers` (the mech priority correction), `ImproveDesignations` (the work
+giver's search set and the designation re-sync), `StoredMaterials` (when hauled materials come
+back), the work giver's declared surface, the shipped `PatchOperation` XML, and the target quality
+field and container allocation behaviour on `SimpleImproveComp`.
 
 `WorkerSkill` is the worked example of the split this harness rewards, and it is worth copying. The
 readings that cannot be tested (`pawn.skills`, `RaceProps.IsMechanoid`, `mechFixedSkillLevel`) are
@@ -87,6 +86,23 @@ can be built outside the game; `RepairNeeded` takes two booleans, because everyt
 (`Thing.Map`, `DesignationOn`) cannot be. The call sites of both, `PotentialWorkThingsGlobal` and
 `PostSpawnSetup`, are still unreachable.
 
+`StoredMaterials` is the same split again for the materials staged inside a building. Both of its
+call sites, `SimpleImproveComp.PostDeSpawn` and `ReturnStoredMaterialsWhileSpawned`, need a spawned
+`Thing` on a `Map`; the three booleans they decide over do not. The gravship case is the one worth
+knowing about, because it is the only one where keeping the materials is correct and because the
+seven vanilla components that make the same call guard it differently, on
+`mode != DestroyMode.WillReplace`, which would be wrong here.
+
+The target quality field on `SimpleImproveComp` is genuinely reachable rather than split, and that is
+itself the fix: the property used to go through `parent?.Map?.GetComponent`, so it could not be
+constructed or read without a map. It is a field now, so `TargetQuality` round-trips on a bare
+`new SimpleImproveComp()`, and so does the invariant that clearing the mark clears the target.
+
+`SimpleImproveMapComponent.FinalizeInit` is reachable too, which is rare enough here to be worth
+naming. `MapComponent.FinalizeInit` is an empty virtual and `EnableImprovingForColonyMechs` returns
+early on a null map, so the whole override runs against `new SimpleImproveMapComponent(null)` and the
+discard it performs is tested rather than inferred.
+
 `WorkGiverSurfaceTests` is a different kind of test and the reason it exists is worth repeating. A
 performance fix has no functional signature: re-adding the `PotentialWorkThingRequest` override would
 restore the thirty-region scan that was this mod's most-reported defect, and every other test here
@@ -104,17 +120,38 @@ test failures rather than as compile errors, which is a distinction worth keepin
 For the container, three more: reverting `GetDirectlyHeldThings` to the raw field, widening
 `ShouldScribeContainer` back to a non-null test, and making `GetChildHolders` allocate.
 
-**Be precise about what that does not cover, because the list above makes it look wider than it is.**
-Three method bodies in the work giver fix are unreachable, and mutations inside them were measured
-(against the suite as it stood at 97 tests) to pass it entire: dropping the `!` from `ShouldSkip`,
-replacing `PotentialWorkThingsGlobal`'s body with `ScanTargets(null)`, and deleting the
-`PostSpawnSetup` repair. The reflection tests hold the *declarations*, not the bodies. No test
-can reach them either: `Map` is unconstructible outside a running game and `DesignationManager` needs
-one, so `ShouldSkip`, `PotentialWorkThingsGlobal` and `PostSpawnSetup` cannot be executed here at all.
-What the split buys is that the decisions those three bodies delegate to are covered; what it does not
-buy is any assurance they still call them. Only an in-game check closes that.
+For the material return and the target quality move, measured on 2026-09-18 against the suite at 136
+tests, eighteen more are caught: `OnDeSpawn` ignoring the gravship flag, the map, or whether
+anything is staged, or answering unconditionally; `OnUnmark` ignoring the map;
+`ShouldMigrateTargetQuality` dropping any one of its three conditions; `TakeTargetQuality` not
+removing what it read; `DiscardUnclaimedTargetQualities` doing nothing, not being called from
+`FinalizeInit`, or `FinalizeInit` no longer overriding; `SetMarkedForImprovementDirect` leaving the
+target behind, or clearing it when marking rather than unmarking; the `TargetQuality` setter
+becoming a no-op; and the `PostDeSpawn` override being removed.
 
-Quote coverage against those eight types, never the repo: most of this mod needs a spawned `Thing` on
+One mutation that was expected to be caught and is not, which is worth recording rather than
+quietly dropping: rewriting `OnUnmark` to call `OnDeSpawn` with a hardcoded `false` passes the
+suite. That is because it is behaviour preserving, not because of a gap.
+`TheTwoDecisionsDisagreeAboutAGravship` says so in the fixture rather than implying it catches
+something it does not.
+
+**Be precise about what that does not cover, because the list above makes it look wider than it is.**
+Several method bodies are unreachable, and mutations inside them were measured to pass the suite
+entire. Against the suite at 97 tests: dropping the `!` from `WorkGiver_Improve.ShouldSkip`,
+replacing `PotentialWorkThingsGlobal`'s body with `ScanTargets(null)`, and deleting the
+`PostSpawnSetup` designation repair. Against the suite at 136 tests, six more: emptying
+`PostDeSpawn`'s body, emptying `ReturnStoredMaterialsWhileSpawned`'s body, deleting the target
+quality migration call, hardcoding `true` for the mark argument it passes, deleting the
+`Scribe_Values.Look` for `targetQuality`, and making the designation-cancel prefix stop returning
+materials.
+
+The reflection tests hold the *declarations*, not the bodies, and no test can reach the bodies
+either: `Map` is unconstructible outside a running game, `DesignationManager` needs one, `Scribe` is
+static game state, and Harmony cannot patch on this runtime at all. What the split buys is that the
+decisions those bodies delegate to are covered; what it does not buy is any assurance they still
+call them. Only an in-game check closes that, and it is the largest outstanding gap in this suite.
+
+Quote coverage against those nine types, never the repo: most of this mod needs a spawned `Thing` on
 a `Map` and a whole-repo figure would be misleading.
 
 The background is `docs/spikes/test-harness/README.md` in the workspace, which records what each

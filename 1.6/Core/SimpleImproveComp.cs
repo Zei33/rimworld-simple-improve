@@ -61,12 +61,27 @@ namespace SimpleImprove.Core
         private List<ThingDefCountClass> cachedMaterialsNeeded = new List<ThingDefCountClass>();
         
         /// <summary>
-        /// The target quality level that the improvement should aim for.
-        /// If null, any improvement is acceptable (original behavior).
-        /// Note: This is now stored in the MapComponent for persistence across save/load.
+        /// The quality the improvement is aiming at, or <c>null</c> for any improvement at all.
         /// </summary>
-        // Removed private field - now uses MapComponent storage
-	
+        /// <remarks>
+        /// <para>
+        /// This lived in <see cref="SimpleImproveMapComponent"/> until version 1.0.9, keyed by
+        /// <c>thingIDNumber</c>, because the improvement component was attached at runtime and could
+        /// not persist anything of its own. It is a field again now that the component is declared on
+        /// the defs, and <see cref="SimpleImproveMapComponent"/> says what remains of the old store.
+        /// </para>
+        /// <para>
+        /// The side store was not only redundant, it was unreachable for exactly the buildings that
+        /// most needed it. Its accessors went through <c>parent?.Map?.GetComponent</c>, so for any
+        /// building that was not on a map the getter returned null and the setter silently discarded
+        /// the write. That includes every thing during loading, because <c>Thing.ExposeData</c> forces
+        /// <c>mapIndexOrState</c> to -1 on <c>LoadingVars</c> and things are only spawned later in
+        /// <c>Map.FinalizeLoading</c>, which is the direct reason the value could not be read back
+        /// from <see cref="PostExposeData"/> while it lived there.
+        /// </para>
+        /// </remarks>
+        private QualityCategory? targetQuality;
+
         /// <summary>
         /// Gets or sets whether this item is marked for improvement.
         /// Setting this property will automatically handle designation management and material cleanup.
@@ -83,8 +98,13 @@ namespace SimpleImprove.Core
                 
                 if (!value && isMarkedForImprovement)
                 {
-                    // Clear materials and designation when unmarking
-                    GetMaterialContainer().TryDropAll(parent.Position, parent.Map, ThingPlaceMode.Near);
+                    // Clear materials, target and designation when unmarking. The drop goes through
+                    // ReturnStoredMaterialsWhileSpawned rather than being spelled out here, because
+                    // the map can be null: both quality float menus build their options as closures
+                    // over a captured component and revalidate nothing when clicked, and the game
+                    // ticks while the menu is open.
+                    ReturnStoredMaterialsWhileSpawned();
+                    targetQuality = null;
                     parent.Map?.designationManager.TryRemoveDesignationOn(parent, SimpleImproveDefOf.Designation_Improve);
                 }
                 else if (value && !isMarkedForImprovement)
@@ -103,12 +123,30 @@ namespace SimpleImprove.Core
         /// </summary>
         /// <param name="value">The value to set for the improvement flag.</param>
         /// <remarks>
+        /// <para>
         /// This method is primarily used by <see cref="Patches.DesignationCancelPatch"/> to avoid
-        /// recursive designation removal when canceling improvements.
+        /// recursive designation removal when cancelling improvements.
+        /// <c>DesignationManager.RemoveDesignation</c> fires <c>Designation.Notify_Removing</c>
+        /// before it removes the entry from its indexes, so going back through the property would
+        /// find the designation still there and recurse.
+        /// </para>
+        /// <para>
+        /// Clearing the flag also clears the target quality, which keeps the invariant that an
+        /// unmarked building has no target. Without it the target outlives the mark, and the stale
+        /// value is not merely untidy: a building can still show it in the inspect pane while
+        /// holding materials, and reinstating the mark would silently reinstate a target the player
+        /// last saw cancelled. This is not designation management, so it does not reopen the
+        /// recursion this method exists to avoid.
+        /// </para>
         /// </remarks>
         public void SetMarkedForImprovementDirect(bool value)
         {
             isMarkedForImprovement = value;
+
+            if (!value)
+            {
+                targetQuality = null;
+            }
         }
 
         /// <summary>
@@ -141,26 +179,8 @@ namespace SimpleImprove.Core
         /// <value>The target quality category, or null for any improvement.</value>
         public QualityCategory? TargetQuality
         {
-            get
-            {
-                var mapComp = GetSimpleImproveMapComponent();
-                return mapComp?.GetTargetQuality(parent.thingIDNumber);
-            }
-            set
-            {
-                var mapComp = GetSimpleImproveMapComponent();
-                mapComp?.SetTargetQuality(parent.thingIDNumber, value);
-            }
-        }
-
-        /// <summary>
-        /// Gets the SimpleImproveMapComponent for this map.
-        /// This component handles persistent storage of target quality data.
-        /// </summary>
-        /// <returns>The SimpleImproveMapComponent, or null if not available.</returns>
-        private SimpleImproveMapComponent GetSimpleImproveMapComponent()
-        {
-            return parent?.Map?.GetComponent<SimpleImproveMapComponent>();
+            get => targetQuality;
+            set => targetQuality = value;
         }
 
         /// <summary>
@@ -456,8 +476,11 @@ namespace SimpleImprove.Core
         private void ClearImprovementAndFinish()
         {
             // Clear the improvement flag directly and remove designation without triggering setter
-            // to avoid double-clearing materials that were already destroyed above
+            // to avoid double-clearing materials that were already destroyed above. The target goes
+            // with the flag: it has been reached, and leaving it behind would re-aim the building at
+            // it the moment anything marked it again.
             isMarkedForImprovement = false;
+            targetQuality = null;
             parent.Map?.designationManager.TryRemoveDesignationOn(parent, SimpleImproveDefOf.Designation_Improve);
         }
 
@@ -483,7 +506,81 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
-        /// Restores the improvement designation when the building arrives on a map without it.
+        /// Returns the staged materials to the map the building is standing on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// One of the two owners of returning materials, the other being
+        /// <see cref="PostDeSpawn"/>. This one is for the building that stays where it is and only
+        /// loses its mark: the cancel gizmo, the cancel designator and vanilla's own
+        /// <c>Designator_Cancel</c>, none of which despawn anything.
+        /// <see cref="StoredMaterials.OnUnmark"/> carries when it fires and why the map has to be
+        /// tested.
+        /// </para>
+        /// <para>
+        /// The field is read rather than <see cref="GetMaterialContainer"/>, which would allocate a
+        /// container for every quality building that has never been marked, purely to find it empty.
+        /// </para>
+        /// </remarks>
+        internal void ReturnStoredMaterialsWhileSpawned()
+        {
+            if (StoredMaterials.OnUnmark(materialContainer?.Any == true, parent.Map != null)
+                != MaterialReturn.DropOnMap)
+            {
+                return;
+            }
+
+            materialContainer.TryDropAll(parent.Position, parent.Map, ThingPlaceMode.Near);
+        }
+
+        /// <summary>
+        /// Returns the staged materials to the map the building is leaving.
+        /// </summary>
+        /// <param name="map">The map being left. <c>parent.Map</c> is already null by now.</param>
+        /// <param name="mode">Why the building is being despawned.</param>
+        /// <remarks>
+        /// <para>
+        /// The single owner of returning materials on every path that removes a building from a map:
+        /// deconstruct, uninstall, minify, fire, damage, a wall being smoothed over, and any other
+        /// destroy mode. <see cref="StoredMaterials.OnDeSpawn"/> carries the ordering that makes this
+        /// first, why the gravship is the thing being tested for, and why that is deliberately not
+        /// the <c>mode != DestroyMode.WillReplace</c> guard the seven equivalent vanilla components
+        /// use.
+        /// </para>
+        /// <para>
+        /// The <paramref name="map"/> parameter is the only usable map reference in here.
+        /// <c>ThingWithComps.DeSpawn</c> captures it before calling <c>base.DeSpawn(mode)</c> and
+        /// runs the comps afterwards, so <c>parent.Map</c> has already gone to null.
+        /// <c>parent.Position</c> is still good: <c>Thing.DeSpawn</c> never writes
+        /// <c>positionInt</c>.
+        /// </para>
+        /// <para>
+        /// This does not remove the improvement designation, and must not. Doing so would call
+        /// <c>DesignationManager.RemoveDesignation</c>, which fires <c>Designation.Notify_Removing</c>
+        /// and so reaches this mod's own prefix, which clears the mark.
+        /// <see cref="PostSpawnSetup"/> only restores a missing designation while the mark is still
+        /// set, so clearing it here would silently lose the mark on every gravship jump: the pair
+        /// has to survive together, and the designation is already the half that does not.
+        /// </para>
+        /// </remarks>
+        public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
+        {
+            base.PostDeSpawn(map, mode);
+
+            if (StoredMaterials.OnDeSpawn(
+                    materialContainer?.Any == true,
+                    map != null,
+                    parent.BeingTransportedOnGravship) != MaterialReturn.DropOnMap)
+            {
+                return;
+            }
+
+            materialContainer.TryDropAll(parent.Position, map, ThingPlaceMode.Near);
+        }
+
+        /// <summary>
+        /// Restores the improvement designation when the building arrives on a map without it, and
+        /// adopts a target quality left behind in the pre-1.0.9 map component store.
         /// </summary>
         /// <param name="respawningAfterLoad">Whether this spawn is a save being loaded.</param>
         /// <remarks>
@@ -518,6 +615,26 @@ namespace SimpleImprove.Core
         /// motes on a building whose mark is genuinely being restored, which is honest feedback.
         /// </para>
         /// <para>
+        /// The migration at the top is the other half of moving target quality onto this component,
+        /// and the ordering that makes it safe is not obvious. <c>Game.LoadGame</c> runs the
+        /// <c>maps</c> collection through the scribe, and <c>Map.ExposeData</c> reaches
+        /// <c>ExposeComponents</c> from inside it, so every map component has loaded its own data
+        /// before <c>Scribe.loader.FinalizeLoading</c>, which is itself before
+        /// <c>Map.FinalizeLoading</c> spawns the first thing. The old store is therefore fully
+        /// populated by the time the first building asks it for a target.
+        /// <see cref="SimpleImproveMapComponent.ShouldMigrateTargetQuality"/> says why both of its
+        /// conditions are there and <see cref="SimpleImproveMapComponent.TakeTargetQuality"/> says
+        /// why it removes what it reads.
+        /// </para>
+        /// <para>
+        /// Only a building standing on a map when a save loads can claim an entry, and that is the
+        /// whole of what the migration reaches. A reinstall does not: <c>Frame.CompleteConstruction</c>
+        /// calls <c>GenSpawn.Spawn</c> without the <c>respawningAfterLoad</c> argument, whose default
+        /// is false. Anything still in the store when the map has finished loading is discarded by
+        /// <see cref="SimpleImproveMapComponent.DiscardUnclaimedTargetQualities"/>, which explains
+        /// why keeping it would be worse than losing it and why nothing marked is in there.
+        /// </para>
+        /// <para>
         /// The <c>DesignationOn</c> lookup is paid on every spawn of every improvable building,
         /// including every one on a map load, and not only for marked ones. That is deliberate.
         /// Short-circuiting on <c>isMarkedForImprovement</c> here would move half the decision out of
@@ -530,6 +647,13 @@ namespace SimpleImprove.Core
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
+
+            if (SimpleImproveMapComponent.ShouldMigrateTargetQuality(
+                    respawningAfterLoad, isMarkedForImprovement, targetQuality.HasValue))
+            {
+                targetQuality = parent.Map.GetComponent<SimpleImproveMapComponent>()
+                    ?.TakeTargetQuality(parent.thingIDNumber);
+            }
 
             var repair = ImproveDesignations.RepairNeeded(
                 isMarkedForImprovement,
@@ -573,21 +697,33 @@ namespace SimpleImprove.Core
 
         /// <summary>
         /// Saves and loads component data for game save files.
-        /// Note: Target quality is now stored in SimpleImproveMapComponent for persistence.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// These keys are written flat onto the parent thing's node, because
         /// <c>ThingWithComps.ExposeData</c> calls each comp's <c>PostExposeData</c> directly rather
         /// than wrapping it. That is why saves written before the component was declared on the def
         /// still carry readable values here, and why this fix recovers work and materials from an
         /// existing save rather than only preventing the next loss.
+        /// </para>
+        /// <para>
+        /// <c>targetQuality</c> is scribed with no default argument, which is both what vanilla does
+        /// for a nullable and the only spelling that behaves. Every <c>Scribe_Values.Look</c> call on
+        /// a <c>Nullable&lt;T&gt;</c> field in the whole game assembly omits it, among them
+        /// <c>ThingStuffPairWithQuality</c>, <c>ScenPart_ThingCount</c> and <c>SketchThing</c>, all
+        /// three on this same <c>QualityCategory?</c>. Passing one would not break the round trip but
+        /// it would change the file: <c>Scribe_Values.Look</c> only skips a null when the default is
+        /// also null, so a non-null default writes an explicit <c>IsNull="True"</c> node for every
+        /// building that has no target. A sentinel is not available either way, since
+        /// <c>QualityCategory</c> is byte-backed with no unset member and <c>Awful</c> is zero.
+        /// </para>
         /// </remarks>
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Values.Look(ref isMarkedForImprovement, "isMarkedForImprovement", false);
             Scribe_Values.Look(ref workDone, "workDone", 0f);
-            // Note: targetQuality is now stored in SimpleImproveMapComponent
+            Scribe_Values.Look(ref targetQuality, "targetQuality");
 
             // Only write the container when it actually holds something. The component is on every
             // improvable building def, so scribing unconditionally would add a node to every quality
@@ -605,26 +741,43 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
-        /// Called when the parent thing is destroyed.
-        /// Drops any stored materials if the item is being deconstructed and cleans up target quality data.
+        /// Destroys anything still staged in the building when it is destroyed.
         /// </summary>
         /// <param name="mode">The mode of destruction.</param>
-        /// <param name="previousMap">The map the thing was on before destruction.</param>
+        /// <param name="previousMap">The map the thing was held on before destruction.</param>
+        /// <remarks>
+        /// <para>
+        /// This used to be where materials came back, under <c>DestroyMode.Deconstruct</c> alone,
+        /// and that is now <see cref="PostDeSpawn"/>'s job for every mode.
+        /// <c>Thing.Destroy</c> despawns before it does anything else, so by the time this runs the
+        /// container has already been emptied onto the map for any building that was standing on one.
+        /// </para>
+        /// <para>
+        /// What is left is the building that is destroyed without ever being despawned, because it
+        /// was inside something: a minified building in a stockpile that burns, or one carried by a
+        /// caravan. Dropping is not available there and never was. Destroying the contents rather
+        /// than letting the container fall out of scope with things still in it is the tidier of the
+        /// two, and it is what vanilla containers do when they cannot place what they hold.
+        /// </para>
+        /// <para>
+        /// Note that <paramref name="previousMap"/> is <c>MapHeld</c> rather than <c>Map</c>:
+        /// <c>ThingWithComps.Destroy</c> captures it by walking the holder chain, so it can be
+        /// non-null for a building that was never spawned. It is not used here, because the
+        /// building's own <c>Position</c> is meaningless once it has been inside a container and a
+        /// drop would land somewhere arbitrary.
+        /// </para>
+        /// </remarks>
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
             base.PostDestroy(mode, previousMap);
-            
-            // Read the field, not GetMaterialContainer: the component is on every improvable
-            // building def now, so the lazy getter would create a container for every one of them
-            // as it is destroyed, purely to find it empty.
-            if (mode == DestroyMode.Deconstruct && materialContainer != null)
+
+            // The field, not GetMaterialContainer: the component is on every improvable building def,
+            // so the lazy getter would build a container for each one as it is destroyed purely to
+            // find it empty.
+            if (materialContainer?.Any == true)
             {
-                materialContainer.TryDropAll(parent.Position, previousMap, ThingPlaceMode.Near);
+                materialContainer.ClearAndDestroyContents();
             }
-            
-            // Clean up target quality data from the MapComponent
-            var mapComp = previousMap?.GetComponent<SimpleImproveMapComponent>();
-            mapComp?.RemoveTargetQuality(parent.thingIDNumber);
         }
 
         /// <summary>

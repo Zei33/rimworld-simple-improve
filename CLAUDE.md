@@ -28,7 +28,8 @@ building stays marked and the loop repeats until a roll reaches it.
 | `ImproveWorkers` | `1.6/Core/ImproveWorkers.cs` | `IsAssignedToImproving`, the one place the work-settings guard lives |
 | `Tests/` | NUnit, net472 | Not in the sln, excluded from the mod's compile items. See `Tests/README.md` |
 | `ImproveGroup` | same file, L16-26 | DTO grouping the current selection for one shared gizmo |
-| `SimpleImproveMapComponent : MapComponent` | `1.6/Core/SimpleImproveMapComponent.cs` | `Dictionary<int, QualityCategory>` of target qualities keyed on `thingIDNumber`. Redundant now the comp persists; slated for removal in #13 |
+| `SimpleImproveMapComponent : MapComponent` | `1.6/Core/SimpleImproveMapComponent.cs` | Colony mech work priorities on `FinalizeInit`, plus a read-only `Dictionary<int, QualityCategory>` that migrates target qualities out of a pre-1.0.9 save and is discarded at the end of that same load |
+| `StoredMaterials` | `1.6/Core/StoredMaterials.cs` | `OnDeSpawn` and `OnUnmark`: when staged materials are returned to the map. Pure, and covered |
 | `SimpleImproveSettings : ModSettings` | `1.6/Core/SimpleImproveSettings.cs` (789 L) | Skill table, 5 presets + Custom, v1 to v2 migration, immediate-mode settings UI |
 | `MaterialStorage : ThingOwner<Thing>` | `1.6/Utils/MaterialStorage.cs` | Accepts only outstanding need. Built with `base(comp, false)`, so `Owner` is the comp and the holder tree reaches it |
 | `WorkGiver_Improve : WorkGiver_Scanner` | `1.6/Jobs/WorkGiver_Improve.cs` | Emits `Job_HaulToImprove` then `Job_Improve` |
@@ -46,7 +47,8 @@ mod's drone station. Both carry `<success>Always</success>`, which is the whole 
 RimWorld update that renames or moves the def fails a test rather than silently doing nothing.
 Flow: every improvable building carries the comp from the moment it is made,
 `CompGetGizmosExtra` builds `ImproveGroup`s from `Find.Selector`, and the float menu writes
-`TargetQuality` (into the map component) and `IsMarkedForImprovement` (which adds the designation).
+`TargetQuality` (a field on the comp since 2026-09-18) and `IsMarkedForImprovement` (which adds the
+designation).
 `JobGiver_Work` then calls `WorkGiver_Improve.ShouldSkip`, which exits on
 `!AnySpawnedDesignationOfDef(Designation_Improve)` before any search is built; when something is
 marked, `PotentialWorkThingsGlobal` returns the designated buildings and `HasJobOnThing` runs over
@@ -63,7 +65,7 @@ Harmony surface, all applied by `PatchAll()` from the `Mod` constructor:
 |---|---|---|---|
 | `CompInjectionPatch` | `1.6/Patches/CompInjectionPatch.cs` | `RimWorld.DefGenerator.GenerateImpliedDefs_PostResolve` | Postfix, declares the comp on the improvable defs |
 | `LateCompInjectionPatch` | same file | `Verse.StaticConstructorOnStartupUtility.CallAll` | Postfix, second idempotent pass for quality added by another mod's C# |
-| `DesignationCancelPatch` | `1.6/Patches/DesignationCancelPatch.cs:12` | `Verse.Designation.Notify_Removing` | Prefix, drops materials and kills jobs |
+| `DesignationCancelPatch` | `1.6/Patches/DesignationCancelPatch.cs:12` | `Verse.Designation.Notify_Removing` | Prefix, returns materials on the still-spawned paths and kills jobs |
 
 Nothing is exception-guarded. `DynamicComponentPatch`, which prefixed `ThingWithComps.GetGizmos` to
 attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it, was deleted on
@@ -101,9 +103,8 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
     the comp is an `IThingHolder` with a real owner. Arguably the correct accounting, since the
     resources do still exist, but it is a live balance change and needs a changelog note alongside
     simple-improve#14 and the chair-bug fix.
-  - `DesignationCancelPatch` dropping into a null map (S-9, #10) is now reachable across a reload,
-    because materials survive one. It was already reachable within a session. Fix it with #10 and
-    #11 together, as ordering constraint 3 requires, not on its own.
+  - ~~`DesignationCancelPatch` dropping into a null map (S-9, #10)~~ fixed 2026-09-18 with #11 and
+    #13 in one commit, as ordering constraint 3 required.
   - A save from the 1.0.5 or 1.0.6 era can hold a `Designation_Improve` with no
     `isMarkedForImprovement` key, giving a building a mark that the work giver ignores. Narrow, and
     it belongs with the designation work in #12, not here.
@@ -129,12 +130,40 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   sealed type parameter that misses the dictionary short-circuits to null instead of falling through
   to the linear scan. `InitializeComps` does key the dictionary correctly now, so sealing would
   probably work, which is exactly why the rule is worth keeping written down rather than rediscovered.
-- Target quality is off-comp: `comp.TargetQuality` reads through
-  `parent.Map.GetComponent<SimpleImproveMapComponent>()` every access, so it is null off-map or
-  despawned. `CleanupOrphanedEntries` (`SimpleImproveMapComponent.cs:83`) runs on `FinalizeInit` and
-  every 120000 ticks, dropping any entry whose id is not a spawned, player-faction, quality-bearing,
-  blueprint-having thing on that map, so minified, caravanned or transferred buildings lose their
-  target silently.
+- **Exactly one thing returns staged materials, and it is `SimpleImproveComp.PostDeSpawn`.** Three
+  places used to disagree, which is issues #10 and #11. `Thing.Destroy` despawns before it removes
+  designations and before `PostDestroy`, and `MinifyUtility.MakeMinified` despawns before it assigns
+  `InnerThing`, so the despawn hook runs first on every path and the container is already empty by
+  the time anything else looks. `ReturnStoredMaterialsWhileSpawned` is the second owner and covers
+  the one case that never despawns: a plain cancel on a building that keeps standing.
+  `StoredMaterials` carries both decisions.
+  **The gravship guard is `parent.BeingTransportedOnGravship`, not the
+  `mode != DestroyMode.WillReplace` that all seven equivalent vanilla comps gate on**
+  (`CompThingContainer`, `CompTransporter`, `CompGenepackContainer`, `CompBiosculpterPod`,
+  `CompGaumakerPod`, `CompDryadCocoon`, `CompDryadHealingPod`). `WillReplace` also means "something
+  is being built here instead", which is how `GenSpawn` wipes what it covers and how
+  `SmoothableWallUtility` swaps a wall, and in those the materials must come back or they are lost
+  with the old thing. Do not "correct" it to match vanilla. Vanilla does not think the mode is a
+  sufficient gravship test either: `CompTransporter.PostDeSpawn`, the one holding things the colony
+  put there deliberately, opens with an early return on `parent.BeingTransportedOnGravship` before
+  it reaches its own `WillReplace` drop.
+- Target quality is a field on the comp and is scribed with no default argument, which is what
+  vanilla does for every nullable in the assembly and the only spelling that keeps unset fields out
+  of the file. It used to read through `parent.Map.GetComponent<SimpleImproveMapComponent>()` on
+  every access, so it was null off-map, null while despawned and null for every thing during loading,
+  and the setter silently discarded writes in all three. The map component's orphan sweep then
+  deleted the entry for any marked building that was minified, in a caravan or in a container when a
+  map loaded. That is issue #13; the dictionary survives as a one-way migration read on spawn, and
+  `FinalizeInit` discards whatever is left once the map has finished loading.
+  **Do not remove that discard to be kinder to off-map buildings.** An entry can only ever be claimed
+  by a building standing on a map when a save loads: a reinstall spawns with `respawningAfterLoad`
+  false and never consults the store. A surviving entry therefore gets exactly one more chance, the
+  next load, by which time the player may have set a target of their own, and the comp writes nothing
+  when the target is null so "any improvement" and "never had one" are the same state. That is a
+  wrong setting applied silently, which is worse than a lost one. Nothing marked is discarded either:
+  a building that is off a map went into a container, and `ThingOwner.NotifyAdded` clears its
+  designations and so its mark. The migration is additionally gated on the mark for the same reason,
+  because before 1.0.9 cancelling an improvement left the target behind in this dictionary.
 - `Mathf.Clamp(baseQuality, 0, 5)` at `SimpleImproveSettings.cs:261` indexes the skill table, but
   `QualityCategory.Legendary` is 6, so the configured Legendary requirement is dead and the Masterwork
   row is used instead. Fixing it raises the default preset from 18 to 20 for every existing colony: a
@@ -256,8 +285,18 @@ are the consequence of a trap above; the traps carry the mechanism.
 Fixed on 2026-09-17: the comp persistence (issue #2), which also retired `DynamicComponentPatch` and
 the two-`[HarmonyPatch]`-attribute trap along with it. Fixed on 2026-09-18: the unguarded
 `pawn.skills` and `pawn.workSettings` dereferences (issue #9), colony mechs being unable to hold
-the work type (issue #8), and the work giver scanning every artificial building on every job search
-(issue #3).
+the work type (issue #8), the work giver scanning every artificial building on every job search
+(issue #3), the null container handed to the selection code (issue #22), and the staged materials
+being dropped into a null map, stranded on uninstall, or losing their target quality (issues #10,
+#11 and #13 as one commit, with #12 closed as overtaken).
+
+One residual from that last commit, checked and left alone. A gravship jump leaves the old map's
+designation manager holding a `Designation_Improve` whose target thing is now on another map.
+`SpawnedDesignationsOfDef`, `AnySpawnedDesignationOfDef` and `DrawDesignations` all filter on
+`!target.HasThing || target.Thing.Map == map`, so it is invisible to the work giver and is not
+drawn, and `AddDesignation` only rejects a double-add within one manager, so the new map's
+designation is added cleanly. If the building ever comes back to that map the orphan becomes valid
+again and `PostSpawnSetup` correctly does nothing. It costs a few bytes in the old map's save.
 
 One trap came out of #3 and is not obvious from either the code or the issue. **An Odyssey gravship
 jump strands a thing designation on the map it left.** `Thing.DeSpawn` never touches the designation
@@ -315,7 +354,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 99 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 136 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 
@@ -331,8 +370,8 @@ root file has the detail.
 
 The best test that does not need the game: `SimpleImproveSettings.GetSkillRequirement(q, pawn: null)`
 is pure over the skill dictionary, so a table test across all seven `QualityCategory` values catches
-the Legendary clamp. `DetermineClosestPreset`, `ValidateAndFixLoadedData` and the
-`SimpleImproveMapComponent` dictionary methods (constructible with `new SimpleImproveMapComponent(null)`)
+the Legendary clamp. `DetermineClosestPreset`, `ValidateAndFixLoadedData`, `StoredMaterials`, and the
+`SimpleImproveMapComponent` migration methods (constructible with `new SimpleImproveMapComponent(null)`)
 are equally pure. Verifying the save/load round-trip end to end still needs the game: a dev-mode
 debug action that saves, reloads and asserts `WorkDone`.
 

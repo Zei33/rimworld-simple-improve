@@ -7,8 +7,16 @@ namespace SimpleImprove.Patches
 {
     /// <summary>
     /// Harmony patch that handles cleanup when improvement designations are removed.
-    /// Ensures materials are properly dropped and jobs are canceled when improvements are canceled.
+    /// Ensures materials are returned and jobs are cancelled when improvements are cancelled.
     /// </summary>
+    /// <remarks>
+    /// This is the cleanup for a building that keeps standing and only loses its mark, which is what
+    /// the mod's own cancel gizmo and designator do and what vanilla's <c>Designator_Cancel</c> does.
+    /// It is also reached, with the building already despawned, from every destroy, every uninstall,
+    /// every minify and every map removal, because all four remove designations after the despawn.
+    /// It deliberately returns nothing to the map in those cases: <see cref="Core.StoredMaterials"/>
+    /// explains why <c>SimpleImproveComp.PostDeSpawn</c> owns them instead.
+    /// </remarks>
     [HarmonyPatch(typeof(Designation), "Notify_Removing")]
     public static class DesignationCancelPatch
     {
@@ -25,17 +33,16 @@ namespace SimpleImprove.Patches
                 var improveComp = __instance.target.Thing.TryGetComp<SimpleImproveComp>();
                 if (improveComp != null && improveComp.IsMarkedForImprovement)
                 {
-                    // GetMaterialContainer, not GetDirectlyHeldThings, which reports null until
-                    // something has actually been hauled here.
-                    improveComp.GetMaterialContainer().TryDropAll(
-                        improveComp.parent.Position, 
-                        improveComp.parent.Map, 
-                        ThingPlaceMode.Near
-                    );
-                    
+                    // The component decides whether a drop is possible rather than this doing it
+                    // unconditionally, which is what used to put a red error on the log for every
+                    // stack staged in a building that was being deconstructed. See
+                    // StoredMaterials.OnUnmark for the four ways this is reached with the target
+                    // already despawned, and PostDeSpawn for who returns the materials in those.
+                    improveComp.ReturnStoredMaterialsWhileSpawned();
+
                     // Cancel any running improvement jobs for this building
                     CancelImprovementJobs(improveComp.parent);
-                    
+
                     // Clear the improvement flag directly without triggering setter
                     // to avoid recursive designation removal
                     improveComp.SetMarkedForImprovementDirect(false);
