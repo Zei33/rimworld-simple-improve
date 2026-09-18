@@ -25,7 +25,17 @@ namespace SimpleImprove.Core
     /// the <c>Representative == this</c> test, which is why one shared cache is correct here rather
     /// than a field on each comp.
     /// </para>
+    /// <para>
+    /// The attribute is here for the two texture fields, not for any work done at startup. With
+    /// dev mode on, <c>StaticConstructorOnStartupUtility.ReportProbablyMissingAttributes</c> warns
+    /// about every type holding a static <c>Texture</c> field without it, whether or not the field
+    /// is ever filled off the main thread. Both are filled lazily from the gizmo code, which runs
+    /// on the main thread, so the warning was a false positive; the attribute answers it. All it
+    /// adds is that the static initialisers below run once from <c>CallAll</c> at startup, and
+    /// they only allocate an empty list.
+    /// </para>
     /// </remarks>
+    [StaticConstructorOnStartup]
     public static class ImproveSelection
     {
         /// <summary>The frame <see cref="cachedGroups"/> was built on.</summary>
