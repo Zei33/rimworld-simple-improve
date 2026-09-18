@@ -63,6 +63,15 @@ Prosimy zgłaszać wszelkie problemy na https://github.com/Zei33/rimworld-simple
 
 [hr][/hr] 
 
+[img]https://api.p.hex.pro/media/95d0151d1bb22800ebf1bf66d8cbf14fc6b85a32ded27ecbbba58daaefa33131.png[/img]
+
+[b]Wsparcie dla tego moda[/b]
+Za czas, który na to poświęcam, płaci oprogramowanie, które piszę w [url=https://hex.pro]Hex Pro[/url].
+[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: Wszystko, za co inni każą płacić. Za darmo. iPhone · iOS 17+. Wkrótce w App Store.
+[i]Cała prośba to zajrzeć i naprawdę nie ma żadnego obowiązku.[/i]
+
+[hr][/hr] 
+
 Sprawdź moje inne mody:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Bioskulptor Detoks[/url][/h3]

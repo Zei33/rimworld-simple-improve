@@ -63,6 +63,15 @@
 
 [hr][/hr] 
 
+[img]https://api.p.hex.pro/media/a101086da0cf95f041adfb4769b063bbbd29d7a5b82fa13cace8f4d4b25ec89f.png[/img]
+
+[b]Поддержка этого мода[/b]
+Время на это оплачивают программы, которые я пишу в [url=https://hex.pro]Hex Pro[/url].
+[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: Всё, за что другие берут деньги. Бесплатно. iPhone · iOS 17+. Скоро в App Store.
+[i]Прошу только заглянуть, но это совершенно необязательно.[/i]
+
+[hr][/hr] 
+
 Ознакомьтесь с моими другими модами:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Детоксикация Биоскульптора[/url][/h3]

@@ -63,6 +63,15 @@ Veuillez signaler tout problème sur https://github.com/Zei33/rimworld-simple-im
 
 [hr][/hr] 
 
+[img]https://api.p.hex.pro/media/e24500bb4294faf0a37554444c5b9ff6bdb7c600b69ffba878fc6475834a1b21.png[/img]
+
+[b]Soutenir ce mod[/b]
+Le temps que j'y passe est financé par les logiciels que j'écris chez [url=https://hex.pro]Hex Pro[/url].
+[url=https://apps.hex.pro/fr/hex-nfc?from=rimworld]Hex NFC[/url] : Tout ce que les autres font payer. Gratuit. iPhone · iOS 17+. Bientôt sur l'App Store.
+[i]Un simple coup d'œil me suffit, et il reste entièrement facultatif.[/i]
+
+[hr][/hr] 
+
 Découvrez mes autres mods :
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Désintoxication Biosculpteur[/url][/h3]

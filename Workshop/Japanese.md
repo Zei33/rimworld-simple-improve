@@ -63,6 +63,15 @@
 
 [hr][/hr] 
 
+[img]https://api.p.hex.pro/media/f8d6a89ba7468b39214c8883f23b1282489758058558e80aa2b7694a1c7a10ee.png[/img]
+
+[b]このModへの支援について[/b]
+このModにかける時間は、[url=https://hex.pro]Hex Pro[/url] で作っているソフトウェアの収入でまかなっています。
+[url=https://apps.hex.pro/ja/hex-nfc?from=rimworld]Hex NFC[/url]：他社が有料にしている機能を、すべて無料で。iPhone · iOS 17 以降、App Store で近日公開。
+お願いするのは見ていただくことだけで、本当に任意です。
+
+[hr][/hr] 
+
 私の他のModもチェックしてください：
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]バイオスカルプター解毒[/url][/h3]

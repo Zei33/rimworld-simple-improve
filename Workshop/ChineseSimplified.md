@@ -63,6 +63,15 @@
 
 [hr][/hr] 
 
+[img]https://api.p.hex.pro/media/9be887f4a9c6bcc033dedb49887fc208f9f02209079592dee7a08671857788f1.png[/img]
+
+[b]关于支持本模组[/b]
+我有时间维护本模组，靠的是我在 [url=https://hex.pro]Hex Pro[/url] 开发的软件带来的收入。
+[url=https://apps.hex.pro/zh/hex-nfc?from=rimworld]Hex NFC[/url]：别人收费的功能，这里全部免费。iPhone · iOS 17 及以上，即将登陆 App Store。
+我想请你做的就只有去看一眼，不看也完全没关系。
+
+[hr][/hr] 
+
 查看我的其他模组：
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]生物雕塑戒毒[/url][/h3]

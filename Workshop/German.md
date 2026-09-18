@@ -63,6 +63,15 @@ Bitte melden Sie alle Probleme an https://github.com/Zei33/rimworld-simple-impro
 
 [hr][/hr] 
 
+[img]https://api.p.hex.pro/media/01032e3630c40cec6b8f73e6c3354849eb1a00f9b81a39a336cd40dcf64db50e.png[/img]
+
+[b]Diese Mod unterstützen[/b]
+Bezahlt wird die Zeit dafür durch die Software, die ich bei [url=https://hex.pro]Hex Pro[/url] schreibe.
+[url=https://apps.hex.pro/hex-nfc?from=rimworld]Hex NFC[/url]: Alles, wofür andere Geld verlangen. Kostenlos. iPhone · iOS 17+. Bald im App Store.
+[i]Ein Blick auf die App genügt mir schon, und auch der ist völlig freiwillig.[/i]
+
+[hr][/hr] 
+
 Schauen Sie sich meine anderen Mods an:
 
 [h3][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540117812]Bioskulpter Entgiftung[/url][/h3]
