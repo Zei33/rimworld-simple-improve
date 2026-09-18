@@ -217,6 +217,54 @@ namespace SimpleImprove.Tests
                 + "found: " + string.Join(", ", calls));
         }
 
+        [Test]
+        public void TheMaterialSearchAsksThePawnForItsNormalDangerThreshold()
+        {
+            // The old call was the bare TraverseParms.For(pawn), whose maxDanger default is
+            // Danger.Deadly. That is the LOOSEST setting, not an unset one, so the giver accepted
+            // material only a deadly route reached while using the normal threshold for the building
+            // itself. Reading the IL cannot see arguments, so it cannot check that the ternary is the
+            // right way round; what it can see is that NormalMaxDanger is reached at all, which is
+            // true only of the two-argument form. Reverting to the bare overload makes that call
+            // vanish and fails here.
+            Assert.That(
+                CallNamesIn(typeof(WorkGiver_Improve), "FindClosestMaterial"),
+                Does.Contain("Verse.DangerUtility.NormalMaxDanger"),
+                "FindClosestMaterial no longer asks the pawn for its normal danger threshold, so it "
+                + "is back to accepting material across a deadly-danger route.");
+        }
+
+        [Test]
+        public void TheMaterialSearchIsBoundedByAPerTickCache()
+        {
+            // Without this, a build with nothing reachable runs an unbounded ClosestThingReachable
+            // for every outstanding material for every marked building, on every pawn's job search.
+            // That is the multiplier issue #5 and #6 both point at, and it is the no-work case that
+            // costs the most, exactly as it was for the region scan in #3.
+            List<string> search = CallNamesIn(typeof(WorkGiver_Improve), "FindClosestMaterial");
+
+            Assert.That(
+                search.Any(call => call.Contains("HashSet") && call.EndsWith(".Contains")),
+                Is.True,
+                "FindClosestMaterial no longer consults the unreachable-material cache before "
+                + "searching. Calls found: " + string.Join(", ", search));
+
+            Assert.That(
+                search.Any(call => call.Contains("HashSet") && call.EndsWith(".Add")),
+                Is.True,
+                "FindClosestMaterial no longer records a failed search, so the cache can never hit.");
+
+            // The cache carries no pawn, forced flag or tick of its own; it borrows the memo's key by
+            // being cleared with it. If that clear ever stops happening, one pawn's unreachable
+            // materials are served to every other pawn for the rest of the session.
+            Assert.That(
+                CallNamesIn(typeof(WorkGiver_Improve), "JobFor")
+                    .Any(call => call.Contains("HashSet") && call.EndsWith(".Clear")),
+                Is.True,
+                "JobFor no longer clears the unreachable-material cache, so it outlives the key it "
+                + "silently depends on.");
+        }
+
         private static List<string> CallNamesIn(Type declaringType, string methodName)
         {
             MethodInfo method = declaringType.GetMethod(

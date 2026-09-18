@@ -117,6 +117,38 @@ namespace SimpleImprove.Jobs
         private readonly Dictionary<Thing, Job> memo = new Dictionary<Thing, Job>();
 
         /// <summary>
+        /// Material defs the search below already failed to find, under the memo's current key.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This shares <see cref="memo"/>'s key and is cleared with it, which is what makes it sound
+        /// with only a <c>ThingDef</c> for a key: by the time anything reads it, the pawn, the
+        /// <c>forced</c> value and the tick have already been established as current, and those are
+        /// the only other inputs the search has. The search root is the pawn's position, the map is
+        /// the pawn's map, and the requested count never enters the search at all, so two calls for
+        /// the same def under one key are the same call.
+        /// </para>
+        /// <para>
+        /// This is vanilla's own answer to the same problem, kept deliberately narrow.
+        /// <c>WorkGiver_ConstructDeliverResources</c> carries a per-tick
+        /// <c>noReachableResourceCache</c> keyed on the pawn, the def and <c>forced</c>, and records
+        /// a miss only when the search returned null. Its members are private static, so this mod
+        /// cannot share them and needs its own.
+        /// </para>
+        /// <para>
+        /// Successful finds are deliberately NOT cached, although the same argument would make it
+        /// sound within a scan. A cached hit outlives the scan for the rest of the tick, and
+        /// <c>Pawn_JobTracker.StartJob</c> reserves as it starts a job, so a pawn that scans twice in
+        /// one tick could be handed a stack that was reserved between the two. The failure is benign
+        /// and self-correcting, but it is a behaviour vanilla does not have, and the miss path is
+        /// where the cost actually is: a build with nothing reachable searches every outstanding
+        /// material for every marked building, while a build that finds something returns from the
+        /// loop on the first hit.
+        /// </para>
+        /// </remarks>
+        private readonly HashSet<ThingDef> unreachableMaterials = new HashSet<ThingDef>();
+
+        /// <summary>
         /// Determines if the specified pawn has a job to do on the given thing.
         /// </summary>
         /// <param name="pawn">The pawn to check for available work.</param>
@@ -205,6 +237,7 @@ namespace SimpleImprove.Jobs
             if (memoPawn != pawn || memoForced != forced || memoTick != tick)
             {
                 memo.Clear();
+                unreachableMaterials.Clear();
                 memoPawn = pawn;
                 memoForced = forced;
                 memoTick = tick;
@@ -269,7 +302,7 @@ namespace SimpleImprove.Jobs
                     {
                         if (pawn.Map.itemAvailability.ThingsAvailableAnywhere(material.thingDef, material.count, pawn))
                         {
-                            var foundMaterial = FindClosestMaterial(pawn, material);
+                            var foundMaterial = FindClosestMaterial(pawn, material, forced);
                             if (foundMaterial != null)
                             {
                                 var haulJob = JobMaker.MakeJob(SimpleImproveDefOf.Job_HaulToImprove);
@@ -417,9 +450,55 @@ namespace SimpleImprove.Jobs
         /// </summary>
         /// <param name="pawn">The pawn that needs to access the material.</param>
         /// <param name="material">The material requirement to find.</param>
+        /// <param name="forced">Whether the player is prioritising this by hand.</param>
         /// <returns>The closest accessible material thing, or null if none is available.</returns>
-        private Thing FindClosestMaterial(Pawn pawn, ThingDefCountClass material)
+        /// <remarks>
+        /// <para>
+        /// The danger threshold used to be the bare <c>TraverseParms.For(pawn)</c>, and the thing to
+        /// understand before reading this as a tightening-for-its-own-sake is that the bare overload
+        /// is not "no danger set". Its <c>maxDanger</c> default is <c>Danger.Deadly</c>, the loosest
+        /// value there is, so this work giver was accepting material that only a deadly-danger route
+        /// reaches while its own target search used the normal threshold. During a toxic fallout or a
+        /// fire a pawn could be handed a haul job toward a stack the giver's own danger policy would
+        /// have refused for the building.
+        /// </para>
+        /// <para>
+        /// Cite two precedents for the new form rather than "vanilla", because vanilla is not
+        /// consistent here: the bare call outnumbers the danger-carrying one in the game's own
+        /// assembly, and several shipped haul givers use the Deadly default quite happily. The two
+        /// that matter are <c>WorkGiver_ConstructDeliverResources</c>, which is the closest vanilla
+        /// analogue and spells this exactly, and this mod's own
+        /// <see cref="ImproveSite.CanWorkOn"/>, which already decides reachability to the building
+        /// this way. Those two are what makes the old form an inconsistency inside one job rather
+        /// than a style choice.
+        /// </para>
+        /// <para>
+        /// What this does NOT do is stop a pawn walking through fire.
+        /// <c>maxDanger</c> gates job assignment only; once a job is issued
+        /// <c>Pawn_PathFollower</c> builds its path at <c>Danger.Deadly</c> regardless. The change is
+        /// about which jobs are offered, and it is player-visible in the tightening direction, so it
+        /// belongs in the release notes.
+        /// </para>
+        /// <para>
+        /// <c>9999f</c> is kept. An earlier internal note called it too high; it is what
+        /// <c>WorkGiver_ConstructDeliverResources</c> passes and it is also <c>GenClosest</c>'s own
+        /// default, so lowering it would make pawns refuse distant material that vanilla
+        /// construction accepts.
+        /// </para>
+        /// <para>
+        /// The reservation test now passes <c>ignoreOtherReservations</c> the same way the two tests
+        /// on the building itself already did. Without it a right-click prioritise would widen the
+        /// danger threshold and the building's reservation but still refuse a stack another pawn had
+        /// reserved, so the forced path contradicted itself inside one job.
+        /// </para>
+        /// </remarks>
+        private Thing FindClosestMaterial(Pawn pawn, ThingDefCountClass material, bool forced)
         {
+            if (unreachableMaterials.Contains(material.thingDef))
+            {
+                return null;
+            }
+
             bool Validator(Thing thing)
             {
                 if (thing.def != material.thingDef)
@@ -428,21 +507,28 @@ namespace SimpleImprove.Jobs
                 if (thing.IsForbidden(pawn))
                     return false;
 
-                if (!pawn.HasReserved(thing) && !pawn.CanReserve(thing))
+                if (!pawn.HasReserved(thing) && !pawn.CanReserve(thing, ignoreOtherReservations: forced))
                     return false;
 
                 return true;
             }
 
-            return GenClosest.ClosestThingReachable(
+            Thing found = GenClosest.ClosestThingReachable(
                 pawn.Position,
                 pawn.Map,
                 ThingRequest.ForDef(material.thingDef),
                 PathEndMode.ClosestTouch,
-                TraverseParms.For(pawn),
+                TraverseParms.For(pawn, forced ? Danger.Deadly : pawn.NormalMaxDanger()),
                 9999f,
                 Validator
             );
+
+            if (found == null)
+            {
+                unreachableMaterials.Add(material.thingDef);
+            }
+
+            return found;
         }
     }
 }
