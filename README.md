@@ -1,269 +1,156 @@
 # Simple Improve
 
-A RimWorld mod that allows players to improve the quality of buildings with construction skill. Mark buildings for improvement and watch skilled pawns enhance their quality using the same resources required for initial construction.
+A RimWorld 1.6 mod that lets colonists raise the quality of buildings that already have a quality
+rating, using the same work and the same roll as building one from scratch.
 
 ![RimWorld Version](https://img.shields.io/badge/RimWorld-1.6-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)
 
 ## Overview
 
-Simple Improve adds a new construction system to RimWorld that lets you upgrade the quality of furniture and other constructed items. Instead of being stuck with normal-quality furniture forever, you can now invest materials and skilled labor to improve them over time.
+Mark a building for improvement and a colonist will bring materials to it and work on it. When the
+work finishes, the game rolls a new quality exactly as it would for a fresh build. A better result
+is kept; a worse one is discarded and the building keeps the quality it had.
+
+Only buildings qualify, and only those that carry a quality rating and have a blueprint, because
+the blueprint is what the material cost is charged against. Weapons and apparel are out of scope,
+and so are quality buildings with no blueprint.
 
 ## Features
 
-### 🔧 Quality Improvement System
-- **Mark any furniture or constructed item** with quality for improvement
-- **Skill-based outcomes** - Higher construction skill increases success chances
-- **Flexible material requirements** - Option to require materials like normal construction, or just time and labor
-- **Adjustable material costs** - Set improvement costs anywhere from 10% to 500% of the original build cost (100% default = same as build cost)
-- **Smart failure handling** - Failed improvements consume materials (if required) but preserve the item
+### Improving
 
-### 🎯 Flexible Skill Requirements
-- **Configurable thresholds** for each quality tier
-- **Default settings** based on 5% success chance:
-  - Normal: Construction 4
-  - Good: Construction 10  
-  - Excellent: Construction 14
-  - Masterwork: Construction 18
-- **Pawn modifiers** supported:
-  - **Inspired Creativity** (+2 quality tiers)
-  - **Production Specialist** (+1 quality tier)
-  - Modifiers can stack to enable Legendary quality
+- Mark one building or a whole selection at once.
+- Aim for any improvement at all, or for a specific target quality.
+- Failures are not destructive. A failed roll costs the work and the materials, not the building.
+- Improvement uses the vanilla quality roll, so the odds are the odds you already know.
+- Without an inspiration or a production role the roll tops out at Masterwork, the same as
+  building fresh. Legendary can be set as a target and is accepted with a warning saying so.
 
-### 🎨 Intuitive User Interface
-- **Drag-select designators** for marking multiple items at once
-- **Smart multi-building selection** with consolidated controls - no more duplicate buttons!
-- **Intelligent quality targeting** with context-aware options based on your selection
-- **Cross-group operations** - set quality targets for all selected buildings at once
-- **Individual item toggles** via building gizmos
-- **Visual feedback** with success/failure messages
-- **Enhanced settings menu** with preset system, tooltips, and improved organization
-- **Quality distribution calculator** for testing different configurations
+### Skill requirements
 
-### ⚙️ Seamless Integration  
-- **New "Improve" work type** with separate priority from construction
-- **Automatic material hauling** - Pawns gather resources automatically
-- **Experience gain** - Construction skill improves while working
-- **Universal mod compatibility** - Works with any mod that adds quality to buildings
-- **Costs nothing when idle** - Pawns skip the improvement search entirely unless something is marked
+The mod decides which colonists may attempt which target quality. Five presets set the whole table
+at once, and every threshold is editable by hand:
+
+- **Apprentice** loose thresholds, so most pawns may try
+- **Novice** low thresholds
+- **Default** balanced
+- **Master** high thresholds
+- **Artisan** tight thresholds
+
+Custom is not a button. Typing your own number into any of the seven skill boxes switches the
+preset to Custom and keeps the rest of your table as it was. Values are clamped to 0 to 20.
+
+Inspired Creativity lowers a pawn's requirement, as does an Ideology role whose effects include a
+production quality offset, including a modded one. They stack. Inspirations are matched on vanilla's
+Inspired Creativity specifically, which is also the only inspiration vanilla's own quality roll
+rewards.
+
+### Interface
+
+- Select several buildings and one Improve button marks them all.
+- Buildings already marked for the same target share a button, so a mixed selection shows one
+  button per group rather than one per building.
+- The inspect pane shows the materials delivered, the work left and the skill the target needs.
+
+There is no Architect menu tab and no designator tool. Marking is done from the building's own
+button.
+
+### Work type
+
+The mod adds a work type called Improve, with its own column in the Work tab, separate from
+Construction. See "Switching the work type on" below, because it does not start switched on.
 
 ## Installation
 
-### Steam Workshop
-1. Subscribe to the mod on Steam Workshop
-2. Ensure **Harmony** is installed (required dependency)
-3. Enable the mod in your mod list
-4. Start or reload your save
+Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3538863870).
 
-### Manual Installation
-1. Download the latest release from the [releases page]
-2. Extract to your RimWorld `Mods` folder
-3. Install [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) if not already installed
-4. Enable both mods in your mod list
+To install by hand, clone this repository and copy it into `RimWorld/Mods/`. There are no tagged
+GitHub releases.
+
+Requires the [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) mod. The
+copy in this repository is a compile-time reference and is stripped from the built mod folder.
 
 ## Usage
 
 ### Switching the work type on
 
-Simple Improve adds a separate work type so improvement can be prioritised apart from Construction.
-In the Work tab it is the column headed **Improve**.
+**In a colony that existed before you added the mod, Improve starts switched off for every
+colonist.** RimWorld gives a newly added work type priority 0 in an existing save, so nothing will
+happen until you set a priority yourself.
 
-**In a colony that already existed before you added the mod, it starts switched off for every
-colonist.** RimWorld gives a newly added work type priority 0 in an existing save, and priority 0
-means the job is never picked up. Nothing is wrong; the column just has to be turned on. Open the
-Work tab and set a priority in the Improve column for the colonists you want doing it.
+1. Open the Work tab.
+2. Find the column headed **Improve**.
+3. Set a priority for the colonists you want doing it.
 
-For a colonist created after the mod was added, RimWorld switches on only the six work types they are
-best at, so Improve can still be off for one whose Construction is weak. Worth checking the column.
+For a colonist created after the mod was added, RimWorld switches on only the work types they are
+best at, so Improve can still be off for one whose Construction is weak.
 
-**Colony mechs are switched on for you.** Constructoids can do improvement work, and the mod sets
-their priority itself when a save is loaded. It has to: RimWorld's Work tab lists colonists only and
-never shows a mech, so there is nowhere for you to set it by hand. Nothing else is touched, and a
-mech you have already given a different priority is left alone.
+Colony mechs are switched on for you when a save loads. The Work tab lists colonists only and never
+shows a mech, so there is nowhere to set it by hand. A mech is judged at the fixed skill level
+mechanoids use for every job, which is 10, so on the Default preset a constructoid is given
+buildings marked for any improvement or for a target up to Good, and not ones marked for Excellent
+or above. Of the seven vanilla mechs only the constructoid does construction work.
 
-A mech is judged on the fixed skill level mechanoids use for every job, which is 10. So under the
-Default preset the mod will give a constructoid a building marked for any improvement, or marked for
-a target up to Good, and will not give it one marked for Excellent or above. The quality it then
-rolls is the ordinary roll for skill 10, the same as for a colonist at that level, so a lucky result
-above the target is still possible.
+### Marking a building
 
-### Marking Items for Improvement
+1. Select one or more improvable buildings.
+2. Click **Improve** in the gizmo bar.
+3. Choose **Any improvement**, or a target quality.
 
-1. **Using Designators**:
-   - Open the Architect menu → Improve tab
-   - Select "Mark for Improvement" 
-   - Click on items or drag to select multiple
-   - Use "Cancel Improvement" to remove designations
+To unmark, click **Improve** again and choose **Cancel improvement**. The vanilla Architect,
+Orders, Cancel tool also clears the mark, and returns any materials already delivered.
 
-2. **Using Item Buttons**:
-   - Select any improvable item (or multiple items)
-   - Click the improvement toggle button in the item's gizmo bar
-   - When multiple buildings are selected, the mod shows consolidated buttons grouped by improvement state
-   - Choose quality targets from the dropdown menu - options adapt based on your selection
+### How the work runs
 
-### How Improvement Works
+Any colonist with the work type switched on will haul the materials. The skill requirement is
+checked when the improvement work itself is handed out, so a pawn below the requirement can stock a
+building it cannot then work on.
 
-1. **Designation**: Mark items for improvement using the designator or item button
-2. **Material Hauling**: Pawns with "Improve" work enabled will gather required materials
-3. **Construction Work**: Pawns perform improvement work based on their construction skill
-4. **Quality Roll**: New quality is determined using RimWorld's standard quality system
-5. **Result**: If quality improves, the new quality is applied; otherwise materials are consumed and the process can retry
-
-### Understanding Success Rates
-
-Quality improvement uses RimWorld's standard construction quality system. Higher construction skill dramatically improves your chances:
-
-| Construction Skill | Good+ Chance | Excellent+ Chance | Masterwork+ Chance |
-|-------------------|--------------|-------------------|-------------------|
-| 8                 | 40.1%        | 6.6%              | 0.15%             |
-| 10                | 56.5%        | 12.7%             | 0.45%             |
-| 12                | 74.4%        | 21.8%             | 1.19%             |
-| 16                | 90.6%        | 38.2%             | 3.67%             |
-| 20                | 97.5%        | 60.1%             | 9.58%             |
-
-Compatible with mods that increase skills above 20.
+Materials are staged in the building until the work completes. Cancelling returns them.
 
 ## Configuration
 
-### Mod Settings
+**Options, Mod options, Simple Improve.**
 
-Access the mod settings through:
-**Options → Mod Settings → Simple Improve**
+- The five preset buttons, and the seven editable skill thresholds.
+- **Require materials for improvement**, a checkbox. Off means improvements cost only work.
+- **Material cost percentage**, from 10% to 500%, default 100%, shown while materials are required.
+- **Reset to Defaults**.
 
-#### Quality Standards Presets
+## Compatibility
 
-Choose from pre-configured pawn skill requirements for different improvement strategies:
+- Works with any modded building that carries quality and has a blueprint.
+- Does not patch the quality roll. It calls vanilla's, so a mod that changes quality generation
+  changes improvement the same way.
+- Improvement does not run third-party `GenConstruct.CanConstruct` postfixes, because it no longer
+  calls that method. See `docs` in the workspace for why. One visible consequence: with Humanoid
+  Alien Races installed, a race forbidden to construct something can now improve it.
 
-- **🌱 Apprentice**: Very low skill requirements - allows any pawn to attempt improvements (high failure rates)
-- **📚 Novice**: Low skill requirements - most pawns can attempt improvements with moderate success  
-- **⚖️ Default**: Balanced skill requirements - ensures reasonable success chances for most attempts
-- **🎯 Master**: High skill requirements - only skilled pawns can attempt improvements (high success rates)
-- **🏆 Artisan**: Very high skill requirements - only master craftsmen can attempt improvements (very high success rates)
-- **🛠️ Custom**: Set your own minimum skill requirements for each quality tier
+## Technical notes
 
-#### Advanced Settings
+Three Harmony patches: two postfixes that declare the improvement component on the relevant defs,
+one at def generation and one after every mod's static constructors have run, and one prefix on
+designation removal that returns staged materials and cancels running jobs. None of them skips the
+method it attaches to or changes what it returns. Two XML PatchOperations add the work type to
+colony mechs.
 
-- **Require Materials for Improvement**: Toggle whether improvements need materials like normal construction, or just require work time
-- **Material Cost Percentage**: Adjust improvement costs from 10% to 500% of the original build cost (default 100%)
-- **Skill Requirements**: Adjust minimum construction skill needed for each quality tier (Custom preset only)
-- **Quality Calculator**: Test different success rates and skill requirements
-- **Success Thresholds**: Set desired success percentages to automatically calculate skill requirements
+Modded buildings are picked up at startup once every mod's defs have loaded, which is what the
+second of the two injection passes is for.
 
-### Recommended Settings
+## Building from source
 
-**For balanced gameplay**: Use the **Default** preset, which provides balanced skill requirements ensuring reasonable success chances for most improvement attempts.
-
-**For fast improvements**: Try **Apprentice** or **Novice** presets to allow lower-skilled pawns to attempt improvements, accepting higher failure rates for faster progression.
-
-**For efficient material usage**: Use **Master** or **Artisan** presets to ensure only highly-skilled pawns attempt improvements, minimizing wasted materials from failed attempts.
-
-**Material-free mode**: Disable "Require Materials for Improvement" in Advanced Settings if you prefer improvements to only cost time and labor, eliminating material waste from failures.
-
-**Budget improvements**: Set Material Cost Percentage to 50% or lower to make improvements more affordable, encouraging experimentation with quality upgrades.
-
-**Expensive improvements**: Set Material Cost Percentage to 200% or higher for additional challenge, making quality improvements a significant investment decision.
-
-## Technical Details
-
-### Architecture
-
-The mod uses clean, modular architecture with minimal Harmony patches for maximum compatibility:
-
-- **Component System**: Uses RimWorld's ThingComp system for item state management
-- **Job System**: Integrates with RimWorld's work system for natural pawn behavior  
-- **Material Storage**: Custom storage system restricts hauling to required materials only
-- **Settings Framework**: Persistent configuration with runtime updates
-
-### Compatibility
-
-- **Harmony Requirement**: Uses Harmony 2.3.6 for compatibility patches
-- **Mod Support**: Automatically works with modded items that have quality
-- **Save Compatibility**: Safe to add to existing saves; removes cleanly when disabled
-
-### Performance
-
-- **Work search**: pawns only look for improvement work when something is actually marked. The
-  work giver skips itself outright when the map carries no improvement designation, and when one
-  does, it considers the marked buildings rather than searching the map.
-- **Minimal patches**: three Harmony patches. Two declare the component on the relevant building
-  definitions as the game loads them, and one runs when a designation is removed.
-- **Standard systems**: work, hauling and quality all go through RimWorld's own.
-
-## Building from Source
-
-### Prerequisites
-- .NET Framework 4.7.2
-- RimWorld 1.6 assemblies
-- MonoBleedingEdge 6.12.x
-
-### Build Steps
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/rimworld-simple-improve.git
-cd rimworld-simple-improve
-
-# Build using the provided script
-./build.sh
-
-# Or build manually
-dotnet build SimpleImprove.csproj
+```sh
+export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
+dotnet build rimworld-simple-improve.sln -c Release
 ```
 
-The built mod will be in the `1.6/Assemblies/` directory.
+`./build.sh` builds Release, stages the mod and replaces the copy in the RimWorld install. It
+deletes that folder first, so do not run it to check something.
 
-## Contributing
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`. `Tests/README.md` says what is and is not
+reachable outside a running game, which is most of this mod.
 
-Contributions are welcome! Please:
+## Licence
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow C# coding conventions
-- Add XML documentation for public APIs
-- Test with multiple RimWorld scenarios
-- Ensure compatibility with popular mods
-
-## Frequently Asked Questions
-
-**Q: Can I improve items to Legendary quality?**
-A: Only with pawn modifiers like Inspired Creativity or Production Specialist roles. The base system caps at Masterwork.
-
-**Q: What happens if improvement fails?**
-A: Materials are consumed but the item keeps its original quality. If materials remain, the improvement can be retried.
-
-**Q: Does this work with modded furniture?**
-A: Yes! Any item with a quality stat and proper blueprint definition will work automatically.
-
-**Q: Can I control which pawns can attempt improvements?**
-A: Yes! Choose from 5 preset skill requirement levels (Apprentice to Artisan) or use Custom mode. Apprentice allows any pawn to try (with high failure rates), while Artisan requires master-level construction skill (ensuring high success rates).
-
-**Q: Do I always need materials for improvements?**
-A: No! In the mod settings under Advanced Settings, you can disable "Require Materials for Improvement" to make improvements only require time and labor instead of resources.
-
-**Q: How does the Material Cost Percentage setting work?**
-A: This setting controls how much material improvements cost relative to the original build cost. At 100% (default), improving costs the same as building from scratch. At 50%, improvements cost half the materials. At 200%, improvements cost double the materials. This allows you to make improvements cheaper for easier gameplay or more expensive for additional challenge.
-
-## License
-
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
-## Credits
-
-- **Author**: Zei33
-- **Original Concept**: Inspired by Improve This by [Hex](https://steamcommunity.com/sharedfiles/filedetails/?id=2785022023)
-
-## Support
-
-- **Issues**: Report bugs via GitHub Issues
-- **Discussions**: Join the conversation on Steam Workshop
-- **Updates**: Watch this repository for new releases and features
-
----
-
-*Enhance your colony's infrastructure one improvement at a time! 🔨*
+GPL-3.0. See `LICENSE`.

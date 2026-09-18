@@ -4,11 +4,11 @@
   <author>Zei33</author>
   <modVersion>1.0.8</modVersion>
   <packageId>Zei33.SimpleImprove</packageId>
-  <description>Transform your colony's infrastructure over time! Simple Improve lets you upgrade the quality of furniture and other buildings with quality through skilled construction work.
+  <description>Simple Improve lets colonists raise the quality of furniture and other buildings that already have a quality rating, using the same construction work and the same roll as building one fresh.
 
 CORE FEATURES:
-• Mark any furniture or building with quality for improvement
-• Pawns use construction skill to enhance buildings from Awful to Masterwork quality
+• Mark a building for improvement from its own Improve button, one at a time or a whole selection at once
+• Pawns use Construction skill to raise quality. Without an inspiration or a production role the roll tops out at Masterwork, the same as building fresh
 • Smart multi-building selection with consolidated controls
 • Configurable skill requirements with 5 quality standards presets
 
@@ -23,13 +23,13 @@ QUALITY STANDARDS PRESETS:
 • Default: Balanced requirements (reasonable success rates for all tiers)
 • Master: High skill requirements (higher success rate, only well prepared pawns can make attempts)
 • Artisan: Tight skill requirements (minimal waste, only pawns with a high likelihood of success can make attempts)
-• Custom: Set your own skill thresholds (full control over skill requirements for each quality tier)
+• Custom: not a button. Typing your own number into any skill box switches to Custom and keeps the rest of your table
 
 FLEXIBLE GAMEPLAY:
 • Traditional mode: Requires materials like normal construction (default)
 • Adjustable material costs: Set improvement costs anywhere from 10% to 500% of the original build cost
 • Labor-only mode: Improvements cost only time and skill
-• Works with any modded furniture or building that has quality
+• Works with any modded building that has quality and a blueprint, which is what the material cost is charged against. Sculptures and other quality buildings with no blueprint are out of scope, as are weapons and apparel
 • New "Improve" work type with separate priority from construction (for colonists that are working on improving items)
 • Colony mechs: constructoids can do improvement work
 
@@ -41,9 +41,11 @@ SETTING UP THE WORK TYPE:
 • Colony mechs are switched on for you when a save is loaded. RimWorld's Work tab lists colonists only and never shows a mech, so there is nowhere to set it by hand
 • A mech is judged on the fixed skill level mechanoids use for every job, which is 10, so on the Default preset a constructoid is given buildings marked for any improvement or for a target up to Good, and not ones marked for Excellent or above
 
-ENHANCED INTERFACE:
-• Drag-select multiple items for batch improvement
-• Helpful settings menu</description>
+INTERFACE:
+• Select several buildings, by drag or by shift-clicking, and one Improve button marks them all
+• Buildings already marked for the same target share a button, so a mixed selection shows one per group
+• There is no Architect menu tab. Marking is done from the building's own button
+• Settings live under Options, Mod options, Simple Improve</description>
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>

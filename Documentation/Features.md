@@ -3,8 +3,12 @@
 ## Core Functionality
 
 ### Quality Improvement System
-- Mark any furniture or constructed item with quality for improvement
-- Pawns with sufficient construction skill will gather materials and attempt to improve quality
+- Mark a building that has a quality rating and a blueprint. The blueprint is what the material
+  cost is charged against, so a quality building without one is out of scope, as are weapons and
+  apparel
+- Any pawn with the work type switched on hauls the materials. The skill requirement is checked
+  when the improvement work itself is handed out, so a pawn below the requirement can stock a
+  building it cannot then work on
 - Quality is re-rolled based on pawn's skill level
 - If the new quality is not better, materials are consumed but quality remains unchanged
 - If improvement succeeds, the item gains the new quality level
@@ -29,12 +33,21 @@
 #### Quality Standards Presets
 Choose from pre-configured skill requirement levels:
 
-- **🌱 Apprentice**: Very low skill requirements - allows any pawn to attempt improvements with high failure rates
-- **📚 Novice**: Low skill requirements - most pawns can attempt improvements with moderate success rates
-- **⚖️ Default**: Balanced skill requirements - ensures reasonable success chances for skilled pawns
-- **🎯 Master**: High skill requirements - only skilled pawns can attempt improvements with high success rates
-- **🏆 Artisan**: Very high skill requirements - only master craftsmen can attempt improvements with very high success rates
-- **🛠️ Custom**: Set your own minimum skill requirements for each quality tier
+- **Apprentice**: the loosest thresholds, so nearly any assigned pawn may attempt anything
+- **Novice**: low thresholds
+- **Default**: balanced thresholds
+- **Master**: high thresholds
+- **Artisan**: the tightest thresholds
+
+The buttons are plain text; the settings window draws no icons. A preset sets the whole table of
+thresholds at once and nothing else. It does not change the odds of a roll succeeding: the roll is
+vanilla's and depends on the pawn's actual skill, so a preset decides who is allowed to try rather
+than how likely they are to succeed.
+
+**Custom is not a button.** Typing your own number into any of the seven skill boxes switches the
+preset to Custom and keeps the rest of your table as it was. The boxes are always editable,
+whichever preset is selected; editing one is what puts you into Custom, not the other way round.
+Values are clamped to 0 to 20.
 
 #### Default Skill Requirements (Default Preset)
 - Awful: 0
@@ -43,7 +56,11 @@ Choose from pre-configured skill requirement levels:
 - Good: 10
 - Excellent: 14
 - Masterwork: 18
-- Legendary quality cannot be achieved through normal improvement (requires special circumstances)
+- Legendary: 20
+
+Legendary can be set as a target and the threshold above is enforced, but the vanilla roll clamps
+at Masterwork without an inspiration or a production role, so a plain pawn cannot reach it however
+skilled. The mod says so when the target is chosen.
 
 ### Target Quality Persistence
 - **Saved With The Building**: The target is a field on the improvement component, written onto the
@@ -80,30 +97,44 @@ Choose from pre-configured skill requirement levels:
   - Buildings at or above the selected target quality are automatically excluded from marking
 - **Visual Indicators**: Button labels show the number of buildings in each group (e.g., "Improve (3)")
 
-### Designators
-- **Mark for Improvement**: Select items to queue for quality improvement
-- **Cancel Improvement**: Remove items from the improvement queue
-- Both support drag selection for multiple items
+### Marking
+Marking is done from the building's own gizmo. Select one or more improvable buildings and use the
+Improve button; the menu it opens also carries Cancel improvement for anything already marked.
+
+**There is no Architect menu tab and no designator tool.** Two designator classes exist in the
+source and nothing registers either of them, so neither has ever been reachable. Marking is
+therefore per selection rather than by dragging a tool over cells, which in practice means
+selecting the buildings the normal way and pressing one button.
+
+The vanilla Architect, Orders, Cancel tool also clears a mark, and returns any staged materials.
 
 ### Item Gizmos
 - **Smart Consolidated Buttons**: When multiple buildings are selected, the mod intelligently groups them and shows consolidated improvement buttons instead of duplicates
-- **Quality Target Selection**: Dropdown menu allows choosing specific quality targets (Poor, Normal, Good, Excellent, Masterwork) or "Any improvement"
+- **Quality Target Selection**: the menu offers "Any improvement" plus every quality above the building's current one, up to and including Legendary, which is accepted with a warning that it needs an inspiration or a production role
 - **Context-Aware Options**: Available quality options adapt based on selection:
   - **All Unmarked**: Shows all quality options above each building's current quality
-  - **Mixed Selection**: Unmarked buildings show limited options based on highest quality in selection
+  - **Mixed Selection**: the unmarked buildings are offered only qualities above the highest-quality building among the unmarked ones, not across the whole selection
   - **Different Targets**: Separate buttons for each target quality group, with cross-group quality setting affecting all selected buildings
 - Shows current improvement status and target quality
 
-### Enhanced Settings Menu
-- **Quality Standards Presets**: Quick selection from pre-configured difficulty levels
-- **Preset Tooltips**: Detailed explanations of each preset's skill requirements and strategy
-- **Custom Configuration**: Full control over individual skill requirements when using Custom preset
-- **Advanced Settings**: 
-  - Toggle material requirements on/off
-  - Adjust material cost percentage (10% to 500%, default 100%)
-- **Quality Distribution Calculator**: Test different skill configurations and success rates
-- **Interactive Preview**: Real-time display of current skill requirements and success rates
-- **Settings Migration**: Automatic upgrade from legacy settings format
+### Settings Menu
+Reached through Options, Mod options, Simple Improve. It draws a label naming the current preset,
+the seven editable skill boxes, five preset buttons, a materials checkbox, a material cost box and
+a reset button. Nothing else.
+
+- **Quality Standards Presets**: five buttons that rewrite the whole threshold table
+- **Custom Configuration**: the seven skill boxes are always editable, and typing in one switches
+  the preset to Custom while keeping the rest of your table
+- **Materials**: a checkbox that turns material requirements on and off, and, while they are on, a
+  material cost percentage box accepting 10% to 500%, default 100%
+
+The preset buttons carry no tooltip. The only tooltip in the window is on the material cost field.
+There is no quality distribution calculator, no success threshold control, no live success-rate
+preview and no Advanced Settings section; earlier versions of this document described all five and
+none has ever existed.
+
+- **Settings Migration**: a config written by the mod's version 1 format is upgraded on load, and
+  a skill table that no longer matches any preset is matched to the closest one
 
 ### Visual Feedback
 - Text motes show improvement results:
@@ -181,7 +212,11 @@ Choose from pre-configured skill requirement levels:
 ## Compatibility
 
 ### Harmony Patches
-- Two patches: one declares the improvement component on the defs, one handles designation removal
+- Three Harmony patches: two postfixes that declare the improvement component on the defs, one at
+  def generation and one after every mod's static constructors have run, and one prefix on
+  designation removal that returns staged materials and cancels running jobs
+- None of the three skips the method it attaches to or changes what it returns
+- Two XML PatchOperations add the work type to colony mechs
 - Neither changes the behaviour of the method it attaches to
 - All other functionality uses standard RimWorld systems
 
@@ -194,9 +229,12 @@ Choose from pre-configured skill requirement levels:
   the first time each building loads
 
 ### Mod Support
-- Automatically works with any modded items that have quality
+- Works with any modded building that carries quality and has a blueprint. Apparel, weapons and
+  other quality items are out of scope, as are quality buildings with no blueprint
 - Respects custom material costs
-- Compatible with modded inspirations and roles
+- Any Ideology role whose effects include a production quality offset is read, including a modded
+  one, and its own offset value is used. Inspirations are matched on vanilla's Inspired Creativity
+  specifically, which is also the only inspiration vanilla's own quality roll rewards
 - Modded buildings are picked up at startup, once every mod's defs have loaded
 
 ## Limitations

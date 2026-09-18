@@ -11,25 +11,35 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 ├── ModEntry.cs              # Main entry point and mod initialization
 ├── Core/                    # Core functionality
 │   ├── SimpleImproveSettings.cs      # Mod settings and configuration
-│   ├── SimpleImproveComp.cs         # Component attached to improvable items
-│   ├── ImprovableDefs.cs            # Decides which defs carry the component, and declares it
-│   ├── SimpleImproveMapComponent.cs # Colony mech work priorities, and the pre-1.0.9 target store
-│   ├── WorkerSkill.cs               # A worker's Construction level, and the skill gate over it
-│   ├── ImproveWorkers.cs            # Which pawns can be given improvement work
+│   ├── SimpleImproveComp.cs          # Component attached to improvable buildings
+│   ├── ImprovableDefs.cs             # Decides which defs carry the component, and declares it
+│   ├── ImproveSelection.cs           # The per-frame selection analysis and the gizmo textures
+│   ├── ImproveSite.cs                # The five vanilla checks that replace GenConstruct.CanConstruct
+│   ├── ImproveDesignations.cs        # The designation and the marked flag as one record
+│   ├── SimpleImproveMapComponent.cs  # Colony mech work priorities, and the legacy target store
+│   ├── WorkerSkill.cs                # A worker's Construction level, and the skill gate over it
+│   ├── ImproveWorkers.cs             # Which pawns can be given improvement work
+│   ├── QualityBonuses.cs             # Inspiration and role quality offsets, each declaring its kind
+│   ├── MaterialCostField.cs          # The 10% to 500% range, and the typing versus unfocused split
+│   ├── StoredMaterials.cs            # What happens to staged materials when a building despawns
 │   ├── CompProperties_SimpleImprove.cs # Component properties
-│   └── SimpleImproveDefOf.cs        # Def references
-├── Designators/            # UI designators for marking items
+│   └── SimpleImproveDefOf.cs         # Def references
+├── Designators/            # DEAD CODE: two Designator subclasses that nothing registers
 │   ├── Designator_MarkForImprovement.cs
 │   └── Designator_CancelImprovement.cs
 ├── Jobs/                   # Job system implementation
 │   ├── WorkGiver_Improve.cs         # Assigns improvement work
-│   ├── JobDriver_HaulToImprove.cs  # Hauls materials to items
+│   ├── JobDriver_HaulToImprove.cs   # Hauls materials to buildings
 │   └── JobDriver_Improve.cs         # Performs improvement work
 ├── Utils/                  # Utility classes
 │   └── MaterialStorage.cs           # Custom material container
-├── Patches/                # Harmony patches
-│   ├── CompInjectionPatch.cs        # Declares the component on every play-data load
-│   └── DesignationCancelPatch.cs    # Handles designation removal
+├── Patches/                # Harmony patches AND XML PatchOperations
+│   ├── CompInjectionPatch.cs        # Two classes: a postfix on GenerateImpliedDefs_PostResolve,
+│   │                                #   and LateCompInjectionPatch, a second idempotent pass
+│   │                                #   after StaticConstructorOnStartupUtility.CallAll
+│   ├── DesignationCancelPatch.cs    # Prefix on Designation.Notify_Removing
+│   ├── MechWorkTypes.xml            # Adds the work type to Mech_Constructoid
+│   └── ProjectRimFactoryDrones.xml  # Untested: the target mod is not installed here
 └── Defs/                   # XML definitions
     ├── DesignationDefs/
     ├── JobDefs/
@@ -60,10 +70,11 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 - **Legacy Target Quality Store**: A `Dictionary<int, QualityCategory>` keyed on thing ID, kept only
   so that saves written before version 1.0.9 do not lose the targets the player set. Nothing writes
   to it; each building takes its own entry as it spawns, and the entry is removed when taken
-- **No Orphan Sweep**: The sweep this class used to run every two game days deleted any entry it
-  could not match to a spawned thing on that map, which silently discarded the target of every
-  marked building that happened to be minified, in a caravan or in any other container at the time.
-  Leaving the unclaimed entries costs an int and a byte each
+- **One-Shot Store**: the sweep this class used to run every two game days is gone. It deleted any
+  entry it could not match to a spawned thing on that map, which silently discarded the target of
+  every marked building that happened to be minified, in a caravan or in any other container at the
+  time. `FinalizeInit` now clears the whole store once instead, after every building on the map has
+  had its single chance to claim an entry, so nothing is carried between loads
 - **Performance Optimized**: Efficient O(1) lookups by thing ID with minimal memory overhead
 - **Mod Safety**: Graceful degradation if mod is disabled - no save corruption or data loss
 
@@ -98,7 +109,6 @@ another mod gives quality to.
 - **Settings Migration**: Automatic upgrade from Version 1 to Version 2 settings format
 - **Material Requirements Toggle**: Optional material costs for improvements
 - **Material Cost Percentage**: Adjustable improvement costs from 10% to 500% of the original build cost
-- **Quality Distribution Calculator**: Testing tool for different skill configurations
 - **Support for Pawn Modifiers**: Inspirations and ideological roles
 
 ### Job System
@@ -120,16 +130,18 @@ another mod gives quality to.
 ### Persistent Storage System
 - **One Owner**: The marked flag, work progress, hauled materials and target quality are all fields
   on the component, written flat onto the building's own save node by `PostExposeData`
-- **Off-Map Buildings**: The state travels with the building rather than with the map, so a
-  minified or caravanned building keeps its work progress and its hauled materials. It does not keep
-  its mark or its target: putting a building in a container makes vanilla remove its designations,
-  which clears both. That is unchanged behaviour, and it is why a reinstalled building comes back
-  unmarked
+- **Off-Map Buildings**: work progress travels with the building, because `workDone` is a field on
+  the component and is written onto the building's own save node, so a minified or caravanned
+  building comes back with its progress intact. The hauled materials do NOT travel: `PostDeSpawn`
+  drops them onto the map the building is leaving, on every path except a gravship jump. Nor does
+  the mark or the target survive, because putting a building in a container makes vanilla remove its
+  designations, which clears both. That is why a reinstalled building comes back unmarked and
+  materially empty, with its work progress still counted
 - **Designation Repair**: The designation and the marked flag have to agree, because the work giver
   is designation-driven. `PostSpawnSetup` restores a designation that a gravship jump left behind
 - **Older Saves**: A save written before version 1.0.9 has its target qualities migrated out of the
   map component as each building spawns
-- **Robustness**: Handles edge cases like mid-save thing destruction and map transitions
+- **Destruction and map changes**: a building destroyed, minified, uninstalled or carried to another map returns its staged materials through one owner, `PostDeSpawn`, rather than through three separate paths
 
 ### Quality Standards Preset System
 - **QualityStandardsPreset Enum**: Defines preset difficulty levels (Apprentice through Artisan)
@@ -141,12 +153,12 @@ another mod gives quality to.
   - **Artisan**: Very high thresholds - only master craftsmen can attempt, maximizes success rates
   - **Custom**: User-defined skill requirements for each quality tier
 - **Settings Migration**: Automatic upgrade from legacy settings to preset system
-- **UI Integration**: Enhanced settings interface with preset selection and tooltips
+- **UI Integration**: five preset buttons in the right column of the settings window, one per preset. They carry no tooltip; the only tooltip in the window is on the material cost percentage field
 - **Validation System**: Ensures skill requirements remain within valid ranges
 
 ### Gizmo Consolidation System
 - **ImproveGroup Class**: Represents a collection of buildings with similar improvement states
-- **Selection Analysis**: `AnalyzeSelection()` method groups buildings by:
+- **Selection Analysis**: `ImproveSelection.Current()` analyses the whole selection once per frame, keyed on the frame number and an element-by-element snapshot of the selection, which is the same key `GizmoGridDrawer` uses for the gizmo objects themselves. Every selected component shares the result, and `SimpleImproveComp.AnalyzeSelection()` is a one-line delegation to it. `EligibleIn` filters in one pass on player faction, blueprint, a non-Legendary `CompQuality` and the improve component; `GroupsFor` then groups by:
   - Improvement marking status (marked vs unmarked)
   - Target quality settings (groups buildings with same target quality)
 - **Representative Gizmos**: Only the first component in each group yields a gizmo, preventing duplicates
@@ -200,9 +212,9 @@ the defs removed the reason for the split, and version 1.0.9 removed the split.
 9. **Cross-Group Operations**: Quality settings can be applied to all selected buildings simultaneously
 10. **Quality Standards Presets**: Pre-configured skill requirement levels for different playstyles and strategies
 11. **Flexible Material Requirements**: Optional material costs - improvements can require only time/labor if preferred
-12. **Enhanced Settings UI**: Improved interface with tooltips, presets, and better organization
+12. **Settings UI**: a preset label, seven editable skill boxes, five preset buttons, a materials checkbox, a material cost box and a reset button. No tooltips except on the material cost box
 13. **Settings Migration System**: Automatic upgrade from legacy settings format to new preset system
-14. **Robust Data Management**: Automatic cleanup and validation prevent data corruption and memory leaks
-15. **Enhanced Mod Compatibility**: Dual-storage pattern provides better compatibility with other mods
+14. **Data Validation**: a loaded config is checked on the way in. Missing quality rows are filled from the Default preset, skill values and the material cost multiplier are clamped to their ranges, and a preset name this build cannot parse falls back to Default rather than to the loosest preset
+15. **Single Storage**: every piece of per-building state lives on the component and is scribed with the building, so nothing depends on a side table keyed by thing ID that goes missing the moment the building leaves a map
 16. **Save File Integrity**: Clean separation ensures saves remain valid even if mod is disabled
 17. **Adjustable Material Costs**: Material cost percentage setting (10% to 500%) allows fine-tuning improvement expenses for different playstyles
