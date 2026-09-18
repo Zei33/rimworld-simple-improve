@@ -334,8 +334,29 @@ namespace SimpleImprove.Tests
 
             foreach (var file in files)
             {
+                // Select on either bound, then require both on the one line. The selector used to
+                // read `l.Contains(minimum) || l.Contains("5%")`, whose second clause was a leftover
+                // from the range change in #15 and matched 25%, 35%, 45% and 65% as substrings. A
+                // bullet reading "25% faster with a skilled pawn" sitting above the range bullet was
+                // therefore picked instead, and both assertions below then failed on it reporting
+                // that the file "does not name the minimum", which points at the wrong line.
+                //
+                // Selecting on either bound rather than on the minimum alone is the stricter of the
+                // two repairs the issue offered, and it buys one real case: copy that splits
+                // "10% to 500%" across two bullets is now caught, because the bullet naming 10% is
+                // selected and fails the maximum assertion. Selecting on the minimum alone would
+                // have passed that, and selecting on lines containing both would have made the two
+                // assertions below tautological and left only the blunt "names no range" message.
+                //
+                // Residual, stated rather than left to be rediscovered: these are still substring
+                // tests, so "110%" contains "10%" and "1500%" contains "500%". That is tolerated
+                // because the alternative is a regex, and this selector is deliberately mirrored by
+                // `required_strings` in Workshop/src/mod.json, whose rule engine evaluates plain
+                // containment. Keeping both halves expressible in the weaker of the two languages is
+                // what makes them agree by construction rather than by coincidence. Changing
+                // MinimumMultiplier or MaximumMultiplier means editing that file in the same commit.
                 var line = File.ReadAllLines(file)
-                    .FirstOrDefault(l => l.Contains(minimum) || l.Contains("5%"));
+                    .FirstOrDefault(l => l.Contains(minimum) || l.Contains(maximum));
 
                 Assert.That(line, Is.Not.Null, Path.GetFileName(file) + " names no material cost range.");
                 Assert.That(line, Does.Contain(minimum), Path.GetFileName(file) + " does not name the minimum.");

@@ -50,11 +50,11 @@
   },
   "required_strings": [
     {
-      "why": "mirrors EveryShippedDescriptionNamesTheRangeTheCodeEnforces in rimworld-simple-improve/Tests/MaterialCostFieldTests.cs, which pins MaterialCostField.MinimumMultiplier and MaximumMultiplier over the ten shipped files. The selector reproduces that test's own `l.Contains(minimum) || l.Contains(\"5%\")`, substring trap included: a bullet reading '25% faster' would be picked instead and fail both assertions.",
+      "why": "mirrors EveryShippedDescriptionNamesTheRangeTheCodeEnforces in rimworld-simple-improve/Tests/MaterialCostFieldTests.cs, which pins MaterialCostField.MinimumMultiplier and MaximumMultiplier over the ten shipped files. Both halves select on either bound and then require both on that one line, so a copy edit splitting '10% to 500%' across two bullets fails here as well as there. The selector used to carry a bare '5%' clause copied from the test, which substring-matched 25%, 35% and 45% and picked an unrelated bullet; issue #26 removed it from both sides in one commit. These are plain containment tests on both sides on purpose: keeping the rule expressible in this engine's language is what makes the two agree by construction. Changing either multiplier means editing this file and that test together.",
       "languages": "all",
       "select_first_line_containing_any": [
         "10%",
-        "5%"
+        "500%"
       ],
       "and_that_line_must_contain_all": [
         "10%",
