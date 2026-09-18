@@ -47,7 +47,15 @@ RimWorld update that renames or moves the def fails a test rather than silently 
 Flow: every improvable building carries the comp from the moment it is made,
 `CompGetGizmosExtra` builds `ImproveGroup`s from `Find.Selector`, and the float menu writes
 `TargetQuality` (into the map component) and `IsMarkedForImprovement` (which adds the designation).
-`JobGiver_Work` then reaches `WorkGiver_Improve.HasJobOnThing`, which delegates to `JobOnThing`.
+`JobGiver_Work` then calls `WorkGiver_Improve.ShouldSkip`, which exits on
+`!AnySpawnedDesignationOfDef(Designation_Improve)` before any search is built; when something is
+marked, `PotentialWorkThingsGlobal` returns the designated buildings and `HasJobOnThing` runs over
+those, delegating to `JobOnThing`.
+
+**The designation is the record of what is marked, not decoration.** Since 2026-09-18 it decides
+whether the work giver runs at all, so anything that puts the comp's `isMarkedForImprovement` and the
+designation out of step is a building that never gets improved. `SimpleImproveComp.PostSpawnSetup`
+repairs the one direction that happens in normal play; `ImproveDesignations` carries why.
 
 Harmony surface, all applied by `PatchAll()` from the `Mod` constructor:
 
@@ -247,12 +255,31 @@ are the consequence of a trap above; the traps carry the mechanism.
 
 Fixed on 2026-09-17: the comp persistence (issue #2), which also retired `DynamicComponentPatch` and
 the two-`[HarmonyPatch]`-attribute trap along with it. Fixed on 2026-09-18: the unguarded
-`pawn.skills` and `pawn.workSettings` dereferences (issue #9), and colony mechs being unable to hold
-the work type (issue #8).
+`pawn.skills` and `pawn.workSettings` dereferences (issue #9), colony mechs being unable to hold
+the work type (issue #8), and the work giver scanning every artificial building on every job search
+(issue #3).
+
+One trap came out of #3 and is not obvious from either the code or the issue. **An Odyssey gravship
+jump strands a thing designation on the map it left.** `Thing.DeSpawn` never touches the designation
+manager at all, and `Building.DeSpawn` only asks `Notify_BuildingDespawned` to clear defs that set
+`removeIfBuildingDespawned`, which vanilla sets on Plan, Mine and MineVein alone.
+`GravshipUtility.GenerateGravship` then despawns every building *before* sweeping the substructure
+cells, and that sweep looks through `thingGrid`, which the despawn has already emptied, so the
+designation is never swept; the `Gravship` holds its things in a plain `Dictionary` rather than a
+`ThingOwner` and carries only the three floor designations across. That was invisible while the
+comp's bool decided whether work happened. It is not invisible now, which is why `PostSpawnSetup`
+restores it.
+
+**Minifying is not a second case, and an earlier version of this paragraph said it was.**
+`ThingOwner.NotifyAdded` calls `RemoveAllDesignationsOn` on *every* map when the holder
+`IsEnclosingContainer()` (which excludes only carry trackers, corpses, maps, caravans, trader
+trackers and trade ships, so a `MinifiedThing` qualifies). That goes through `RemoveDesignation` and
+so fires `Notify_Removing`. Uninstalling a marked building loses the mark on both sides and stays
+consistent. The same applies to anything else that puts a thing in a container.
 
 | Defect | file:line | What breaks |
 |---|---|---|
-| No `ShouldSkip`, no `PotentialWorkThingsGlobal` | `1.6/Jobs/WorkGiver_Improve.cs:14,20` | Every pawn reachability-scans every `BuildingArtificial` on the map on every job search, even with nothing marked |
+| ~~No `ShouldSkip`, no `PotentialWorkThingsGlobal`~~ | fixed 2026-09-18, issue #3 | Was: every pawn reachability-scanned every `BuildingArtificial` on the map on every job search, even with nothing marked. `ShouldSkip` now exits on the designation count, and the search set is the designated buildings with `PotentialWorkThingRequest` left `Undefined` so no region walk is built |
 | `HasJobOnThing` delegates to `JobOnThing` | `1.6/Jobs/WorkGiver_Improve.cs:49` | Full job construction runs as the scan validator, then again on the winner |
 | Nested `GenClosest.ClosestThingReachable` inside that validator | `1.6/Jobs/WorkGiver_Improve.cs:186` | Unbounded (9999f) map search per required material, per candidate |
 | A completed `Building` is handed to `GenConstruct.CanConstruct` | `1.6/Jobs/WorkGiver_Improve.cs:105` | An argument shape no vanilla caller produces. Any third-party postfix that assumes a blueprint or frame throws and kills the whole scan |
@@ -288,7 +315,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 82 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 97 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 

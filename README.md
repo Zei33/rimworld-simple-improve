@@ -45,7 +45,7 @@ Simple Improve adds a new construction system to RimWorld that lets you upgrade 
 - **Automatic material hauling** - Pawns gather resources automatically
 - **Experience gain** - Construction skill improves while working
 - **Universal mod compatibility** - Works with any mod that adds quality to buildings
-- **Optimized performance** - Intelligent caching prevents UI slowdowns
+- **Costs nothing when idle** - Pawns skip the improvement search entirely unless something is marked
 
 ## Installation
 
@@ -182,9 +182,12 @@ The mod uses clean, modular architecture with minimal Harmony patches for maximu
 
 ### Performance
 
-- **Efficient Caching**: Caches calculations and lookups where possible
-- **Minimal Patches**: Only patches designation removal for clean integration
-- **Standard Systems**: Uses RimWorld's built-in systems for work, hauling, and quality
+- **Work search**: pawns only look for improvement work when something is actually marked. The
+  work giver skips itself outright when the map carries no improvement designation, and when one
+  does, it considers the marked buildings rather than searching the map.
+- **Minimal patches**: three Harmony patches. Two declare the component on the relevant building
+  definitions as the game loads them, and one runs when a designation is removed.
+- **Standard systems**: work, hauling and quality all go through RimWorld's own.
 
 ## Building from Source
 

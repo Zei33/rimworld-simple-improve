@@ -14,16 +14,87 @@ namespace SimpleImprove.Jobs
     public class WorkGiver_Improve : WorkGiver_Scanner
     {
         /// <summary>
-        /// Gets the type of things this work giver can potentially work on.
-        /// Targets artificial buildings that can have quality improvements.
-        /// </summary>
-        public override ThingRequest PotentialWorkThingRequest => ThingRequest.ForGroup(ThingRequestGroup.BuildingArtificial);
-
-        /// <summary>
         /// Gets the path end mode for reaching work targets.
         /// Uses Touch mode for direct interaction with buildings.
         /// </summary>
         public override PathEndMode PathEndMode => PathEndMode.Touch;
+
+        // PotentialWorkThingRequest is deliberately NOT overridden, and leaving it at the Undefined
+        // default is half of the performance fix rather than an omission.
+        //
+        // GenClosest.ClosestThingReachable decides whether to run its 30-region breadth-first search
+        // from the request alone: `!thingReq.IsUndefined && thingReq.CanBeFoundInRegion`. Declaring
+        // ThingRequestGroup.BuildingArtificial, as this class used to, therefore bought a region walk
+        // calling the validator on every wall segment, door and frame in range, and supplying
+        // PotentialWorkThingsGlobal alongside it would not have removed that walk. The set would only
+        // have become the conditional fallback after it.
+        //
+        // The no-work case was the expensive one, which is what made this the mod's most-reported
+        // problem: GenClosest.ValidateThing only shrinks closestDistSquared for a candidate the
+        // validator accepted, so with nothing marked the distance cull never engaged and every
+        // building on the map was fed through. Marking something made the scan cheaper.
+        //
+        // Undefined makes ThingRequest.Accepts return false for everything, which sounds like it
+        // would break right-click prioritise and does not.
+        // FloatMenuOptionProvider_WorkGivers.ScannerShouldSkip tests
+        // `Accepts(t) || (PotentialWorkThingsGlobal(pawn) != null && PotentialWorkThingsGlobal(pawn).Contains(t))`,
+        // so the set below is what the menu matches against instead. That is why the set must stay
+        // exactly the designated buildings: narrowing it would remove menu options too.
+
+        /// <summary>
+        /// Skips this work giver outright when nothing on the map is marked for improvement.
+        /// </summary>
+        /// <param name="pawn">The pawn looking for work.</param>
+        /// <param name="forced">Whether the player is prioritising this by hand.</param>
+        /// <returns><c>true</c> when there is no improvement work anywhere on the map.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is the cheap exit the class did not have. <c>JobGiver_Work.PawnCanUseWorkGiver</c>
+        /// calls it as the fourth of six gates, before the scanner cast, before
+        /// <see cref="PotentialWorkThingsGlobal"/> is read and before any search is constructed, so
+        /// returning true here costs one walk of a single designation bucket and nothing else. It is
+        /// the same shape as all twenty vanilla uses of
+        /// <c>AnySpawnedDesignationOfDef</c>, every one of which sits in a <c>ShouldSkip</c>.
+        /// </para>
+        /// <para>
+        /// <paramref name="forced"/> is ignored on purpose. With no designation on the map there is no
+        /// work whoever asks, and this cannot suppress a right-click that would otherwise have worked:
+        /// the menu only reaches a scanner through the set in
+        /// <see cref="PotentialWorkThingsGlobal"/>, which is derived from the same designations, so a
+        /// building that can be clicked is a building that makes this return false.
+        /// </para>
+        /// <para>
+        /// <c>pawn.Map</c> is not guarded, matching all twenty vanilla call sites. Both callers reach
+        /// here with a spawned pawn: the think tree runs on a spawned pawn, and the float menu rejects
+        /// a pawn whose map is not the current one before any provider runs.
+        /// </para>
+        /// <para>
+        /// The designations this counts are narrowed to the pawn's own map by vanilla, which matters
+        /// once a building can leave one. <c>AnySpawnedDesignationOfDef</c> tests
+        /// <c>!target.HasThing || target.Thing.Map == map</c>, so a designation stranded on the map a
+        /// gravship left cannot hold this open for the map it arrived at.
+        /// </para>
+        /// </remarks>
+        public override bool ShouldSkip(Pawn pawn, bool forced = false)
+        {
+            return !pawn.Map.designationManager.AnySpawnedDesignationOfDef(SimpleImproveDefOf.Designation_Improve);
+        }
+
+        /// <summary>
+        /// Gets the buildings this work giver will consider, which is exactly the marked ones.
+        /// </summary>
+        /// <param name="pawn">The pawn looking for work.</param>
+        /// <returns>The buildings currently marked for improvement on the pawn's map.</returns>
+        /// <remarks>
+        /// With <c>PotentialWorkThingRequest</c> left undefined, this is the whole search set rather
+        /// than a fallback after a region walk. <see cref="ImproveDesignations.ScanTargets"/> carries
+        /// why it is materialised into a list and why the null test in it is load-bearing.
+        /// </remarks>
+        public override IEnumerable<Thing> PotentialWorkThingsGlobal(Pawn pawn)
+        {
+            return ImproveDesignations.ScanTargets(
+                pawn.Map.designationManager.SpawnedDesignationsOfDef(SimpleImproveDefOf.Designation_Improve));
+        }
 
         /// <summary>
         /// Determines if the specified pawn has a job to do on the given thing.

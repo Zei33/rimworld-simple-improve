@@ -43,13 +43,25 @@ calls, and in this mod it is wide:
   `CompInjectionPatch` and `DesignationCancelPatch` have no path to automated coverage. The logic
   `CompInjectionPatch` calls is covered; the patch attribute that calls it is not.
 - `SimpleImproveComp`, the JobDrivers, the WorkGiver and the gizmo code all need a spawned `Thing`,
-  a `Map` and in most cases `Find.Selector`. None of that is reachable.
+  a `Map` and in most cases `Find.Selector`. None of those **methods** is reachable. A work giver's
+  declared **surface** is: `new WorkGiver_Improve()` constructs, and reading a property that returns
+  a struct touches no static state, so `PotentialWorkThingRequest`, `PathEndMode` and
+  `MaxRegionsToScanBeforeGlobalSearch` can all be asserted. `WorkGiverSurfaceTests` exists for that
+  and is worth knowing about before concluding something here is untestable.
+- `new Thing()`, `new Building()` and `new Designation(LocalTargetInfo, DesignationDef)` all work,
+  which is more than the rest of this list suggests. `DesignationManager` does not: its `DefMap`
+  throws without an initialised def database, which is what keeps `ShouldSkip` out of reach.
+- `Thing.Spawned` reads `Find.Maps` and is therefore **false for every `Thing` built here**, which
+  is a trap rather than a limit. A predicate filtering on `Spawned` can only be tested for
+  exclusion, and such a test passes just as well against a predicate that returns nothing at all.
+  Decide over primitives instead, as `ImproveDesignations.RepairNeeded` does.
 
 Covered today: `ImprovableDefs` (the decision the save/load fix rests on),
 `SimpleImproveSettings` (skill table, presets, modifier registration),
 `SimpleImproveMapComponent` (the target quality store), `WorkerSkill` (the skill gate that keeps a
-skill-less worker away from the quality roll), `ImproveWorkers` (the mech priority correction), the
-shipped `PatchOperation` XML, and the container allocation behaviour on
+skill-less worker away from the quality roll), `ImproveWorkers` (the mech priority correction),
+`ImproveDesignations` (the work giver's search set and the designation re-sync), the work giver's
+declared surface, the shipped `PatchOperation` XML, and the container allocation behaviour on
 `SimpleImproveComp`. That last one is small and matters more than its size: `GetDirectlyHeldThings`
 must report null until something is hauled, because declaring the component on the defs puts every
 quality building into `ThingRequestGroup.ThingHolder` and vanilla traversals call it on all of them.
@@ -69,7 +81,37 @@ spawned `Thing` on a `Map`. Routing both through one function shrinks the gap ra
 them and passes three primitives in. `PotentialOnMap` beside it is pure readings and has no coverage,
 which is the right split rather than an omission.
 
-Quote coverage against those six types, never the repo: most of this mod needs a spawned `Thing` on
+`ImproveDesignations` covers the work giver's search set, and the two halves of it are covered
+differently on purpose. `ScanTargets` is exercised against real `Designation` objects, because those
+can be built outside the game; `RepairNeeded` takes two booleans, because everything it decides over
+(`Thing.Map`, `DesignationOn`) cannot be. The call sites of both, `PotentialWorkThingsGlobal` and
+`PostSpawnSetup`, are still unreachable.
+
+`WorkGiverSurfaceTests` is a different kind of test and the reason it exists is worth repeating. A
+performance fix has no functional signature: re-adding the `PotentialWorkThingRequest` override would
+restore the thirty-region scan that was this mod's most-reported defect, and every other test here
+would still pass. Where the absence of a fix is invisible to behaviour, the declaration is what has
+to be asserted.
+
+Fixes here are checked by mutation rather than by inspection, and the fixtures say which mutations
+they catch. For the work giver those are: re-adding the `ThingRequest`; deleting either override;
+dropping the null test in `ScanTargets`; turning `ScanTargets` back into a lazy iterator; inverting,
+widening or making `RepairNeeded` two-way; and `ScanTargets` ignoring its input. All nine fail as
+test failures rather than as compile errors, which is a distinction worth keeping: an assertion on
+`.Count` silently became a LINQ method group under the iterator mutation and had to be rewritten as
+`Has.Count` to fail properly.
+
+**Be precise about what that does not cover, because the nine above make it look wider than it is.**
+Three method bodies in this fix are unreachable, and mutations inside them were measured to pass the
+whole suite: dropping the `!` from `ShouldSkip` (97/97), replacing
+`PotentialWorkThingsGlobal`'s body with `ScanTargets(null)` (97/97), and deleting the entire
+`PostSpawnSetup` repair (97/97). The reflection tests hold the *declarations*, not the bodies. No test
+can reach them either: `Map` is unconstructible outside a running game and `DesignationManager` needs
+one, so `ShouldSkip`, `PotentialWorkThingsGlobal` and `PostSpawnSetup` cannot be executed here at all.
+What the split buys is that the decisions those three bodies delegate to are covered; what it does not
+buy is any assurance they still call them. Only an in-game check closes that.
+
+Quote coverage against those eight types, never the repo: most of this mod needs a spawned `Thing` on
 a `Map` and a whole-repo figure would be misleading.
 
 The background is `docs/spikes/test-harness/README.md` in the workspace, which records what each

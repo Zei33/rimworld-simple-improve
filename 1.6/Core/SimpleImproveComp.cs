@@ -473,6 +473,77 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
+        /// Restores the improvement designation when the building arrives on a map without it.
+        /// </summary>
+        /// <param name="respawningAfterLoad">Whether this spawn is a save being loaded.</param>
+        /// <remarks>
+        /// <para>
+        /// The work giver is designation-driven, so a marked building that has lost its designation is
+        /// a building that never gets improved again. Nothing in the game restores it:
+        /// <c>Thing.DeSpawn</c> does not touch the designation manager, and <c>Building.DeSpawn</c>
+        /// only clears defs that set <c>removeIfBuildingDespawned</c>, which this one does not.
+        /// <see cref="ImproveDesignations.RepairNeeded"/> carries the two ordinary ways a building
+        /// reaches a new map without its designation, and why the opposite case is left alone.
+        /// </para>
+        /// <para>
+        /// Running on a load as well as on a fresh spawn is deliberate, and it is what repairs a save
+        /// that already carries the divergence. The ordering holds:
+        /// <c>Scribe.loader.FinalizeLoading</c> runs before a map's <c>FinalizeLoading</c> respawns
+        /// its things, so the designation manager is already indexed and answerable by the time this
+        /// is asked.
+        /// </para>
+        /// <para>
+        /// <c>AddDesignation</c> unforbids its target, before indexing it, via
+        /// <c>SetForbidden(false, warnOnFail: false)</c>. Marking by hand goes through the same call
+        /// and so has always done that, but this fires with no player input and no message, so the
+        /// forbidden state is captured and put back. Only three shipped defs can even notice
+        /// (<c>PlantPot</c>, <c>PlantPot_Bonsai</c> and <c>GibbetCage</c> are the only improvable ones
+        /// that also carry <c>CompForbiddable</c>; the Forbid designator refuses anything that is not
+        /// an item), which makes this cheap rather than unnecessary: restoring a value is three lines,
+        /// and silently discarding a state the player set is the kind of thing nobody reports and
+        /// nobody can explain.
+        /// </para>
+        /// <para>
+        /// The other side effect, <c>FleckMaker.ThrowMetaPuffs</c>, is left alone. It is a puff of
+        /// motes on a building whose mark is genuinely being restored, which is honest feedback.
+        /// </para>
+        /// <para>
+        /// The <c>DesignationOn</c> lookup is paid on every spawn of every improvable building,
+        /// including every one on a map load, and not only for marked ones. That is deliberate.
+        /// Short-circuiting on <c>isMarkedForImprovement</c> here would move half the decision out of
+        /// <see cref="ImproveDesignations.RepairNeeded"/> and into a call site the test harness cannot
+        /// reach, which is how the skill guard in this mod came to have no coverage. The cost is a
+        /// missing key in a <c>Dictionary&lt;Thing, List&lt;Designation&gt;&gt;</c>, against a fix that
+        /// removed a thirty-region search per pawn per job search.
+        /// </para>
+        /// </remarks>
+        public override void PostSpawnSetup(bool respawningAfterLoad)
+        {
+            base.PostSpawnSetup(respawningAfterLoad);
+
+            var repair = ImproveDesignations.RepairNeeded(
+                isMarkedForImprovement,
+                parent.Map.designationManager.DesignationOn(parent, SimpleImproveDefOf.Designation_Improve) != null);
+
+            if (repair != ImproveDesignationRepair.AddDesignation)
+            {
+                return;
+            }
+
+            // AddDesignation unforbids the target on the way past. Put it back.
+            var forbiddable = parent.TryGetComp<CompForbiddable>();
+            var wasForbidden = forbiddable != null && forbiddable.Forbidden;
+
+            parent.Map.designationManager.AddDesignation(
+                new Designation(parent, SimpleImproveDefOf.Designation_Improve));
+
+            if (wasForbidden)
+            {
+                forbiddable.Forbidden = true;
+            }
+        }
+
+        /// <summary>
         /// Saves and loads component data for game save files.
         /// Note: Target quality is now stored in SimpleImproveMapComponent for persistence.
         /// </summary>
