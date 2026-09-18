@@ -400,13 +400,13 @@ consistent. The same applies to anything else that puts a thing in a container.
 | Defect | file:line | What breaks |
 |---|---|---|
 | ~~No `ShouldSkip`, no `PotentialWorkThingsGlobal`~~ | fixed 2026-09-18, issue #3 | Was: every pawn reachability-scanned every `BuildingArtificial` on the map on every job search, even with nothing marked. `ShouldSkip` now exits on the designation count, and the search set is the designated buildings with `PotentialWorkThingRequest` left `Undefined` so no region walk is built |
-| `HasJobOnThing` delegates to `JobOnThing` | `1.6/Jobs/WorkGiver_Improve.cs:49` | Full job construction runs as the scan validator, then again on the winner |
-| Nested `GenClosest.ClosestThingReachable` inside that validator | `1.6/Jobs/WorkGiver_Improve.cs:186` | Unbounded (9999f) map search per required material, per candidate |
+| ~~`HasJobOnThing` delegates to `JobOnThing`~~ | fixed 2026-09-18, issue #5 | Was: full job construction ran as the scan validator and again on the winner. **The issue's own fix was refused**: a cheap field-test predicate breaks the invariant `JobGiver_Work` relies on, and a desync there makes the pawn abandon every remaining work giver across every work type, diagnosed only by a `Log.ErrorOnce` on key 6112651 that any other mod may already have consumed. Both methods answer from one memoised `JobFor` instead |
+| ~~Nested `GenClosest.ClosestThingReachable` inside that validator~~ | fixed 2026-09-18, issue #6 | Was: an unbounded map search per required material per candidate, at `Danger.Deadly`, because the bare `TraverseParms.For(pawn)` defaults to the LOOSEST threshold rather than none. Now `forced ? Deadly : NormalMaxDanger()`, bounded by a per-tick cache of failed searches in vanilla's own shape. 9999f is correct and kept. **Player-visible tightening**, needs a release note |
 | ~~A completed `Building` is handed to `GenConstruct.CanConstruct`~~ | fixed 2026-09-18, issue #7 | Was: an argument shape no vanilla caller produces, from **two** call sites rather than the one the issue named. `ImproveSite.CanWorkOn` calls the same five public vanilla methods in the same order instead. Costs Humanoid Alien Races players its building restriction on improvement; needs a release note |
 | ~~Chairs cannot be improved~~ | fixed 2026-09-17, confirmed in game | Was: `CanConstruct(..., checkSkills: true, ...)` enforcing `constructionSkillPrerequisite`, which `DiningChair` (4), `Armchair` (5) and `Couch` (5) declare and beds, stools and dressers do not. There is no `checkSkills` argument anywhere in the mod since #7: the block that read it is not transcribed into `ImproveSite` at all, so the regression cannot return by flipping a flag |
 | ~~Unguarded `pawn.skills` dereference~~ | fixed 2026-09-18, issue #9 | Was: any non-humanlike worker NREs, every tick during the job. All five sites and both `workSettings` sites now go through `WorkerSkill` and `ImproveWorkers` |
 | ~~Mechs can never take the work type~~ | fixed 2026-09-18, issue #8 | Was: `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`. `1.6/Patches/MechWorkTypes.xml` appends the improving work type to it |
-| Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history, while three published descriptions advertise the tab |
+| Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history. The shipped docs no longer advertise the tab (issue #4, #20); the nine generated store pages still do, and that copy belongs to `workshop-content-builder` |
 | ~~Legendary skill requirement unreachable~~ | fixed 2026-09-18, issue #14 | Was: `Mathf.Clamp(baseQuality, 0, 5)` indexed the skill table while `QualityCategory.Legendary` is 6, so the configured Legendary number was never read. The bound is `HighestQualityIndex` now. Raises an ordinary pawn's Default requirement from 18 to 20: a live balance change, and a pawn with an inspiration or a role bonus was already getting the right number |
 | ~~The best case drops the production specialist when inspired~~ | fixed 2026-09-18, issue #16 | Was: the best-case scan used the pawn's inspiration state as a proxy for which modifier it held, so an inspired pawn's modifiers were all skipped and the warning quoted a number up to six Construction levels too high. Modifiers declare their kind now. See traps |
 | The skill warning drops "assigned to improvement" in eight languages | issue #24, open | The four warning strings say "no colonist can improve this" outside English, while the check only ever looked at pawns with the work type switched on. Bound to the #17/#18 locale pass by constraint 11a |
@@ -431,6 +431,51 @@ donated Project RimFactory drone patch that needs a `MayRequire` guard and walks
 requests. Refresh the set with the `workshop-feedback` skill; the dossier holds the full register with
 reporters and dates.
 
+## What this week's issue sweep established
+
+All twelve open issues were closed on 2026-09-18. The findings worth keeping are these.
+
+**`HasJobOnThing` must agree with `JobOnThing`, and the penalty for disagreeing is not local.**
+`JobGiver_Work` uses the first as the scan validator and calls the second on the winner with no
+re-check between. On a desync it leaves `bestTargetOfLastPriority` set, breaks at the next
+`priorityInType` boundary and returns `NoJob`, and `workGiversInOrderNormal` is one flat list across
+every enabled work type, so the pawn stops looking for **any** work. The only diagnostic is
+`Log.ErrorOnce` on the literal key 6112651, shared by every work giver in the game, and `Log.Clear`
+never resets `usedKeys`, so whichever mod desyncs first in a session silences every later one. Never
+treat "no red error in testing" as evidence here.
+
+**`TraverseParms.For(pawn)` means `Danger.Deadly`, not "unset".** The bare overload's default is the
+loosest value. Anywhere this reads as a missing argument, the behaviour is the opposite of what it
+looks like, and fixing it tightens rather than loosens.
+
+**A per-frame cache keyed on `Time.frameCount` alone is wrong, and the reasoning that suggests it is
+sound.** The selection can change part-way through a frame: `UIRoot_Play` draws the gizmo grid and
+then runs `Selector.SelectorOnGUI`, whose mouse-up branch changes the selection, and the next pass
+has the same frame number. Vanilla's `GizmoGridDrawer` keys on the frame **plus** an
+element-by-element snapshot, and `ImproveSelection` copies that key exactly so it can never outlive
+vanilla's. The opposite worry, Layout versus Repaint, is not a hazard: `Time.frameCount` is stable
+across the passes of one frame and vanilla already builds in Layout and draws in Repaint.
+
+**`ContentFinder<T>.Get` is not a dictionary lookup**, it walks every running mod in reverse load
+order before falling through to `Resources.Load`. Cache it in a static, and refresh with an explicit
+`== null`, never `??` or `?.`: a language change or a dev content reload calls
+`UnityEngine.Object.Destroy` on every cached texture, and a destroyed Unity object is fake null, so
+the null-coalescing operators see a live object and draw a destroyed texture.
+
+**A `Job` is pooled.** `JobMaker` hands them out from `SimplePool<Job>` and `Pawn_JobTracker` returns
+them. Anything that caches a `Job` must stop holding it the moment it hands it out.
+
+**A test that reads source or a shell script as text cannot tell a use from a description of one.**
+Two tests failed on their first run against the comment explaining the very thing they forbid, once
+for `cp -r 1.6 release` in `build.sh` and once for `defaultLabel` in the detox mod. Strip comments
+first, and say in the test why.
+
+**Deleting a key from one language is invisible without a test, and so is a whole missing
+`DefInjected` directory.** `Tests/LanguageParityTests.cs` now holds the nine languages to the same
+Keyed set, the same injected def types and the same injected fields, checks every key the C# asks
+for, and fails a language whose injection file is byte-identical to English. That last one is what a
+copied and untranslated file looks like.
+
 ## Build and test
 
 ```sh
@@ -438,7 +483,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 229 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 260 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 
