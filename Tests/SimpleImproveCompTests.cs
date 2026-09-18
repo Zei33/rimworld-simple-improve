@@ -16,17 +16,54 @@ namespace SimpleImprove.Tests
     public class SimpleImproveCompTests
     {
         [Test]
-        public void GetDirectlyHeldThingsReportsNullUntilSomethingIsActuallyHauled()
+        public void GetDirectlyHeldThingsNeverReportsNull()
         {
-            // The regression this guards is expensive and completely silent. Declaring the
-            // component on the defs puts every quality building into ThingRequestGroup.ThingHolder,
-            // and vanilla map traversals call GetDirectlyHeldThings on each of them. The wealth
-            // recount in Map.FinalizeInit does exactly that on every load. If this allocated, every
-            // quality building on the map would get a container it never uses, and would then write
-            // an empty one into every save, because the scribe guard tests the field for null.
+            // This assertion was the other way round until 2026-09-18, and the null it demanded threw
+            // on ordinary mouse-over.
+            //
+            // Declaring the component on the defs puts every quality building into
+            // ThingRequestGroup.ThingHolder, and almost every vanilla traversal that reaches a child
+            // holder null-checks the result. Exactly one does not:
+            // ContainingSelectionUtility.SelectableContainedThings walks ThingWithComps.AllComps and
+            // does foreach (Thing t in (IEnumerable<Thing>)holder.GetDirectlyHeldThings()) with no
+            // guard. A null cast to IEnumerable<Thing> is still null, so the foreach throws. It is
+            // reached from GenUI.ThingsUnderMouse and Selector.SelectableObjectsUnderMouse, i.e. from
+            // hovering, selecting or right-clicking any improvable building with nothing staged in it.
+            //
+            // The cost that motivated the null is real and is handled in PostExposeData instead,
+            // which scribes the container only when it holds something.
             var comp = new SimpleImproveComp();
 
-            Assert.That(comp.GetDirectlyHeldThings(), Is.Null);
+            Assert.That(comp.GetDirectlyHeldThings(), Is.Not.Null);
+        }
+
+        [Test]
+        public void GetDirectlyHeldThingsIsTheSameContainerTheModHaulsInto()
+        {
+            // If these ever diverged, materials would be staged in one container and read from
+            // another, and the mod would report an empty building it had just filled.
+            var comp = new SimpleImproveComp();
+
+            Assert.That(comp.GetDirectlyHeldThings(), Is.SameAs(comp.GetMaterialContainer()));
+        }
+
+        [Test]
+        public void AnEmptyContainerIsNotWrittenIntoTheSave()
+        {
+            // The half of the crash fix that has no other observable. Now that
+            // GetDirectlyHeldThings allocates on demand, every quality building a traversal walks
+            // past ends up with an empty container, so a scribe guard testing for non-null would put
+            // an empty node into every save for every quality building on the map. That is silent,
+            // cumulative, and exactly the cost the old null return existed to avoid.
+            var comp = new SimpleImproveComp();
+
+            Assert.That(SimpleImproveComp.ShouldScribeContainer(comp.GetMaterialContainer()), Is.False);
+        }
+
+        [Test]
+        public void AnAbsentContainerIsNotWrittenIntoTheSave()
+        {
+            Assert.That(SimpleImproveComp.ShouldScribeContainer(null), Is.False);
         }
 
         [Test]
@@ -49,15 +86,6 @@ namespace SimpleImprove.Tests
         }
 
         [Test]
-        public void GetDirectlyHeldThingsReportsTheContainerOnceItExists()
-        {
-            var comp = new SimpleImproveComp();
-            var container = comp.GetMaterialContainer();
-
-            Assert.That(comp.GetDirectlyHeldThings(), Is.SameAs(container));
-        }
-
-        [Test]
         public void TheContainerIsOwnedByTheComponentSoTheHolderTreeCanResolveALocation()
         {
             // Built with the component as owner rather than null, which is what lets
@@ -69,15 +97,29 @@ namespace SimpleImprove.Tests
         }
 
         [Test]
-        public void GetChildHoldersDoesNotAllocateAContainerEither()
+        public void GetChildHoldersDoesNotAllocateAContainer()
         {
+            // Still worth pinning now that GetDirectlyHeldThings does allocate. GetChildHolders is
+            // called by ThingOwnerUtility.AppendThingHoldersFromThings while walking the holder tree,
+            // it has no unguarded caller forcing its hand, and it reports nothing for an empty
+            // container anyway, so there is no reason for it to build one.
+            //
+            // Read through the field rather than through GetDirectlyHeldThings, which would create
+            // the very container this is checking for the absence of.
             var comp = new SimpleImproveComp();
             var children = new System.Collections.Generic.List<IThingHolder>();
 
             comp.GetChildHolders(children);
 
-            Assert.That(comp.GetDirectlyHeldThings(), Is.Null);
+            Assert.That(MaterialContainerField(comp), Is.Null);
             Assert.That(children, Is.Empty);
+        }
+
+        private static object MaterialContainerField(SimpleImproveComp comp)
+        {
+            return typeof(SimpleImproveComp)
+                .GetField("materialContainer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .GetValue(comp);
         }
 
         [Test]

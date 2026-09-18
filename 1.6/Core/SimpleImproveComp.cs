@@ -181,26 +181,36 @@ namespace SimpleImprove.Core
         /// Gets the directly held things for this component, or <c>null</c> when nothing has ever
         /// been hauled here.
         /// </summary>
-        /// <returns>The material container, or <c>null</c>.</returns>
+        /// <returns>The material container, never <c>null</c>.</returns>
         /// <remarks>
-        /// This must read the field and must not call <see cref="GetMaterialContainer"/>. Declaring
-        /// the component on the defs puts every quality building into
-        /// <c>ThingRequestGroup.ThingHolder</c>, because <c>ThingOwnerUtility.ThisOrAnyCompIsThingHolder</c>
-        /// scans <c>def.comps</c> for a compClass implementing <see cref="IThingHolder"/>. Vanilla
-        /// then calls this on every one of them during ordinary map traversals: the wealth recount
-        /// at <c>Map.FinalizeInit</c> goes through <c>ThingOwnerUtility.GetAllThingsRecursively</c>,
-        /// which does exactly that. Allocating lazily here would therefore create a container for
-        /// every quality building on the map on load, and, because the container would then be
-        /// non-null, write an empty one into every save for every quality building.
-        ///
-        /// Returning null is the vanilla contract, not a violation of it: every traversal that
-        /// reaches a child holder null-checks the result, including
-        /// <c>GetAllThingsRecursively</c> and <c>TryGetInnerInteractableThingOwner</c>. The
-        /// unguarded call sites in the game belong to <c>IHaulSource</c>, transport pods and
-        /// caravans, none of which this component is. Callers inside this mod that need a real
-        /// container to put something into use <see cref="GetMaterialContainer"/> instead.
+        /// <para>
+        /// This must never return null, and an earlier version of it did. Declaring the component on
+        /// the defs puts every quality building into <c>ThingRequestGroup.ThingHolder</c>, because
+        /// <c>ThingOwnerUtility.ThisOrAnyCompIsThingHolder</c> scans <c>def.comps</c> for a compClass
+        /// implementing <see cref="IThingHolder"/>. Almost every vanilla traversal that then reaches a
+        /// child holder does null-check the result. Exactly one does not:
+        /// <c>ContainingSelectionUtility.SelectableContainedThings</c> walks
+        /// <c>ThingWithComps.AllComps</c> and does
+        /// <c>foreach (Thing t in (IEnumerable&lt;Thing&gt;)holder.GetDirectlyHeldThings())</c> with no
+        /// guard, and a null cast to <c>IEnumerable&lt;Thing&gt;</c> is still null. It is reached from
+        /// <c>GenUI.ThingsUnderMouse</c> and <c>Selector.SelectableObjectsUnderMouse</c>, so returning
+        /// null threw on ordinary mouse-over, selection and right-click of any improvable building
+        /// with nothing staged in it. <c>Verse.Building</c> is not itself an <see cref="IThingHolder"/>,
+        /// so the component branch is the one that runs.
+        /// </para>
+        /// <para>
+        /// The reasoning that returned null was not wrong about cost, only about safety, so the cost
+        /// is handled where it actually arises. Allocating a small empty <c>ThingOwner</c> per
+        /// improvable building the first time something walks it is cheap; writing one into every save
+        /// for every quality building is not, and <see cref="PostExposeData"/> now scribes the
+        /// container only when it holds something rather than whenever it exists.
+        /// </para>
+        /// <para>
+        /// Vanilla <c>Frame</c> is the precedent: its <c>resourceContainer</c> is built in the
+        /// constructor and is never null.
+        /// </para>
         /// </remarks>
-        public ThingOwner GetDirectlyHeldThings() => materialContainer;
+        public ThingOwner GetDirectlyHeldThings() => GetMaterialContainer();
 
         /// <summary>
         /// Appends any holders nested inside the stored materials.
@@ -544,6 +554,24 @@ namespace SimpleImprove.Core
         }
 
         /// <summary>
+        /// Decides whether the material container is worth writing into the save.
+        /// </summary>
+        /// <param name="container">The container, which may be <c>null</c>.</param>
+        /// <returns><c>true</c> only when there is something in it.</returns>
+        /// <remarks>
+        /// The test is "holds something", not "exists", and the difference is the whole point.
+        /// <see cref="GetDirectlyHeldThings"/> has to allocate on demand, because one vanilla caller
+        /// throws on a null, so any traversal that walks past a building now leaves it with an empty
+        /// container. Writing on non-null would therefore put an empty node into every save for every
+        /// quality building on the map, which is the cost the null return was protecting against in
+        /// the first place.
+        /// </remarks>
+        internal static bool ShouldScribeContainer(ThingOwner container)
+        {
+            return container != null && container.Any;
+        }
+
+        /// <summary>
         /// Saves and loads component data for game save files.
         /// Note: Target quality is now stored in SimpleImproveMapComponent for persistence.
         /// </summary>
@@ -561,11 +589,16 @@ namespace SimpleImprove.Core
             Scribe_Values.Look(ref workDone, "workDone", 0f);
             // Note: targetQuality is now stored in SimpleImproveMapComponent
 
-            // Only write the container when one exists. The component is now on every improvable
-            // building def, so scribing unconditionally would add a node to every quality building
-            // in every save, the overwhelming majority of which have never been marked. An absent
-            // node leaves the field null on load and GetMaterialContainer creates it on demand.
-            if (Scribe.mode != LoadSaveMode.Saving || materialContainer != null)
+            // Only write the container when it actually holds something. The component is on every
+            // improvable building def, so scribing unconditionally would add a node to every quality
+            // building in every save, the overwhelming majority of which have never been marked. An
+            // absent node leaves the field null on load and GetMaterialContainer creates it on demand.
+            //
+            // The test is "holds something", not "exists", because GetDirectlyHeldThings has to
+            // allocate on demand to avoid throwing in ContainingSelectionUtility. Any traversal that
+            // walks past a building now gives it an empty container, and gating on non-null would put
+            // every one of those into the save.
+            if (Scribe.mode != LoadSaveMode.Saving || ShouldScribeContainer(materialContainer))
             {
                 Scribe_Deep.Look(ref materialContainer, "materialContainer", this);
             }
