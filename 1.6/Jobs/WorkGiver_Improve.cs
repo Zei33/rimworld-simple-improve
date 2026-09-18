@@ -97,27 +97,127 @@ namespace SimpleImprove.Jobs
         }
 
         /// <summary>
+        /// The pawn the memo below was built for, or <c>null</c> when it holds nothing.
+        /// </summary>
+        /// <remarks>
+        /// These four fields are instance fields on what is effectively a singleton.
+        /// <c>WorkGiverDef.Worker</c> constructs one <see cref="WorkGiver"/> per def and caches it in
+        /// an <c>[Unsaved]</c> field, so every pawn in the game shares this object. That is why the
+        /// memo is keyed on the pawn rather than assumed to belong to one.
+        /// </remarks>
+        private Pawn memoPawn;
+
+        /// <summary>The <c>forced</c> value the memo was built for.</summary>
+        private bool memoForced;
+
+        /// <summary>The game tick the memo was built on, or -1 when it holds nothing.</summary>
+        private int memoTick = -1;
+
+        /// <summary>The job decided for each thing asked about, including the null decisions.</summary>
+        private readonly Dictionary<Thing, Job> memo = new Dictionary<Thing, Job>();
+
+        /// <summary>
         /// Determines if the specified pawn has a job to do on the given thing.
-        /// Checks for improvement marking and excludes things being deconstructed or uninstalled.
         /// </summary>
         /// <param name="pawn">The pawn to check for available work.</param>
         /// <param name="thing">The thing to check for work availability.</param>
         /// <param name="forced">Whether this is a forced assignment.</param>
         /// <returns><c>true</c> if the pawn has work to do on the thing; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This still answers by building the job, and that is deliberate rather than an omission.
+        /// The issue asked for a cheap field-test predicate here, and a cheap predicate that is looser
+        /// than <see cref="JobOnThing"/> in any respect is not a wasted call, it is a colony-wide
+        /// work stoppage. <c>JobGiver_Work</c> uses this as the scan validator and then calls
+        /// <see cref="JobOnThing"/> on the winner with nothing in between that could re-check it. When
+        /// the two disagree, <c>JobGiver_Work</c> logs once and then, critically, leaves
+        /// <c>bestTargetOfLastPriority</c> and <c>scannerWhoProvidedTarget</c> set. The loop breaks at
+        /// the next <c>priorityInType</c> boundary and returns <c>NoJob</c>, and
+        /// <c>workGiversInOrderNormal</c> is one flat list across every enabled work type, so the pawn
+        /// abandons cleaning, hauling and cooking too, on every job search, for as long as one marked
+        /// building cannot be worked.
+        /// </para>
+        /// <para>
+        /// The diagnostic for that is worse than useless. It is <c>Log.ErrorOnce</c> on the literal key
+        /// 6112651, which every work giver in the game shares, and <c>Log.Clear</c> does not reset
+        /// <c>usedKeys</c>. Whichever mod desyncs first in a session consumes the key and every later
+        /// desync is silent, so "no red error in testing" is not evidence of anything.
+        /// </para>
+        /// <para>
+        /// What the issue actually named, the double evaluation, is removed instead by
+        /// <see cref="JobFor"/>: both methods answer from one computation, so the scan costs one job
+        /// construction per candidate rather than one per candidate plus one more for the winner, and
+        /// the two cannot disagree because there is only one answer. The expensive part of that
+        /// construction, the material search, is separately bounded by a per-tick cache in
+        /// <see cref="FindClosestMaterial"/>.
+        /// </para>
+        /// <para>
+        /// The two cheap tests that used to sit here have moved into <see cref="BuildJob"/> so that
+        /// this method and <see cref="JobOnThing"/> apply exactly the same ones. Keeping the
+        /// deconstruct and uninstall test here alone made this method stricter than
+        /// <see cref="JobOnThing"/>, which is the safe direction but still a disagreement, and a
+        /// disagreement in a method pair whose whole contract is that they agree is worth removing
+        /// even when it is currently harmless.
+        /// </para>
+        /// </remarks>
         public override bool HasJobOnThing(Pawn pawn, Thing thing, bool forced = false)
         {
-            // Check if the thing is being deconstructed or uninstalled
-            if (thing.Map.designationManager.DesignationOn(thing, DesignationDefOf.Deconstruct) != null ||
-                thing.Map.designationManager.DesignationOn(thing, DesignationDefOf.Uninstall) != null)
+            return JobFor(pawn, thing, forced) != null;
+        }
+
+        /// <summary>
+        /// Answers the job question once per pawn, thing, <c>forced</c> value and tick.
+        /// </summary>
+        /// <param name="pawn">The pawn asking.</param>
+        /// <param name="thing">The building being asked about.</param>
+        /// <param name="forced">Whether the player is prioritising this by hand.</param>
+        /// <returns>The job to do, or <c>null</c> when there is none.</returns>
+        /// <remarks>
+        /// <para>
+        /// The memo is dropped whole whenever the pawn, the <c>forced</c> value or the tick changes,
+        /// which covers every way the answer could have moved. Within one tick the inputs a decision
+        /// reads are stable: the scan makes no reservations, <c>CanReserve</c> is a query, and the
+        /// search root is the pawn's position, which cannot change mid-scan.
+        /// </para>
+        /// <para>
+        /// A hit REMOVES the entry rather than leaving it, and that is a correctness requirement, not
+        /// tidiness. <c>JobMaker.MakeJob</c> hands out pooled <c>Job</c> objects from
+        /// <c>SimplePool&lt;Job&gt;</c>, and <c>Pawn_JobTracker</c> returns them to that pool when it
+        /// declines or finishes one. The only job that ever leaves this class is the one a hit
+        /// returns, so removing it on the way out means nothing the memo still holds can be recycled
+        /// underneath it. Entries for candidates that did not win are never handed to anybody, so they
+        /// are never pooled, and they fall away at the next key change.
+        /// </para>
+        /// <para>
+        /// One consequence worth stating because it looks like a bug. On the float menu path,
+        /// <c>FloatMenuOptionProvider_WorkGivers</c> calls <see cref="HasJobOnThing"/> and then
+        /// <see cref="JobOnThing"/> in a single expression, so the second call is a memo hit and does
+        /// not re-run <see cref="BuildJob"/>, and therefore does not re-set
+        /// <c>JobFailReason</c>. The reason set during the first call is still standing, because that
+        /// provider clears the reason once per work giver BEFORE the pair and reads it after, and
+        /// nothing in between clears it. Do not "fix" this by re-setting the reason on a hit.
+        /// </para>
+        /// </remarks>
+        private Job JobFor(Pawn pawn, Thing thing, bool forced)
+        {
+            int tick = Find.TickManager.TicksGame;
+
+            if (memoPawn != pawn || memoForced != forced || memoTick != tick)
             {
-                return false;
+                memo.Clear();
+                memoPawn = pawn;
+                memoForced = forced;
+                memoTick = tick;
+            }
+            else if (memo.TryGetValue(thing, out Job remembered))
+            {
+                memo.Remove(thing);
+                return remembered;
             }
 
-            var improveComp = thing.TryGetComp<SimpleImproveComp>();
-            if (improveComp == null || !improveComp.IsMarkedForImprovement)
-                return false;
-
-            return JobOnThing(pawn, thing, forced) != null;
+            Job job = BuildJob(pawn, thing, forced);
+            memo[thing] = job;
+            return job;
         }
 
         /// <summary>
@@ -130,9 +230,34 @@ namespace SimpleImprove.Jobs
         /// <returns>A job for the pawn to perform, or null if no suitable job is available.</returns>
         public override Job JobOnThing(Pawn pawn, Thing thing, bool forced = false)
         {
+            return JobFor(pawn, thing, forced);
+        }
+
+        /// <summary>
+        /// Decides the job for one building, with no memoisation of its own.
+        /// </summary>
+        /// <param name="pawn">The pawn to assign work to.</param>
+        /// <param name="thing">The thing to work on.</param>
+        /// <param name="forced">Whether this is a forced assignment.</param>
+        /// <returns>A job for the pawn to perform, or null if no suitable job is available.</returns>
+        /// <remarks>
+        /// The marked test comes first because it is the cheapest thing here that can refuse: one
+        /// comp lookup and a bool, against two dictionary lookups into the designation manager. The
+        /// old order paid for both designation lookups on every candidate before asking the question
+        /// that rejects most of them.
+        /// </remarks>
+        private Job BuildJob(Pawn pawn, Thing thing, bool forced)
+        {
             var improveComp = thing.TryGetComp<SimpleImproveComp>();
             if (improveComp == null || !improveComp.IsMarkedForImprovement)
                 return null;
+
+            // Not while something else is already going to take this building apart.
+            if (thing.Map.designationManager.DesignationOn(thing, DesignationDefOf.Deconstruct) != null ||
+                thing.Map.designationManager.DesignationOn(thing, DesignationDefOf.Uninstall) != null)
+            {
+                return null;
+            }
 
             // Check if materials are needed (only if materials are required by settings)
             if (SimpleImproveMod.Settings.RequireMaterials)
@@ -161,7 +286,18 @@ namespace SimpleImprove.Jobs
                         }
                     }
 
-                    JobFailReason.Is($"{"MissingMaterials".Translate(remainingMaterials.Select(m => $"{m.count}x {m.thingDef.label}").ToCommaList())}");
+                    // Only the float menu ever reads this. FloatMenuOptionProvider_WorkGivers is
+                    // the only consumer of JobFailReason in the game, it clears the static once per
+                    // work giver before asking, and it is the only caller that passes forced: true.
+                    // JobGiver_Work never mentions JobFailReason at all, so a reason built during a
+                    // background scan is written to a static nobody reads and then overwritten. The
+                    // guard turns that into no work rather than into a formatted, translated,
+                    // comma-listed string per marked building per pawn per job search.
+                    if (forced)
+                    {
+                        JobFailReason.Is($"{"MissingMaterials".Translate(remainingMaterials.Select(m => $"{m.count}x {m.thingDef.label}").ToCommaList())}");
+                    }
+
                     return null;
                 }
             }
@@ -170,7 +306,11 @@ namespace SimpleImprove.Jobs
             // workSettings.WorkIsActive call.
             if (!ImproveWorkers.IsAssignedToImproving(pawn))
             {
-                JobFailReason.Is("NotAssignedToWorkType".Translate(SimpleImproveDefOf.WorkType_Improving.gerundLabel).CapitalizeFirst());
+                if (forced)
+                {
+                    JobFailReason.Is("NotAssignedToWorkType".Translate(SimpleImproveDefOf.WorkType_Improving.gerundLabel).CapitalizeFirst());
+                }
+
                 return null;
             }
 
@@ -216,14 +356,23 @@ namespace SimpleImprove.Jobs
             switch (WorkerSkill.FirstBlocker(workerSkill, requiredSkill))
             {
                 case ImproveSkillBlocker.NoConstructionSkill:
-                    JobFailReason.Is("SimpleImprove_NoConstructionSkill".Translate(pawn.LabelShort));
+                    if (forced)
+                    {
+                        JobFailReason.Is("SimpleImprove_NoConstructionSkill".Translate(pawn.LabelShort));
+                    }
+
                     return null;
 
                 case ImproveSkillBlocker.SkillTooLow:
                     {
+                        if (!forced)
+                        {
+                            return null;
+                        }
+
                         var pawnSkill = workerSkill.Level;
                         var baseRequiredSkill = SimpleImproveMod.Settings.GetSkillRequirement(targetQuality.Value);
-                        
+
                         if (baseRequiredSkill > pawnSkill)
                         {
                             // Even with bonuses, skill is too low

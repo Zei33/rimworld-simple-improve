@@ -224,7 +224,15 @@ namespace SimpleImprove.Tests
             // Both gates have to survive and the order matters for what the player is told: the site
             // checks set no fail reason at all, so running the skill gate first would replace silence
             // with "skill too low" for a building nobody can reach.
-            List<string> calls = CallNamesIn(typeof(WorkGiver_Improve), nameof(WorkGiver_Improve.JobOnThing));
+            //
+            // This reads BuildJob rather than JobOnThing. Issue #5 moved the decision out of
+            // JobOnThing so that it and HasJobOnThing could answer from one memoised computation and
+            // could no longer disagree; JobOnThing is now a one-line delegate. That is exactly the
+            // shape the repo's own rule warns about, where a call appears to leave a method it has
+            // only moved out of, so the name is spelled as a literal: nameof would not have compiled
+            // and would have made the move visible, which is the whole reason this line is a literal
+            // and not an oversight.
+            List<string> calls = CallNamesIn(typeof(WorkGiver_Improve), "BuildJob");
 
             int site = calls.IndexOf("SimpleImprove.Core.ImproveSite.CanWorkOn");
             int skill = calls.IndexOf("SimpleImprove.Core.WorkerSkill.Of");
