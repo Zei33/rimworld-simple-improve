@@ -68,8 +68,14 @@ namespace SimpleImprove.Jobs
                     return;
                 }
                 
+                // Stop the moment the mark has no work left in it: cancelled, or aimed at a quality
+                // the building already has. The work giver refuses on this same property, so the
+                // two agree and this cannot end a job the giver has just handed out. It is the
+                // safety net for a building that stops being worth improving while a pawn is at it.
+                // Reading the flag alone is what let a Legendary building marked for any
+                // improvement be worked to completion, "fail" and lose its materials every cycle.
                 var comp = targetThing.TryGetComp<SimpleImproveComp>();
-                if (comp == null || !comp.IsMarkedForImprovement)
+                if (comp == null || !comp.HasOutstandingImprovement)
                 {
                     ReadyForNextToil();
                     return;
@@ -147,11 +153,24 @@ namespace SimpleImprove.Jobs
             // is working rather than once per scan, and it is invisible to a search for the call in
             // this method because the compiler hoists the lambda into a nested class.
             //
+            // The work giver no longer makes this as one call. It asks the ideoligion
+            // (ImproveSite.IdeoligionAllows) before its haul branch and the four access checks
+            // (ImproveSite.CanAccess) after it, because that order is what the player reads in the
+            // float menu. CanWorkOn is exactly those two halves, access first, so this still asks what
+            // the giver asked and nothing more.
+            //
             // forced is left at false, which is what the CanConstruct overload defaulted it to. The
-            // work giver passes the real value, so the two disagree about the danger threshold and
-            // about ignoring other pawns' reservations. That asymmetry predates this change and is
-            // preserved rather than quietly corrected, because changing it is a decision about forced
-            // work rather than about the argument shape.
+            // work giver passes the real value, and the two still cannot answer differently here,
+            // because both things forced changes are already settled for a pawn doing this job.
+            // The danger threshold: NormalMaxDanger returns Danger.Deadly while the pawn's current
+            // job is player-forced, so a forced job gets Deadly either way. Other pawns'
+            // reservations: TryMakePreToilReservations reserved the building before any toil ran,
+            // and CanReserve accepts a claimant's own reservation ahead of every test of anybody
+            // else's. The one test ahead of that is for physical-interaction reservations, which
+            // vanilla makes only for bill ingredients and food being eaten, never for furniture.
+            // Vanilla's JobDriver_ConstructFinishFrame has the same shape, calling CanConstruct from
+            // its own FailOn with forced defaulted. An earlier version of this comment said the two
+            // disagreed, which sent an in-game check after a failure that cannot happen.
             improveToil.FailOn(() => !ImproveSite.CanWorkOn(TargetThingA, pawn, forced: false));
             improveToil.WithProgressBar(TargetIndex.A, () => {
                 var comp = TargetComp;

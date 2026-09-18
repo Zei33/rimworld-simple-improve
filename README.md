@@ -98,14 +98,20 @@ or above. Of the seven vanilla mechs only the constructoid does construction wor
 2. Click **Improve** in the gizmo bar.
 3. Choose **Any improvement**, or a target quality.
 
-To unmark, click **Improve** again and choose **Cancel improvement**. The vanilla Architect,
-Orders, Cancel tool also clears the mark, and returns any materials already delivered.
+To unmark, click **Improve** again and choose **Cancel improvement**. The game's own **Cancel**
+button, which appears on any marked building, clears the mark too, as does the Architect, Orders,
+Cancel tool, and both return any materials already delivered.
+
+If a marked building reaches Legendary some other way, through another mod or dev mode, it can no
+longer be improved. Nobody works on it, and its **Improve** button is replaced by **Cancel
+improvement**, which clears the mark and returns the materials.
 
 ### How the work runs
 
 Any colonist with the work type switched on will haul the materials. The skill requirement is
 checked when the improvement work itself is handed out, so a pawn below the requirement can stock a
-building it cannot then work on.
+building it cannot then work on. Ideology is the exception: a colonist whose ideoligion forbids
+building a pew, kneel sheet, kneel pillow or slab bed is not sent to haul for one.
 
 Materials are staged in the building until the work completes. Cancelling returns them.
 

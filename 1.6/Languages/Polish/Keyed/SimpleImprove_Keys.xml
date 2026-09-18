@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>Oznacz do ulepszenia</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>Oznacz przedmioty do poprawy jakości przez wykwalifikowanych pracowników</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>Anuluj ulepszenie</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>Ten budynek jest oznaczony do ulepszenia, ale nie można go już ulepszyć. Anuluje oznaczenie i zwraca dostarczone materiały.</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>Anuluj polecenia ulepszenia i zwróć przechowywane materiały</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>Przedmiot nie może być ulepszony</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>Już oznaczony do ulepszenia</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>Przedmiot nie ma jakości</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>Już w maksymalnej jakości</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>Przedmiot nie może być zbudowany</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>Ulepszenie nieudane! ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>Ulepszono do {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może ulepszyć tego {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Ostrzeżenie: Żaden kolonista przydzielony do ulepszania nie może osiągnąć jakości {0} (wymaga Konstrukcji {1}, lub {2} z inspiracją/rolą produkcyjną).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Legendarne ulepszenia wymagają specjalnych okoliczności takich jak inspiracje lub ideologiczne role specjalistów.</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>Ulepsz</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>Ulepsz (Dowolne)</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>Ulepsz ({0})</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0} ({1})</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>Oznacz ten przedmiot do ulepszenia jakości</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>Oznacz te przedmioty do ulepszenia jakości ({0} pod wpływem)</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Dowolne ulepszenie</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>Ktoś inny już nad tym pracuje.</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>Spowoduje to zastąpienie własnych wymagań umiejętności wartościami z zestawu i nie można tego cofnąć. Kontynuować?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Przechowywane materiały (niewymagane):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Minimalna umiejętność dla {0}: {1}</SimpleImprove_MinimumSkillFor>

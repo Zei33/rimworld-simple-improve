@@ -17,10 +17,12 @@ namespace SimpleImprove.Tests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Almost none of <see cref="ImproveSite.CanWorkOn"/> can be run here. Four of its six checks need
-    /// a spawned <c>Thing</c> on a <c>Map</c>, and the fifth reads <c>Find.IdeoManager</c>. The one
-    /// that can be run is the guard that has to come first, and running it is the whole point: it is
-    /// reachable precisely because it short-circuits before anything that needs the game.
+    /// Most of <see cref="ImproveSite"/> cannot be run here. Four of its six checks need a spawned
+    /// <c>Thing</c> on a <c>Map</c>. Two parts can be run, and each is reachable precisely because it
+    /// returns before anything that needs the game. One is the guard that has to come first. The
+    /// other is the ideoligion check for a worker with no ideoligion, which is every colony mech:
+    /// only the refusal branch reads <c>Find.IdeoManager</c>, and a worker with no ideoligion never
+    /// enters it.
     /// </para>
     /// <para>
     /// The rest is held structurally, by reading the compiled IL. That is not a substitute for
@@ -35,7 +37,8 @@ namespace SimpleImprove.Tests
     public class ImproveSiteTests
     {
         /// <summary>
-        /// Every call <c>ImproveSite.CanWorkOn</c> makes into the game assembly, in IL order.
+        /// Every call <c>ImproveSite</c>'s five checks make into the game assembly, in IL order:
+        /// <see cref="ImproveSite.CanAccess"/>'s first, then <see cref="ImproveSite.IdeoligionAllows"/>'s.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -44,6 +47,13 @@ namespace SimpleImprove.Tests
         /// interesting names: a whitelist pins that the named calls are present and in order and is
         /// blind to anything else arriving or leaving, including a sixth vanilla check quietly added
         /// or an argument conversion quietly dropped.
+        /// </para>
+        /// <para>
+        /// Until the ideoligion check had to be asked before the work giver's haul branch, all
+        /// seventeen were made by one method, <c>CanWorkOn</c>. The list is deliberately unchanged
+        /// by the split into two, so the split is held to losing nothing and inventing nothing:
+        /// the first <see cref="AccessCallCount"/> belong to the access half and the rest to the
+        /// permission half.
         /// </para>
         /// <para>
         /// Five checks, seventeen calls. The extras are what the five are made of.
@@ -82,6 +92,11 @@ namespace SimpleImprove.Tests
             "Verse.AI.JobFailReason.Is",
         };
 
+        /// <summary>
+        /// How many of <see cref="VanillaCallsInOrder"/> belong to <see cref="ImproveSite.CanAccess"/>.
+        /// </summary>
+        private const int AccessCallCount = 6;
+
         [Test]
         public void ABuildingWithNoBlueprintIsRefusedBeforeVanillaIsAsked()
         {
@@ -115,7 +130,27 @@ namespace SimpleImprove.Tests
             Assert.That(building.OccupiedRect().Count(), Is.EqualTo(1), "The building must occupy a cell.");
             Assert.That(building.Map, Is.Null, "An unspawned thing has no map, which is what would throw.");
 
+            // The guard lives in CanAccess, which the work giver calls directly.
+            Assert.That(ImproveSite.CanAccess(building, null, false), Is.False);
+
+            // And through CanWorkOn, which the job driver calls, and which is held to asking access
+            // before permission by the same null worker: IdeoligionAllows opens on worker.Ideo, so
+            // reaching it here throws.
             Assert.That(ImproveSite.CanWorkOn(building, null, false), Is.False);
+        }
+
+        [Test]
+        public void AWorkerWithNoIdeoligionIsAllowed()
+        {
+            // Every colony mech: PawnComponentsUtility builds the ideoligion tracker only for a
+            // humanlike, so Pawn.Ideo is null for a mechanoid. Inverting the null guard (Ideo == null
+            // || !MembersCanBuild) passed the whole suite and would refuse improvement work to every
+            // mech in the colony, and none of the in-game checks uses a mech. Under that mutation
+            // this call enters the refusal branch and throws on Find.IdeoManager.
+            var worker = new Pawn();
+
+            Assert.That(worker.Ideo, Is.Null, "The premise is a worker with no ideoligion.");
+            Assert.That(ImproveSite.IdeoligionAllows(new Building(), worker), Is.True);
         }
 
         [Test]
@@ -150,7 +185,7 @@ namespace SimpleImprove.Tests
 
             Assert.That(
                 blocking.Select(ILCalls.Describe).ToList(),
-                Does.Contain("SimpleImprove.Core.ImproveSite.CanWorkOn"),
+                Does.Contain("SimpleImprove.Core.ImproveSite.CanAccess"),
                 "The IL scan cannot find a call this mod definitely makes, so its report that "
                 + "CanConstruct is absent means nothing.");
 
@@ -187,43 +222,158 @@ namespace SimpleImprove.Tests
             // which was confirmed in game as wanted; losing the Ideology check would quietly ignore a
             // restriction the player's ideoligion imposes.
             //
-            // The order is asserted too, because it is player-visible. Only the Ideology branch sets
-            // a JobFailReason, so a building that is both blocked and forbidden reports nothing today
-            // and would report "only members of X can build" if the checks were reordered.
-            Assembly game = typeof(Thing).Assembly;
+            // The five now live in two methods, because the work giver has to ask permission before
+            // it hauls and access after. Each half is asserted whole, and the two are slices of one
+            // unchanged list, so moving a check from one half to the other fails here too: the
+            // ideology check drifting back into CanAccess would put it behind the haul again.
+            //
+            // Within each half the order is vanilla's and is asserted. Inside the access half it is
+            // no longer visible to a player, since none of those four writes a reason and so any of
+            // them refusing reads the same. It is pinned anyway because vanilla's order is what
+            // ImproveSite claims to follow, and a reorder should have to edit this list on purpose.
+            List<string> access = VanillaCallsIn(nameof(ImproveSite.CanAccess));
+            List<string> permission = VanillaCallsIn(nameof(ImproveSite.IdeoligionAllows));
 
-            List<string> vanilla = CallsIn(typeof(ImproveSite), nameof(ImproveSite.CanWorkOn))
-                .Where(called => called.DeclaringType.Assembly == game)
-                .Select(ILCalls.Describe)
-                .ToList();
-
-            Assert.That(vanilla, Is.EqualTo(VanillaCallsInOrder.ToList()));
+            Assert.That(access, Is.EqualTo(VanillaCallsInOrder.Take(AccessCallCount).ToList()));
+            Assert.That(permission, Is.EqualTo(VanillaCallsInOrder.Skip(AccessCallCount).ToList()));
         }
 
         [Test]
-        public void BothCallSitesGoThroughTheSameReplacement()
+        public void CanWorkOnAsksBothHalvesInVanillasOrderAndNothingElse()
+        {
+            // CanWorkOn is the job driver's re-check, run on every tick of the work. It must ask
+            // exactly what the work giver asks: fewer and the driver keeps a pawn on a building its
+            // ideoligion forbids, more and it abandons a job the giver has just handed out. The
+            // whole call list is asserted, not filtered to game calls, because both of the calls it
+            // should make are the mod's own.
+            List<string> calls = CallNamesIn(typeof(ImproveSite), nameof(ImproveSite.CanWorkOn));
+
+            Assert.That(
+                calls,
+                Is.EqualTo(new List<string>
+                {
+                    "SimpleImprove.Core.ImproveSite.CanAccess",
+                    "SimpleImprove.Core.ImproveSite.IdeoligionAllows",
+                }));
+        }
+
+        [Test]
+        public void TheWorkGiverAndTheJobDriverAskTheSameFiveQuestions()
         {
             // The work giver decides whether to hand out the job and the job driver re-checks on
             // every tick of it, so the two have to agree or the driver fails a job the giver just
-            // gave. They agreed before this change by both calling CanConstruct with checkSkills
-            // false, and the driver's half is easy to miss: the call lives in a lambda, and issue #7
-            // named only the work giver.
-            List<string> callers = ILCalls
-                .CalledAnywhereInTheMod(typeof(ImproveSite), nameof(ImproveSite.CanWorkOn))
-                .Select(ILCalls.Describe)
-                .ToList();
+            // gave. They agreed before issue #7 by both calling CanConstruct with checkSkills false,
+            // and the driver's half is easy to miss: the call lives in a lambda, and issue #7 named
+            // only the work giver.
+            //
+            // Since the ideoligion is asked before the haul, the giver no longer asks everything in
+            // one call, so agreement is held one half at a time: each half is asked by the giver's
+            // BuildJob and by CanWorkOn, and by nothing else, and CanWorkOn is asked by the driver
+            // alone. CanWorkOnAsksBothHalvesInVanillasOrderAndNothingElse holds what CanWorkOn does
+            // with them.
+            List<string> driver = CallersOf(nameof(ImproveSite.CanWorkOn));
 
-            Assert.That(callers, Has.Count.EqualTo(2), "Expected exactly the work giver and the job driver.");
-            Assert.That(callers, Has.Some.StartsWith("SimpleImprove.Jobs.WorkGiver_Improve"));
-            Assert.That(callers, Has.Some.StartsWith("SimpleImprove.Jobs.JobDriver_Improve"));
+            Assert.That(driver, Has.Count.EqualTo(1), "Expected the job driver alone. Callers: " + string.Join(", ", driver));
+            Assert.That(driver, Has.Some.StartsWith("SimpleImprove.Jobs.JobDriver_Improve"));
+
+            foreach (string half in new[] { nameof(ImproveSite.CanAccess), nameof(ImproveSite.IdeoligionAllows) })
+            {
+                Assert.That(
+                    CallersOf(half),
+                    Is.EquivalentTo(new[]
+                    {
+                        "SimpleImprove.Core.ImproveSite.CanWorkOn",
+                        "SimpleImprove.Jobs.WorkGiver_Improve.BuildJob",
+                    }),
+                    "ImproveSite." + half + " is not asked by exactly the work giver and the job driver's check.");
+            }
+        }
+
+        [Test]
+        public void TheWorkGiverAsksPermissionBeforeItHaulsAndAccessAfter()
+        {
+            // The ideoligion is the one refusal that never clears, so it is asked before any haul:
+            // asked after, as it was until this change, a colonist whose ideoligion forbids a pew
+            // was sent to carry the whole cost to it and could then never improve it. The four access
+            // checks are the opposite case. They write no fail reason, so they are asked after the
+            // haul branch and after the work type test, where the float menu's "No path", "Missing"
+            // and "Not assigned" readings come from the tests ahead of them. Asked earlier, each of
+            // those readings becomes no line at all, and the first two were confirmed in game.
+            //
+            // IL order is not execution order, so this pins that each call appears where it should
+            // rather than that it runs there. BuildJob is a chain of early returns with one loop in
+            // it, and the loop's body is emitted where it is written, so for this method the two
+            // agree. What it does not pin is that the result is used: discarding either answer is
+            // invisible here and is an in-game check.
+            //
+            // The first MakeJob is the haul job. The improve job is the last call in the method.
+            List<string> calls = CallNamesIn(typeof(WorkGiver_Improve), "BuildJob");
+
+            const string Permission = "SimpleImprove.Core.ImproveSite.IdeoligionAllows";
+            const string Access = "SimpleImprove.Core.ImproveSite.CanAccess";
+
+            int permission = calls.IndexOf(Permission);
+            int available = calls.IndexOf("RimWorld.ItemAvailability.ThingsAvailableAnywhere");
+            int search = calls.IndexOf("SimpleImprove.Jobs.WorkGiver_Improve.FindClosestMaterial");
+            int haul = calls.IndexOf("Verse.JobMaker.MakeJob");
+            int assigned = calls.IndexOf("SimpleImprove.Core.ImproveWorkers.IsAssignedToImproving");
+            int access = calls.IndexOf(Access);
+
+            string all = " Calls: " + string.Join(", ", calls);
+
+            Assert.That(permission, Is.GreaterThanOrEqualTo(0), "BuildJob no longer asks the ideoligion." + all);
+            Assert.That(available, Is.GreaterThanOrEqualTo(0), "BuildJob no longer asks whether material exists." + all);
+            Assert.That(search, Is.GreaterThanOrEqualTo(0), "BuildJob no longer searches for material." + all);
+            Assert.That(haul, Is.GreaterThanOrEqualTo(0), "BuildJob no longer makes a job." + all);
+            Assert.That(assigned, Is.GreaterThanOrEqualTo(0), "BuildJob no longer tests the work type." + all);
+            Assert.That(access, Is.GreaterThanOrEqualTo(0), "BuildJob no longer checks access." + all);
+
+            Assert.That(calls.Count(call => call == Permission), Is.EqualTo(1), "The ideoligion is asked twice." + all);
+            Assert.That(calls.Count(call => call == Access), Is.EqualTo(1), "Access is checked twice." + all);
+            Assert.That(
+                calls, Does.Not.Contain("SimpleImprove.Core.ImproveSite.CanWorkOn"),
+                "BuildJob asks CanWorkOn, which re-asks the ideoligion and moves the access checks to "
+                + "wherever that call sits.");
+
+            Assert.That(permission, Is.LessThan(available), "The ideoligion is asked after the material test." + all);
+            Assert.That(permission, Is.LessThan(haul), "The ideoligion is asked after the haul job is made." + all);
+            Assert.That(access, Is.GreaterThan(search), "Access is checked ahead of the haul branch." + all);
+            Assert.That(access, Is.GreaterThan(assigned), "Access is checked ahead of the work type test." + all);
+        }
+
+        [Test]
+        public void TheWorkGiverAsksTheIdeoligionOnlyAfterTheSilentRefusals()
+        {
+            // The other side of the ideoligion's position. It is the one check ahead of the haul
+            // branch that writes a reason, so everything that refuses silently has to come before
+            // it: a building with no work left in its mark, and one about to be deconstructed or
+            // uninstalled, must show no improving line at all rather than a greyed "Only <name>s
+            // can build" that invites the player to fix something that does not matter. Moving the
+            // ideoligion to the top of BuildJob passed the whole suite.
+            List<string> calls = CallNamesIn(typeof(WorkGiver_Improve), "BuildJob");
+
+            int outstanding = calls.IndexOf("SimpleImprove.Core.SimpleImproveComp.get_HasOutstandingImprovement");
+            int lastDesignation = calls.LastIndexOf("Verse.DesignationManager.DesignationOn");
+            int permission = calls.IndexOf("SimpleImprove.Core.ImproveSite.IdeoligionAllows");
+
+            string all = " Calls: " + string.Join(", ", calls);
+
+            Assert.That(outstanding, Is.GreaterThanOrEqualTo(0), "BuildJob no longer asks whether the mark has work left." + all);
+            Assert.That(
+                calls.Count(call => call == "Verse.DesignationManager.DesignationOn"), Is.EqualTo(2),
+                "BuildJob no longer looks for both the deconstruct and the uninstall designation." + all);
+            Assert.That(permission, Is.GreaterThanOrEqualTo(0), "BuildJob no longer asks the ideoligion." + all);
+
+            Assert.That(outstanding, Is.LessThan(permission), "The ideoligion is asked ahead of the outstanding test." + all);
+            Assert.That(lastDesignation, Is.LessThan(permission), "The ideoligion is asked ahead of the designation tests." + all);
         }
 
         [Test]
         public void TheWorkGiverStillChecksTheSiteBeforeItChecksTheSkill()
         {
-            // Both gates have to survive and the order matters for what the player is told: the site
-            // checks set no fail reason at all, so running the skill gate first would replace silence
-            // with "skill too low" for a building nobody can reach.
+            // Both gates have to survive and the order matters for what the player is told: the
+            // access checks set no fail reason at all, so running the skill gate first would replace
+            // silence with "skill too low" for a building nobody can reach.
             //
             // This reads BuildJob rather than JobOnThing. Issue #5 moved the decision out of
             // JobOnThing so that it and HasJobOnThing could answer from one memoised computation and
@@ -234,10 +384,10 @@ namespace SimpleImprove.Tests
             // and not an oversight.
             List<string> calls = CallNamesIn(typeof(WorkGiver_Improve), "BuildJob");
 
-            int site = calls.IndexOf("SimpleImprove.Core.ImproveSite.CanWorkOn");
+            int site = calls.IndexOf("SimpleImprove.Core.ImproveSite.CanAccess");
             int skill = calls.IndexOf("SimpleImprove.Core.WorkerSkill.Of");
 
-            Assert.That(site, Is.GreaterThanOrEqualTo(0), "The work giver no longer checks the site at all.");
+            Assert.That(site, Is.GreaterThanOrEqualTo(0), "The work giver no longer checks access to the site at all.");
             Assert.That(skill, Is.GreaterThanOrEqualTo(0), "The work giver no longer reads the worker's skill.");
             Assert.That(site, Is.LessThan(skill));
         }
@@ -370,6 +520,24 @@ namespace SimpleImprove.Tests
             }
 
             return Math.Abs(result);
+        }
+
+        private static List<string> VanillaCallsIn(string improveSiteMethod)
+        {
+            Assembly game = typeof(Thing).Assembly;
+
+            return CallsIn(typeof(ImproveSite), improveSiteMethod)
+                .Where(called => called.DeclaringType.Assembly == game)
+                .Select(ILCalls.Describe)
+                .ToList();
+        }
+
+        private static List<string> CallersOf(string improveSiteMethod)
+        {
+            return ILCalls
+                .CalledAnywhereInTheMod(typeof(ImproveSite), improveSiteMethod)
+                .Select(ILCalls.Describe)
+                .ToList();
         }
 
         private static List<string> CallNamesIn(Type declaringType, string methodName)

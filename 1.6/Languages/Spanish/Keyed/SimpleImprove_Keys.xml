@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>Designar para mejora</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>Marcar objetos para que trabajadores especializados mejoren su calidad</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>Cancelar mejora</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>Este edificio está marcado para mejora, pero ya no puede mejorarse. Cancela la marca y devuelve los materiales entregados.</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>Cancelar órdenes de mejora y devolver materiales almacenados</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>El objeto no puede ser mejorado</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>Ya está marcado para mejora</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>El objeto no tiene calidad</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>Ya está en la calidad máxima</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>El objeto no puede ser construido</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>¡Mejora falló! ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>¡Mejorado a {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Advertencia: Ningún colono asignado a la mejora puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Advertencia: Ningún colono asignado a la mejora puede mejorar este {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Advertencia: Ningún colono asignado a la mejora puede alcanzar calidad {0} (requiere Construcción {1}, o {2} con inspiración).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Advertencia: Ningún colono asignado a la mejora puede alcanzar calidad {0} (requiere Construcción {1}, o {2} con inspiración/rol de producción).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Las mejoras legendarias requieren circunstancias especiales como inspiraciones o roles especialistas ideológicos.</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>Mejorar</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>Mejorar (Cualquiera)</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>Mejorar ({0})</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0} ({1})</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>Marcar este objeto para mejora de calidad</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>Marcar estos objetos para mejora de calidad ({0} afectados)</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Cualquier mejora</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>Otra persona ya está trabajando en esto.</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>Esto sustituirá tus requisitos de habilidad personalizados por los del ajuste predefinido y no se puede deshacer. ¿Continuar?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Materiales almacenados (no necesarios):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Habilidad mínima para {0}: {1}</SimpleImprove_MinimumSkillFor>

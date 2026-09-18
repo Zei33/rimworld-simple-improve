@@ -26,6 +26,8 @@ building stays marked and the loop repeats until a roll reaches it.
 | `ImprovableDefs` | `1.6/Core/ImprovableDefs.cs` | `Qualifies` and `DeclareCompOn`: which defs carry the comp. Pure, and well covered |
 | `WorkerSkill` | `1.6/Core/WorkerSkill.cs` | The Construction level a worker is judged on, and `FirstBlocker` over it. `Of(Pawn)` takes the readings and decides nothing; `From` and `FirstBlocker` decide everything and are pure |
 | `ImproveWorkers` | `1.6/Core/ImproveWorkers.cs` | `IsAssignedToImproving`, the one place the work-settings guard lives |
+| `JobMemo<TAsker, TSubject, TAnswer>` | `1.6/Core/JobMemo.cs` | The whole hand-over between `WorkGiver_Improve.HasJobOnThing` and `JobOnThing`, as `Answer`: builds through the giver's `BuildJob`, never holds a refusal, hands each job out once, and forgets everything, the giver's unreachable-material cache included, on any change of pawn, `forced` or tick. `JobFor` is one call to it. Pure, and covered |
+| `ImproveTarget` | `1.6/Core/ImproveTarget.cs` | `IsOutstanding`: whether a mark still has work ahead of it, which the work giver, both job drivers and the marking path ask. `CanBeOffered`: whether a building gets the Improve button at all, which the gizmo and the selection filter ask. Pure, and covered |
 | `Tests/` | NUnit, net472 | Not in the sln, excluded from the mod's compile items. See `Tests/README.md` |
 | `ImproveGroup` | same file, L16-26 | DTO grouping the current selection for one shared gizmo |
 | `SimpleImproveMapComponent : MapComponent` | `1.6/Core/SimpleImproveMapComponent.cs` | Colony mech work priorities on `FinalizeInit`, plus a read-only `Dictionary<int, QualityCategory>` that migrates target qualities out of a pre-1.0.9 save and is discarded at the end of that same load |
@@ -34,7 +36,6 @@ building stays marked and the loop repeats until a roll reaches it.
 | `MaterialStorage : ThingOwner<Thing>` | `1.6/Utils/MaterialStorage.cs` | Accepts only outstanding need. Built with `base(comp, false)`, so `Owner` is the comp and the holder tree reaches it |
 | `WorkGiver_Improve : WorkGiver_Scanner` | `1.6/Jobs/WorkGiver_Improve.cs` | Emits `Job_HaulToImprove` then `Job_Improve` |
 | `JobDriver_HaulToImprove`, `JobDriver_Improve` | `1.6/Jobs/` | Haul-to-container, and the work toil that accrues `WorkDone` |
-| `Designator_MarkForImprovement`, `Designator_CancelImprovement` | `1.6/Designators/` | Dead code, registered by nothing (see defects) |
 
 Defs: `Designation_Improve`, `WorkType_Improving` (naturalPriority 500, Construction),
 `WorkGiver_Improve` (priorityInType 10), `Job_Improve`, `Job_HaulToImprove`.
@@ -193,9 +194,10 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   be worth to somebody who had it. Both go through one `RequirementForBonus`, so there is one clamp
   and one table lookup rather than two of each.
 - **The best case scans `FreeColonistsSpawned`, not `ImproveWorkers.PotentialOnMap`, and that is
-  deliberate.** The two call sites use `PotentialOnMap` when deciding whether to warn, because a
-  colony mech can do the work. The bonus scan excludes mechs because a mech can hold neither bonus,
-  and the reason is not in the quality roll. `QualityUtility.GenerateQualityCreatedByPawn` reads
+  deliberate.** The one call site, `CheckAndShowTargetQualitySkillWarning`, uses `PotentialOnMap`
+  when deciding whether to warn, because a colony mech can do the work (the designator that was the
+  second call site was deleted on 2026-09-18). The bonus scan excludes mechs because a mech can hold
+  neither bonus, and the reason is not in the quality roll. `QualityUtility.GenerateQualityCreatedByPawn` reads
   `pawn.InspirationDef` with **no race test**, and its `IsMechanoid` ternary picks the skill level
   and nothing else, so that method would happily add two tiers to an inspired mechanoid. The gate is
   upstream: `InspirationWorker.InspirationCanOccur` rejects `!pawn.IsColonist` unless the def sets
@@ -224,6 +226,13 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
     directly: `FirstBlockingThing`, `CanTouchTargetFromValidCell`, `CanReserveAndReach`, `IsBurning`
     and `Ideo.MembersCanBuild`. The skill block is the one this mod bypasses on purpose, and the
     trailing blueprint-or-frame block is dead code for something that already exists.
+  - **The five are asked at two points, and the split is the order players read.**
+    `ImproveSite.IdeoligionAllows` is asked before the haul branch, because it is the one refusal that
+    never clears: asked last, it let a colonist whose ideoligion forbids a pew or a slab bed haul the
+    whole cost to it. `ImproveSite.CanAccess` is asked after the haul branch and the work type test,
+    because its four checks write no reason and the "No path" and "Missing" readings come from the
+    tests ahead of them. Do not move the access checks up to match vanilla's delivery givers.
+    `CanWorkOn` is both halves, access first, and only the job driver calls it.
   - **The cost is Humanoid Alien Races.** Most postfixes on this method never answered for a finished
     building anyway: Vanilla Expanded Framework's three bail on a null `entityDefToBuild` and Alpha
     Genes' compares it against a def, so it is false for the very building it gates. HAR's is
@@ -249,13 +258,47 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   `Event.current.type` because a click on a preset button has already consumed the event, and
   `SimpleImproveMod.WriteSettings` is the backstop for closing the window, because
   `Dialog_ModSettings.PreClose` calls it on every exit.
-- The gizmo acts on the selection, not on `parent`. `CompGetGizmosExtra` (`:677`) re-analyses the
-  whole of `Find.Selector` once per selected comp per frame and only the group `Representative` yields
-  a gizmo. `ApplyQualityTargetToGroup` deliberately applies to every selected building when the acting
-  group is already marked and more than one group exists. `ShowQualityTargetFloatMenu` and
-  `GetImproveGizmoLabel` are the older single-building path, now unreachable.
+- The gizmo acts on the selection, not on `parent`. `CompGetGizmosExtra` takes its groups from
+  `ImproveSelection.Current()`, which analyses the whole of `Find.Selector` once per frame (issue #19),
+  and only the group `Representative` yields a gizmo. `ApplyQualityTargetToGroup` deliberately
+  applies to every selected building when the acting group is already marked and more than one group
+  exists. The older single-building path, `ShowQualityTargetFloatMenu` and `GetImproveGizmoLabel`, had
+  no callers and was deleted on 2026-09-18 with the two designators. `Tests/ReachabilityTests.cs` now
+  fails on a private or internal method nothing calls, or a designator, work giver or job driver no
+  shipped def names.
+- **A count shown to the player is part of one translated sentence, never a suffix after
+  `Translate()`.** The group Improve tooltip appended the literal English " (N items)" in all nine
+  languages until 2026-09-18. `SimpleImprove_GizmoTooltipGroup` carries the count as `{0}`, worded
+  after vanilla's `CountToDesignate` in each language in a form that does not inflect, and a test
+  pins every string that method loads. The button label's " (N)" was left in code at first, being
+  digits only, and that was wrong too: it fixed the punctuation for every language, so Chinese and
+  Japanese labels closing in fullwidth parentheses gained an ASCII pair after a space. It goes
+  through `SimpleImprove_GizmoLabelCount` now. Both read `ImproveGroup.ShowsCount`, so the label and
+  the tooltip start counting at the same size.
 - `MaterialStorage.GetCountCanAccept` returns 0 unless `IsMarkedForImprovement`, so anything that
   loses the marked flag also makes the container refuse deliveries.
+- **A mark is work only while its target is ahead of the building, and the flag does not say so.**
+  `SimpleImproveComp.HasOutstandingImprovement` is the flag plus `ImproveTarget.IsOutstanding`
+  (below the target, or below Legendary for any improvement), and every decision to do work reads
+  it: `WorkGiver_Improve.BuildJob` before the haul branch, the `JobDriver_Improve` tick and the
+  `JobDriver_HaulToImprove` fail condition. Until 2026-09-18 all three read the flag, so a Legendary
+  building marked for any improvement was hauled for and worked forever, and every cycle's
+  `CompleteImprovement` failed and destroyed the delivered cost. Such a mark is refused, never
+  cleared by the giver: a scan validator must not mutate, and clearing drops materials and ends jobs
+  through the `Notify_Removing` prefix. The player's way out at Legendary is the stranded cancel
+  button; below Legendary, where a target has merely been reached or passed, the building keeps its
+  ordinary Improve button, and the way out is "Cancel improvement" at the top of its menu, or a
+  higher target. Vanilla's Cancel works on both. Marking
+  goes through `TryMarkFor`, and the `IsMarkedForImprovement` setter refuses any unmarked-to-marked
+  transition with nothing ahead, which closed the group menu's "Any improvement" race.
+- **A Masterwork building marked for any improvement, or aimed at Legendary, is still a material
+  sink for most pawns, and that is not fixed.** `QualityUtility.GenerateQualityCreatedByPawn` clamps
+  the base roll to Awful to Masterwork; only Inspired Creativity (+2) or an Ideology production role
+  offset reaches Legendary. So every cycle by a pawn with neither is a guaranteed "Improvement
+  failed!" that destroys the full cost, and the default skill table's 20 for Legendary admits exactly
+  such a pawn. It is a question about the pawn, not the mark, so it was left out of `ImproveTarget`
+  deliberately; it needs a decision about refusing a worker whose best roll cannot beat the current
+  quality.
 - `ThingCountNeeded` (`:258`) reads `cachedMaterialsNeeded` without populating it, and the haul
   deposit toil (`JobDriver_HaulToImprove.cs:147`) sizes its transfer from it, so the amount moved
   depends on an earlier unrelated `GetTotalMaterialCost()` call on the same comp instance.
@@ -344,9 +387,11 @@ attach the comp and postfixed `Game.InitNewGame`/`Game.LoadGame` to re-attach it
   in #18, and pick vanilla's term.
 - Translation keys are not named after what they display: `SimpleImprove_PresetVeryEasy` renders
   "Apprentice", `...Easy` "Novice", `...Normal` "Default", `...Hard` "Master", `...Expert` "Artisan".
-  The preset enum values are newer than the keys, so change the key values, not the key names. 21 of
-  the 56 keyed strings in each of the nine locales are orphaned, including every
-  `SimpleImprove_Preset*Tooltip` and the keys for the removed calculator.
+  The preset enum values are newer than the keys, so change the key values, not the key names. No
+  keyed string is orphaned as of 2026-09-18: the last eleven went then, ten that only the dead
+  designators used and `SimpleImprove_TargetReserved`, which was set only where `CanReserve`
+  ignores other pawns' reservations and so could never be true. `LanguageParityTests` reads the
+  compiled IL and fails on a declared key nothing loads.
 - No `DefInjected/WorkGiverDef/` exists in any of the nine languages, so the `[MustTranslate]`
   `label`, `verb` and `gerund` on `WorkGiver_Improve` render English in every non-English game. Eight
   more user-facing strings are hardcoded English: `SimpleImproveComp.cs:496,520,526,532` and
@@ -370,6 +415,14 @@ the work type (issue #8), the work giver scanning every artificial building on e
 (issue #3), the null container handed to the selection code (issue #22), and the staged materials
 being dropped into a null map, stranded on uninstall, or losing their target quality (issues #10,
 #11 and #13 as one commit, with #12 closed as overtaken).
+
+All twelve in-game checks in `Tests/README.md` passed on 2026-09-18 against the 1.1.0 build at
+`d103316`. Working out exact procedures for six of them corrected the premise of #23 and turned up
+the four defects at the foot of the table below, plus more dead code; all were fixed the same day,
+without issues. **Those fixes are not in the build the session read**, so only the six settings
+checks (1, 2, 3, 7, 11, 12) still stand. Checks 4, 5, 6, 8, 9 and 10 exercise the work giver, the
+job driver and the gizmo's gate, which the fixes rewrote, and are owed again on the build that ships
+together with the never-run checks 13 to 16. `Tests/README.md` says which reading each one needs.
 
 One residual from that last commit, checked and left alone. A gravship jump leaves the old map's
 designation manager holding a `Designation_Improve` whose target thing is now on another map.
@@ -406,12 +459,17 @@ consistent. The same applies to anything else that puts a thing in a container.
 | ~~Chairs cannot be improved~~ | fixed 2026-09-17, confirmed in game | Was: `CanConstruct(..., checkSkills: true, ...)` enforcing `constructionSkillPrerequisite`, which `DiningChair` (4), `Armchair` (5) and `Couch` (5) declare and beds, stools and dressers do not. There is no `checkSkills` argument anywhere in the mod since #7: the block that read it is not transcribed into `ImproveSite` at all, so the regression cannot return by flipping a flag |
 | ~~Unguarded `pawn.skills` dereference~~ | fixed 2026-09-18, issue #9 | Was: any non-humanlike worker NREs, every tick during the job. All five sites and both `workSettings` sites now go through `WorkerSkill` and `ImproveWorkers` |
 | ~~Mechs can never take the work type~~ | fixed 2026-09-18, issue #8 | Was: `Mech_Constructoid.mechEnabledWorkTypes` lists only `Construction`. `1.6/Patches/MechWorkTypes.xml` appends the improving work type to it |
-| Both `Designator` classes are dead code | `1.6/Designators/Designator_MarkForImprovement.cs:14` | No `DesignationCategoryDef` in the mod's source or its git history. The shipped docs no longer advertise the tab (issue #4, #20); the nine generated store pages still do, and that copy belongs to `workshop-content-builder` |
+| ~~Both `Designator` classes are dead code~~ | fixed 2026-09-18, no issue | Deleted, along with the two uncalled single-building gizmo methods, `ShowQualityTargetFloatMenu` and `GetImproveGizmoLabel`, the unreachable `SimpleImprove_TargetReserved` reason, and every key only they used, from all nine languages. No `DesignationCategoryDef` ever existed in the mod's source or its history, so the Architect tab they implied was never built; the shipped docs and the generated store pages no longer advertise it |
 | ~~Legendary skill requirement unreachable~~ | fixed 2026-09-18, issue #14 | Was: `Mathf.Clamp(baseQuality, 0, 5)` indexed the skill table while `QualityCategory.Legendary` is 6, so the configured Legendary number was never read. The bound is `HighestQualityIndex` now. Raises an ordinary pawn's Default requirement from 18 to 20: a live balance change, and a pawn with an inspiration or a role bonus was already getting the right number |
 | ~~The best case drops the production specialist when inspired~~ | fixed 2026-09-18, issue #16 | Was: the best-case scan used the pawn's inspiration state as a proxy for which modifier it held, so an inspired pawn's modifiers were all skipped and the warning quoted a number up to six Construction levels too high. Modifiers declare their kind now. See traps |
-| The skill warning drops "assigned to improvement" in eight languages | issue #24, open | The four warning strings say "no colonist can improve this" outside English, while the check only ever looked at pawns with the work type switched on. Bound to the #17/#18 locale pass by constraint 11a |
+| ~~A marked building that can no longer be improved has no way to cancel the mark~~ | fixed 2026-09-18, commit `7840f4b`, issue #23; premise corrected the same day | **The premise was wrong.** `Designation_Improve` has never set `designateCancelable`, which defaults true, so vanilla's reverse `Designator_Cancel` has always put "Cancel" on the gizmo bar of every marked building. `7840f4b` added a second red-X button, "Cancel improvement", whose tooltip says why the Improve button went away; its C hotkey never fires, because vanilla's Cancel is drawn first. The Legendary state is not reachable without dev tools, another mod, or the Improve-menu race below. What #23 missed was that a stranded building was still worked. Confirmed in game 2026-09-18 |
+| ~~The skill warning drops "assigned to improvement" in eight languages~~ | fixed 2026-09-18, commit `1ddb30c`, issue #24 | Was: the four warning strings said "no colonist can improve this" outside English, while the check only ever looked at pawns with the work type switched on. The qualifier is in all eight now; no C# or key change |
 | ~~The material cost percentage cannot be typed~~ | fixed 2026-09-18, issue #15 | Was: three defects locking each other in. The field rewrote its own buffer to the clamped value on every keystroke, `ResetToDefaults` wrote the multiplier into a percentage buffer, and the clamp, the tooltip and the store copy named three different ranges. See traps |
 | Two unrelated DLLs ship inside the published mod | fixed in the repo 2026-09-17 | The 17 Aug 2025 Workshop file carries `ISharpZipLib.dll` and `com.rlabrecque.steamworks.net.dll` beside `SimpleImprove.dll`, and RimWorld loads them as mod assemblies for all 6356 subscribers. `build.sh` now deletes everything in the staged output bar `SimpleImprove.dll` and every csproj `<Reference>` is `<Private>false</Private>`, so the repo no longer produces them. Live until the next upload, so it is a reason to ship one |
+| ~~A stranded mark is worked forever and destroys its materials every cycle~~ | fixed 2026-09-18, no issue; found while writing in-game check 8 | Was: `BuildJob` and the job driver's tick gated only on the mark, and at Legendary `CompleteImprovement` always takes the failure branch, so the colony hauled the full cost in, showed "Improvement failed!", destroyed the materials without clearing the mark, and started again. Present in 1.0.8. The Improve menu's "Any improvement" could also re-mark a building a colonist finished at Legendary while the menu was open, because its options capture the selection and the game keeps running. The work giver now refuses such a building, the driver stops on it and marking refuses it, and nothing on those paths destroys staged materials. A target already reached or passed cost the same on every roll that did not beat it. Needs a release note: such buildings are no longer worked, and what was delivered stays inside until the mark is cancelled |
+| ~~A second right-click in the same paused tick loses the greyed reason~~ | fixed 2026-09-18, no issue | Was: the `JobFor` memo stored a null answer, the float menu never calls `JobOnThing` after a false `HasJobOnThing`, and the tick does not move while paused, so the next right-click by the same pawn on the same building got the stored null with no reason and showed no line, or no menu. A regression from `01b0bc2` that never shipped: 1.0.8 had no memo |
+| ~~An ideoligion that forbids a building still sends its members to haul for it~~ | fixed 2026-09-18, no issue | Was: `BuildJob` offered the haul job before the Ideology `MembersCanBuild` gate, so a colonist whose ideoligion forbids one of the five forbiddable defs (Pew, KneelSheet, KneelPillow, SlabBed, SlabDoubleBed) hauled the full cost to a building it could never improve, in the background and from the menu. Present in 1.0.8. The gate runs first now; reach, blocking and reservation keep their order, because that order produces the "No path" and "Missing" readings confirmed in game |
+| ~~The Improve tooltip says "items" in English in every language~~ | fixed 2026-09-18, no issue | Was: `GetGroupGizmoDesc` appended `$" ({count} items)"` outside `Translate()` for any group of two or more. Present in 1.0.8. It is a keyed string in all nine languages now, worded so it does not inflect with the number. The button label's own " (N)" went into `SimpleImprove_GizmoLabelCount` in the review of that fix, so Chinese and Japanese can use fullwidth parentheses |
 
 ## Open user reports
 
@@ -422,7 +480,7 @@ reply was 23 Sep 2025. The four that carry the most weight:
 |---|---|---|
 | Scans every building even with nothing marked | IQ250, 19 Aug 2025; KahirDragoon, 14 Sep 2026 | The work giver defect above, and KahirDragoon named the mechanism correctly. Zei said in Aug 2025 he would review it, then shipped nothing |
 | Dining chairs cannot be improved | laurent.mialon, 2 Aug 2025; Shin, 1 Mar 2026 | The chairs defect above, or `FirstBlockingThing` seeing a seated pawn. Improve a Stool against a DiningChair to discriminate. laurent also mentioned modded doormats, unexamined |
-| No Improve option in the Architect tab | Smoovie, 3 Aug 2025; ReDawn, 27 Jan 2026 | The dead designators above. Smoovie also saw no entry in mod options, which would mean the assembly failed to load at all; undiagnosed |
+| No Improve option in the Architect tab | Smoovie, 3 Aug 2025; ReDawn, 27 Jan 2026 | The two designators that nothing registered, deleted 2026-09-18 (see the register above). Smoovie also saw no entry in mod options, which would mean the assembly failed to load at all; undiagnosed |
 | NRE with Forsaken Faction For Alpha Genes | VincentRoth, GitHub #1, 18 Sep 2025; TurtleShroom, 19 Oct 2025 | The `CanConstruct` argument shape. Not the author's bug, unanswered on both channels |
 
 Also open and unanswered: constructoids blocked by `mechEnabledWorkTypes`, Chinese button text, a
@@ -465,6 +523,13 @@ the null-coalescing operators see a live object and draw a destroyed texture.
 **A `Job` is pooled.** `JobMaker` hands them out from `SimplePool<Job>` and `Pawn_JobTracker` returns
 them. Anything that caches a `Job` must stop holding it the moment it hands it out.
 
+**A memo keyed on the tick must never hold a refusal.** The tick does not move while the game is
+paused, and the float menu, the only caller that passes `forced: true`, runs exactly then. The memo
+as first written (`01b0bc2`, never released) held a null between `HasJobOnThing` and `JobOnThing`;
+the menu never asks the second after a false first, so the next right-click on that building in the
+same paused tick got the null back with no `JobFailReason` written, and the greyed line vanished.
+`JobMemo.Keep` refuses null for that reason, and a refusal is rebuilt every time it is asked.
+
 **A test that reads source or a shell script as text cannot tell a use from a description of one.**
 Two tests failed on their first run against the comment explaining the very thing they forbid, once
 for `cp -r 1.6 release` in `build.sh` and once for `defaultLabel` in the detox mod. Strip comments
@@ -483,7 +548,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 260 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 304 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 

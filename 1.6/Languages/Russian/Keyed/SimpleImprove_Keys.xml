@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>Назначить для улучшения</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>Отметить предметы для улучшения качества квалифицированными рабочими</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>Отменить улучшение</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>Это здание отмечено для улучшения, но больше не может быть улучшено. Отменяет отметку и возвращает доставленные материалы.</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>Отменить приказы на улучшение и вернуть сохранённые материалы</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>Предмет нельзя улучшить</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>Уже отмечен для улучшения</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>У предмета нет качества</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>Уже максимального качества</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>Предмет нельзя построить</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>Улучшение провалилось! ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>Улучшено до {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Предупреждение: Ни один поселенец, назначенный на улучшение, не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Предупреждение: Ни один поселенец, назначенный на улучшение, не может улучшить этот {0} (требуется Строительство {1}, или {2} с вдохновением/производственной ролью).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Предупреждение: Ни один поселенец, назначенный на улучшение, не может достичь качества {0} (требуется Строительство {1}, или {2} с вдохновением).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Предупреждение: Ни один поселенец, назначенный на улучшение, не может достичь качества {0} (требуется Строительство {1}, или {2} с вдохновением/ролью производителя).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Легендарные улучшения требуют особых обстоятельств, таких как вдохновение или идеологические роли специалистов.</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>Улучшить</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>Улучшить (Любое)</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>Улучшить ({0})</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0} ({1})</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>Отметить этот предмет для улучшения качества</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>Отметить эти предметы для улучшения качества (выделено: {0})</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Любое улучшение</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>С этим уже работает кто-то другой.</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>Ваши собственные требования к навыку будут заменены значениями из набора, и отменить это нельзя. Продолжить?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Хранящиеся материалы (не требуются):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Минимальный навык для {0}: {1}</SimpleImprove_MinimumSkillFor>

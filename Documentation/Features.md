@@ -6,9 +6,11 @@
 - Mark a building that has a quality rating and a blueprint. The blueprint is what the material
   cost is charged against, so a quality building without one is out of scope, as are weapons and
   apparel
-- Any pawn with the work type switched on hauls the materials. The skill requirement is checked
-  when the improvement work itself is handed out, so a pawn below the requirement can stock a
-  building it cannot then work on
+- Any pawn with the work type switched on hauls the materials, with one exception: a colonist
+  whose ideoligion does not let its members build the building (under Ideology, a pew, kneel sheet,
+  kneel pillow or slab bed can be one) neither hauls for it nor improves it. The skill requirement
+  is checked when the improvement work itself is handed out, so a pawn below the requirement can
+  stock a building it cannot then work on
 - Quality is re-rolled based on pawn's skill level
 - If the new quality is not better, materials are consumed but quality remains unchanged
 - If improvement succeeds, the item gains the new quality level
@@ -101,12 +103,14 @@ skilled. The mod says so when the target is chosen.
 Marking is done from the building's own gizmo. Select one or more improvable buildings and use the
 Improve button; the menu it opens also carries Cancel improvement for anything already marked.
 
-**There is no Architect menu tab and no designator tool.** Two designator classes exist in the
-source and nothing registers either of them, so neither has ever been reachable. Marking is
-therefore per selection rather than by dragging a tool over cells, which in practice means
-selecting the buildings the normal way and pressing one button.
+**There is no Architect menu tab and no designator tool.** Two designator classes sat in the
+source with nothing registering either of them, so neither was ever reachable, and both were
+deleted on 2026-09-18. Marking is per selection rather than by dragging a tool over cells, which in
+practice means selecting the buildings the normal way and pressing one button.
 
-The vanilla Architect, Orders, Cancel tool also clears a mark, and returns any staged materials.
+The game's own Cancel button on a marked building, and the Architect, Orders, Cancel tool, also
+clear a mark and return any staged materials. A marked building that reaches Legendary some other
+way is left alone, and shows Cancel improvement in place of Improve.
 
 ### Item Gizmos
 - **Smart Consolidated Buttons**: When multiple buildings are selected, the mod intelligently groups them and shows consolidated improvement buttons instead of duplicates

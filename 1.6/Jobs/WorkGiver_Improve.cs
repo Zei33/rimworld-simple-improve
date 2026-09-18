@@ -97,36 +97,42 @@ namespace SimpleImprove.Jobs
         }
 
         /// <summary>
-        /// The pawn the memo below was built for, or <c>null</c> when it holds nothing.
+        /// The jobs <see cref="JobFor"/> has built and not yet handed out, for one pawn, one
+        /// <c>forced</c> value and one tick.
         /// </summary>
         /// <remarks>
-        /// These four fields are instance fields on what is effectively a singleton.
-        /// <c>WorkGiverDef.Worker</c> constructs one <see cref="WorkGiver"/> per def and caches it in
-        /// an <c>[Unsaved]</c> field, so every pawn in the game shares this object. That is why the
-        /// memo is keyed on the pawn rather than assumed to belong to one.
+        /// An instance field on what is effectively a singleton. <c>WorkGiverDef.Worker</c> constructs
+        /// one <see cref="WorkGiver"/> per def and caches it in an <c>[Unsaved]</c> field, so every
+        /// pawn in the game shares this object, which is why the memo is keyed on the pawn rather
+        /// than assumed to belong to one. <see cref="JobMemo{TAsker, TSubject, TAnswer}"/> carries the
+        /// rules it keeps and why. It is built in the constructor rather than by an initialiser
+        /// because it is handed two of this instance's members, <see cref="BuildJob"/> and the clear
+        /// of <see cref="unreachableMaterials"/>.
         /// </remarks>
-        private Pawn memoPawn;
-
-        /// <summary>The <c>forced</c> value the memo was built for.</summary>
-        private bool memoForced;
-
-        /// <summary>The game tick the memo was built on, or -1 when it holds nothing.</summary>
-        private int memoTick = -1;
-
-        /// <summary>The job decided for each thing asked about, including the null decisions.</summary>
-        private readonly Dictionary<Thing, Job> memo = new Dictionary<Thing, Job>();
+        private readonly JobMemo<Pawn, Thing, Job> memo;
 
         /// <summary>
         /// Material defs the search below already failed to find, under the memo's current key.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This shares <see cref="memo"/>'s key and is cleared with it, which is what makes it sound
-        /// with only a <c>ThingDef</c> for a key: by the time anything reads it, the pawn, the
-        /// <c>forced</c> value and the tick have already been established as current, and those are
-        /// the only other inputs the search has. The search root is the pawn's position, the map is
-        /// the pawn's map, and the requested count never enters the search at all, so two calls for
-        /// the same def under one key are the same call.
+        /// This shares <see cref="memo"/>'s key and is cleared whenever the memo is rekeyed, because
+        /// its <c>Clear</c> is the memo's forget callback. That is what makes a bare <c>ThingDef</c>
+        /// enough of a key: by the time anything reads it, the pawn, the <c>forced</c> value and the
+        /// tick have already been established as current. The search
+        /// root is the pawn's position, the map is the pawn's map, and the requested count never
+        /// enters the search at all, so two calls for the same def under one key ask the same
+        /// question.
+        /// </para>
+        /// <para>
+        /// They do not always get the same answer, and an earlier version of this comment said they
+        /// did. The tick does not move while the game is paused, so a miss recorded on one right-click
+        /// is still served on the next one in the same paused tick even if the player unforbade a
+        /// stack in between. That is vanilla's behaviour for the same search: vanilla's
+        /// <c>noReachableResourceCache</c>, described below, is consulted on forced calls too, and
+        /// <c>ItemAvailability.ThingsAvailableAnywhere</c>, which this method is only reached through,
+        /// caches per tick and is cleared only by <c>ItemAvailability.Tick</c>. What the player sees
+        /// is a "Missing" reason that is out of date until the game ticks, never a missing reason.
         /// </para>
         /// <para>
         /// This is vanilla's own answer to the same problem, kept deliberately narrow.
@@ -147,6 +153,21 @@ namespace SimpleImprove.Jobs
         /// </para>
         /// </remarks>
         private readonly HashSet<ThingDef> unreachableMaterials = new HashSet<ThingDef>();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WorkGiver_Improve"/> class.
+        /// </summary>
+        /// <remarks>
+        /// The game calls this once per def, through <c>Activator.CreateInstance</c> in
+        /// <c>WorkGiverDef.Worker</c>. It binds the memo to this instance's job builder and to the
+        /// clear of the unreachable-material cache, so that the memo decides both when a job is built
+        /// and when that cache is dropped, and nothing in <see cref="JobFor"/> is left to get either
+        /// wrong.
+        /// </remarks>
+        public WorkGiver_Improve()
+        {
+            memo = new JobMemo<Pawn, Thing, Job>(BuildJob, unreachableMaterials.Clear);
+        }
 
         /// <summary>
         /// Determines if the specified pawn has a job to do on the given thing.
@@ -206,51 +227,40 @@ namespace SimpleImprove.Jobs
         /// <returns>The job to do, or <c>null</c> when there is none.</returns>
         /// <remarks>
         /// <para>
+        /// A job built here is held for the next call about the same building, and for the building
+        /// a caller goes on to use, that call comes straight away: <c>JobGiver_Work</c> asks
+        /// <see cref="JobOnThing"/> about the winner as soon as its scan picks one, and
+        /// <c>FloatMenuOptionProvider_WorkGivers</c> asks it in the same expression as
+        /// <see cref="HasJobOnThing"/>. That hand-over is what makes the pair agree, and all of it
+        /// is <see cref="JobMemo{TAsker, TSubject, TAnswer}.Answer"/>: this method only supplies the
+        /// tick, which the memo cannot read for itself, so that the hand-over can be run by the test
+        /// suite where this method cannot.
+        /// </para>
+        /// <para>
         /// The memo is dropped whole whenever the pawn, the <c>forced</c> value or the tick changes,
-        /// which covers every way the answer could have moved. Within one tick the inputs a decision
-        /// reads are stable: the scan makes no reservations, <c>CanReserve</c> is a query, and the
-        /// search root is the pawn's position, which cannot change mid-scan.
+        /// which bounds how long anything is held. It does not make a held answer true, and an
+        /// earlier version of this comment claimed that within one tick the inputs a decision reads
+        /// are stable. They are not while the game is paused. The tick does not move then, and the
+        /// float menu, the one caller that passes <c>forced: true</c>, runs exactly then: it asks
+        /// every provider when it opens and again every fourth frame while it is open
+        /// (<c>FloatMenuMap.DoWindowContents</c>), and between two right-clicks the player can change
+        /// the Work tab, the mod settings or a mark.
         /// </para>
         /// <para>
-        /// A hit REMOVES the entry rather than leaving it, and that is a correctness requirement, not
-        /// tidiness. <c>JobMaker.MakeJob</c> hands out pooled <c>Job</c> objects from
-        /// <c>SimplePool&lt;Job&gt;</c>, and <c>Pawn_JobTracker</c> returns them to that pool when it
-        /// declines or finishes one. The only job that ever leaves this class is the one a hit
-        /// returns, so removing it on the way out means nothing the memo still holds can be recycled
-        /// underneath it. Entries for candidates that did not win are never handed to anybody, so they
-        /// are never pooled, and they fall away at the next key change.
-        /// </para>
-        /// <para>
-        /// One consequence worth stating because it looks like a bug. On the float menu path,
-        /// <c>FloatMenuOptionProvider_WorkGivers</c> calls <see cref="HasJobOnThing"/> and then
-        /// <see cref="JobOnThing"/> in a single expression, so the second call is a memo hit and does
-        /// not re-run <see cref="BuildJob"/>, and therefore does not re-set
-        /// <c>JobFailReason</c>. The reason set during the first call is still standing, because that
-        /// provider clears the reason once per work giver BEFORE the pair and reads it after, and
-        /// nothing in between clears it. Do not "fix" this by re-setting the reason on a hit.
+        /// So a refusal is never held. A refusal matters to the player only with its reason, the
+        /// reason is written to <c>JobFailReason</c> as a side effect of building the answer, and
+        /// the float menu never asks <see cref="JobOnThing"/> after a false
+        /// <see cref="HasJobOnThing"/>, so a held null was never collected. The memo as first
+        /// written held it, and the next right-click on the same building in the same paused tick
+        /// got it back with no reason written, which the menu shows as no line at all. Every
+        /// refusal is now built by the call that returns it, so every forced refusal writes its own
+        /// reason, and <see cref="JobMemo{TAsker, TSubject, TAnswer}.Keep"/> carries why that beat
+        /// remembering the reason alongside it.
         /// </para>
         /// </remarks>
         private Job JobFor(Pawn pawn, Thing thing, bool forced)
         {
-            int tick = Find.TickManager.TicksGame;
-
-            if (memoPawn != pawn || memoForced != forced || memoTick != tick)
-            {
-                memo.Clear();
-                unreachableMaterials.Clear();
-                memoPawn = pawn;
-                memoForced = forced;
-                memoTick = tick;
-            }
-            else if (memo.TryGetValue(thing, out Job remembered))
-            {
-                memo.Remove(thing);
-                return remembered;
-            }
-
-            Job job = BuildJob(pawn, thing, forced);
-            memo[thing] = job;
-            return job;
+            return memo.Answer(pawn, forced, Find.TickManager.TicksGame, thing);
         }
 
         /// <summary>
@@ -274,15 +284,45 @@ namespace SimpleImprove.Jobs
         /// <param name="forced">Whether this is a forced assignment.</param>
         /// <returns>A job for the pawn to perform, or null if no suitable job is available.</returns>
         /// <remarks>
-        /// The marked test comes first because it is the cheapest thing here that can refuse: one
-        /// comp lookup and a bool, against two dictionary lookups into the designation manager. The
-        /// old order paid for both designation lookups on every candidate before asking the question
-        /// that rejects most of them.
+        /// <para>
+        /// The outstanding test comes first because it is the cheapest thing here that can refuse:
+        /// two comp lookups, a bool and a comparison, against two dictionary lookups into the
+        /// designation manager. The old order paid for both designation lookups on every candidate
+        /// before asking the question that rejects most of them.
+        /// </para>
+        /// <para>
+        /// It asks whether the mark still has work ahead of it, not merely whether there is a mark,
+        /// and that has to happen before the haul branch below. This used to test the flag alone, so
+        /// a building marked for any improvement and then raised to Legendary by something else was
+        /// hauled for, worked and rolled on every cycle. At Legendary no roll can beat the current
+        /// quality, so <c>CompleteImprovement</c> took its failure branch every time and, with
+        /// materials required, destroyed the whole delivered cost without clearing the mark. A
+        /// target the building had already reached cost the same on every roll that did not beat
+        /// it. The refusal sets no <c>JobFailReason</c>, like vanilla's own no-work case in
+        /// <c>WorkGiver_Repair</c>: there is nothing to do here rather than something in the way,
+        /// and the building's own gizmo is the way out, the stranded cancel button at Legendary,
+        /// whose description says why, or Cancel improvement in the ordinary menu otherwise.
+        /// </para>
+        /// <para>
+        /// It refuses rather than clearing the mark. This runs as the scan validator, and clearing
+        /// removes a designation, drops the staged materials and ends other pawns' jobs through the
+        /// <c>Notify_Removing</c> prefix, none of which may happen from inside another pawn's job
+        /// search or a float menu being built. <see cref="SimpleImproveComp.HasOutstandingImprovement"/>
+        /// says where the mark is cleared instead.
+        /// </para>
+        /// <para>
+        /// The rest of the order is what the player reads in the float menu, because each refusal
+        /// writes its own reason or none, and the first refusal wins. The ideoligion is asked before
+        /// the haul branch, because it is the one refusal that never clears. The four access checks
+        /// are asked after the haul branch and after the work type test, because they write no
+        /// reason, and asking them earlier would turn "No path", "Missing" and "Not assigned" into
+        /// no line at all.
+        /// </para>
         /// </remarks>
         private Job BuildJob(Pawn pawn, Thing thing, bool forced)
         {
             var improveComp = thing.TryGetComp<SimpleImproveComp>();
-            if (improveComp == null || !improveComp.IsMarkedForImprovement)
+            if (improveComp == null || !improveComp.HasOutstandingImprovement)
                 return null;
 
             // Not while something else is already going to take this building apart.
@@ -293,22 +333,40 @@ namespace SimpleImprove.Jobs
             }
 
             // The reservation is on the BUILDING, so it does not change from one material to the
-            // next. Testing it inside the material loop was both wasteful and, more to the point,
-            // the reason the player was told the wrong thing: a pawn that found the material but
-            // could not reserve the target fell out of the loop and got "MissingMaterials", which
-            // names a blocker that is not the blocker. It also gated the improve job separately at
-            // the bottom of this method, so the same question was asked in two places.
+            // next. It used to be asked once per material inside the loop and again at the bottom
+            // of this method, and asking it once up here is the whole of that change. An earlier
+            // version of this comment also said the old placement told the player the wrong thing,
+            // "MissingMaterials" for a building another pawn held. No player could ever see that.
             //
-            // Narrow in practice, because the forced path passes ignoreOtherReservations: true, so
-            // a player who right-clicks gets the job anyway. It is the background scan that was
-            // silently mislabelling, and the float menu that was repeating it.
+            // Only the unforced background scan can be refused here because another pawn holds the
+            // building, and nothing reads a fail reason on that path: JobGiver_Work never touches
+            // JobFailReason, and the one caller that reads it after asking a work giver,
+            // FloatMenuOptionProvider_WorkGivers, always passes forced: true. With forced, CanReserve
+            // is asked with ignoreOtherReservations: true, which skips every test of another
+            // claimant, so it refuses only an unspawned pawn, a pawn or target on another map, or a
+            // destroyed target. A right-click on a building somebody else holds therefore gets the
+            // job. Vanilla labels the option "Prioritize improving <building>: Reserved by <pawn>",
+            // and taking it hands the job over (confirmed in game on 2026-09-18).
+            //
+            // So no reason is set here. The one that used to be set when forced could not describe
+            // a reservation, and it was removed along with its key.
             if (!pawn.HasReserved(thing) && !pawn.CanReserve(thing, ignoreOtherReservations: forced))
             {
-                if (forced)
-                {
-                    JobFailReason.Is("SimpleImprove_TargetReserved".Translate());
-                }
+                return null;
+            }
 
+            // Before any haul, because this is the one refusal that never clears. It used to be asked
+            // last, inside ImproveSite.CanWorkOn, so a colonist whose ideoligion forbids the building
+            // (a pew, a kneel sheet, a slab bed) was handed a haul job for it by the background scan
+            // and by a right-click, and carried the whole cost to something it could never improve.
+            // Vanilla's delivery givers refuse that pawn, inside the CanConstruct call they make
+            // before offering a delivery.
+            //
+            // Only this check moves. The four access checks stay below the haul branch, where the
+            // readings they produce by writing no reason are the ones players see; ImproveSite
+            // carries the detail.
+            if (!ImproveSite.IdeoligionAllows(thing, pawn))
+            {
                 return null;
             }
 
@@ -336,9 +394,10 @@ namespace SimpleImprove.Jobs
                         }
                     }
 
-                    // Only the float menu ever reads this. FloatMenuOptionProvider_WorkGivers is
-                    // the only consumer of JobFailReason in the game, it clears the static once per
-                    // work giver before asking, and it is the only caller that passes forced: true.
+                    // Only the float menu ever reads this. JobFailReason has two readers in the
+                    // game, FloatMenuOptionProvider_WorkGivers and CompTechprint's own menu, both
+                    // clear the static before asking, and the first is the only caller that passes
+                    // forced: true.
                     // JobGiver_Work never mentions JobFailReason at all, so a reason built during a
                     // background scan is written to a static nobody reads and then overwritten. The
                     // guard turns that into no work rather than into a formatted, translated,
@@ -365,10 +424,11 @@ namespace SimpleImprove.Jobs
             }
 
             // This used to be GenConstruct.CanConstruct(thing, pawn, checkSkills: false, forced).
-            // ImproveSite.CanWorkOn asks the same five questions of the same five vanilla methods in
-            // the same order; what it does not do is route them through CanConstruct, which every
-            // vanilla caller hands a Blueprint or a Frame and which this mod was handing a completed
-            // Building. ImproveSite carries why that mattered and what dropping the call gives up.
+            // ImproveSite asks the same five questions of the same five vanilla methods; what it does
+            // not do is route them through CanConstruct, which every vanilla caller hands a Blueprint
+            // or a Frame and which this mod was handing a completed Building. ImproveSite carries why
+            // that mattered and what dropping the call gives up. The four access questions are asked
+            // here, in vanilla's order; the fifth, the ideoligion, was asked above the haul branch.
             //
             // The skill prerequisite is still bypassed, and still deliberately. checkSkills gated
             // ThingDef.constructionSkillPrerequisite, which exists to gate BUILDING a thing from
@@ -383,7 +443,7 @@ namespace SimpleImprove.Jobs
             // Vanilla's own work giver for an already-built Building, RimWorld.WorkGiver_Repair,
             // never calls CanConstruct either and imposes no such prerequisite. This mod's own skill
             // model, keyed to the target quality, is just below and is the gate that should apply.
-            if (!ImproveSite.CanWorkOn(thing, pawn, forced))
+            if (!ImproveSite.CanAccess(thing, pawn, forced))
                 return null;
 
             // The skill gate. Both halves live in WorkerSkill.FirstBlocker so their order is a
@@ -486,7 +546,7 @@ namespace SimpleImprove.Jobs
         /// assembly, and several shipped haul givers use the Deadly default quite happily. The two
         /// that matter are <c>WorkGiver_ConstructDeliverResources</c>, which is the closest vanilla
         /// analogue and spells this exactly, and this mod's own
-        /// <see cref="ImproveSite.CanWorkOn"/>, which already decides reachability to the building
+        /// <see cref="ImproveSite.CanAccess"/>, which already decides reachability to the building
         /// this way. Those two are what makes the old form an inconsistency inside one job rather
         /// than a style choice.
         /// </para>

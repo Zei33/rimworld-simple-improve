@@ -14,7 +14,11 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 │   ├── SimpleImproveComp.cs          # Component attached to improvable buildings
 │   ├── ImprovableDefs.cs             # Decides which defs carry the component, and declares it
 │   ├── ImproveSelection.cs           # The per-frame selection analysis and the gizmo textures
-│   ├── ImproveSite.cs                # The five vanilla checks that replace GenConstruct.CanConstruct
+│   ├── ImproveSite.cs                # The five vanilla checks that replace GenConstruct.CanConstruct,
+│   │                                 #   split into access and the ideoligion's permission
+│   ├── JobMemo.cs                    # The jobs the work giver has built and not yet handed out
+│   ├── ImproveTarget.cs              # Whether a mark still has work ahead of it, and whether a
+│   │                                 #   building can be offered improvement at all
 │   ├── ImproveDesignations.cs        # The designation and the marked flag as one record
 │   ├── SimpleImproveMapComponent.cs  # Colony mech work priorities, and the legacy target store
 │   ├── WorkerSkill.cs                # A worker's Construction level, and the skill gate over it
@@ -24,9 +28,6 @@ SimpleImprove is a RimWorld mod that allows players to improve the quality of fu
 │   ├── StoredMaterials.cs            # What happens to staged materials when a building despawns
 │   ├── CompProperties_SimpleImprove.cs # Component properties
 │   └── SimpleImproveDefOf.cs         # Def references
-├── Designators/            # DEAD CODE: two Designator subclasses that nothing registers
-│   ├── Designator_MarkForImprovement.cs
-│   └── Designator_CancelImprovement.cs
 ├── Jobs/                   # Job system implementation
 │   ├── WorkGiver_Improve.cs         # Assigns improvement work
 │   ├── JobDriver_HaulToImprove.cs   # Hauls materials to buildings

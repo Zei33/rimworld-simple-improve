@@ -66,7 +66,7 @@ namespace SimpleImprove.Tests
             // wholesale, which the test above covers.
             string script = Commands();
 
-            foreach (string folder in new[] { "1.6/Core", "1.6/Jobs", "1.6/Designators", "1.6/Utils" })
+            foreach (string folder in new[] { "1.6/Core", "1.6/Jobs", "1.6/Utils" })
             {
                 Assert.That(
                     script.Contains("cp -r " + folder), Is.False,
@@ -85,7 +85,7 @@ namespace SimpleImprove.Tests
             string root = RepoRoot();
             string script = Commands();
 
-            var neverShipped = new[] { "Core", "Jobs", "Designators", "Utils", "Libraries", "Assemblies" };
+            var neverShipped = new[] { "Core", "Jobs", "Utils", "Libraries", "Assemblies" };
 
             foreach (string directory in Directory.GetDirectories(Path.Combine(root, "1.6")))
             {

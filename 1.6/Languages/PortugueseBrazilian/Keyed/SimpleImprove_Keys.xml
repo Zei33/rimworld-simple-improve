@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>Designar para melhoria</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>Marcar itens para ter sua qualidade melhorada por trabalhadores especializados</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>Cancelar melhoria</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>Este edifício está marcado para melhoria, mas não pode mais ser melhorado. Cancela a marcação e devolve os materiais entregues.</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>Cancelar ordens de melhoria e devolver materiais armazenados</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>Item não pode ser melhorado</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>Já marcado para melhoria</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>Item não tem qualidade</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>Já na qualidade máxima</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>Item não pode ser construído</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>Melhoria falhou! ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>Melhorado para {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Aviso: Nenhum colonista designado para melhoria pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Aviso: Nenhum colonista designado para melhoria pode melhorar este {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Aviso: Nenhum colonista designado para melhoria pode alcançar qualidade {0} (requer Construção {1}, ou {2} com inspiração).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Aviso: Nenhum colonista designado para melhoria pode alcançar qualidade {0} (requer Construção {1}, ou {2} com inspiração/função de produção).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Melhorias lendárias requerem circunstâncias especiais como inspirações ou funções especialistas ideológicas.</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>Melhorar</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>Melhorar (Qualquer)</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>Melhorar ({0})</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0} ({1})</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>Marcar este item para melhoria de qualidade</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>Marcar estes itens para melhoria de qualidade ({0} afetados)</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Qualquer melhoria</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>Outra pessoa já está trabalhando nisto.</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>Isto substituirá os seus requisitos de habilidade personalizados pelos da predefinição e não pode ser desfeito. Continuar?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Materiais armazenados (não obrigatórios):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Habilidade mínima para {0}: {1}</SimpleImprove_MinimumSkillFor>

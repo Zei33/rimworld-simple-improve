@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>指定改良</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>标记物品由熟练工人提升质量</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>取消改良</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>此建筑已标记为改良，但现在已无法改良。取消标记并返还已送达的材料。</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>取消改良命令并返还储存的材料</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>物品无法改良</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>已标记为改良</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>物品没有质量</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>已达到最高质量</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>物品无法建造</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>改良失败！({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>改良至{0}！</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>警告：没有分配了改良工作的殖民者能改良这个{0}（需要建造技能{1}，或有灵感时{2}）。</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>警告：没有分配了改良工作的殖民者能改良这个{0}（需要建造技能{1}，或有灵感/生产专家角色时{2}）。</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>警告：没有分配了改良工作的殖民者能达到{0}品质（需要建造技能{1}，或有灵感时{2}）。</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>警告：没有分配了改良工作的殖民者能达到{0}品质（需要建造技能{1}，或有灵感/生产专家角色时{2}）。</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>传奇品质改良需要特殊情况，如灵感或意识形态专家角色。</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>改良（任意）</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>改良（{0}）</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0}（{1}）</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>标记此物品进行质量改良</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>标记这些物品进行质量改良（{0}受到影响）</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>任意改良</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>：</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>已有其他人在处理这个建筑。</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>这将用预设值覆盖你自定义的技能要求，且无法撤销。是否继续？</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>已存材料（非必需）：</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>{0} 所需最低技能：{1}</SimpleImprove_MinimumSkillFor>

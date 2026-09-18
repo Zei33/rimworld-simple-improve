@@ -316,6 +316,130 @@ namespace SimpleImprove.Tests
         }
 
         [Test]
+        public void TheGroupTooltipIsBuiltFromTranslatedKeysAlone()
+        {
+            // The tooltip for a group of two or more used to append the literal English " (N items)"
+            // after Translate(), so every language showed the English word. The method cannot be run
+            // here: its caller needs Find.Selector and Translate needs a loaded language. Its compiled
+            // body can be read, and every string it loads is listed below in full, so an untranslated
+            // suffix coming back is one more literal and fails. Narrowing the list to the keys first
+            // would pass with the suffix still in it.
+            MethodInfo method = GizmoMethod("GetGroupGizmoDesc");
+
+            Assert.That(
+                ILCalls.Read(method).Strings,
+                Is.EqualTo(new List<string> { "SimpleImprove_GizmoTooltip", "SimpleImprove_GizmoTooltipGroup" }),
+                "The group tooltip loads a string that is not one of its two keys, which is what an "
+                + "English suffix outside Translate() looks like.");
+
+            // The strings alone do not hold the count, and the count is the one thing the group
+            // sentence adds. Translating the group key with no argument shows a raw {0} in every
+            // language and loads exactly the same two strings, so the calls are pinned as well, with
+            // each Translate named by its parameters: the group key has to go through the overload
+            // that takes one argument, and that argument has to be converted from the group's size.
+            // The branch between the two sentences is ImproveGroup.ShowsCount, which runs in
+            // TheCountStartsAtTwoBuildings. What this cannot see is arithmetic on the count, such as
+            // passing one less; in-game check 16 reads the number.
+            Assert.That(
+                ILCalls.CalledBy(method).Select(Signature).ToList(),
+                Is.EqualTo(new List<string>
+                {
+                    "SimpleImprove.Core.ImproveGroup.get_ShowsCount()",
+                    "Verse.Translator.Translate(String)",
+                    "Verse.TaggedString.op_Implicit(TaggedString)",
+                    "SimpleImprove.Core.ImproveGroup.get_Comps()",
+                    "System.Collections.Generic.List`1.get_Count()",
+                    "Verse.NamedArgument.op_Implicit(Int32)",
+                    "Verse.TranslatorFormattedStringExtensions.Translate(String, NamedArgument)",
+                    "Verse.TaggedString.op_Implicit(TaggedString)",
+                }));
+        }
+
+        [Test]
+        public void TheGroupLabelIsBuiltFromTranslatedKeysAlone()
+        {
+            // The label's count used to be a literal " (N)" joined after Translate(). It carried no
+            // word, but it fixed the punctuation for every language, so Chinese and Japanese labels
+            // that close in fullwidth parentheses gained an ASCII pair after a space. Every string
+            // the method loads is listed in full, so the format string of that suffix coming back
+            // (" ({0})") is one more literal and fails here.
+            MethodInfo method = GizmoMethod("GetGroupGizmoLabel");
+
+            Assert.That(
+                ILCalls.Read(method).Strings,
+                Is.EqualTo(new List<string>
+                {
+                    "SimpleImprove_GizmoLabel",
+                    "SimpleImprove_GizmoLabelWithTarget",
+                    "SimpleImprove_GizmoLabelAny",
+                    "SimpleImprove_GizmoLabelCount",
+                }));
+
+            // And the count is read through the same rule the tooltip uses, so the two cannot start
+            // counting at different sizes.
+            Assert.That(
+                ILCalls.CalledBy(method).Select(ILCalls.Describe).ToList(),
+                Does.Contain("SimpleImprove.Core.ImproveGroup.get_ShowsCount"));
+        }
+
+        [Test]
+        public void TheCountStartsAtTwoBuildings()
+        {
+            // One building is described in the singular with no count; a pair is already a group.
+            // The tooltip used to test count == 1 and the label count > 1, two spellings of one rule
+            // that could be edited apart, and changing the first to count <= 2 passed the suite
+            // while describing a pair of buildings as one.
+            Assert.That(GroupOf(1).ShowsCount, Is.False);
+            Assert.That(GroupOf(2).ShowsCount, Is.True);
+            Assert.That(GroupOf(3).ShowsCount, Is.True);
+        }
+
+        private static ImproveGroup GroupOf(int size)
+        {
+            var group = new ImproveGroup();
+
+            for (int i = 0; i < size; i++)
+            {
+                group.Comps.Add(new SimpleImproveComp());
+            }
+
+            Assert.That(group.Comps, Has.Count.EqualTo(size));
+            return group;
+        }
+
+        private static MethodInfo GizmoMethod(string name)
+        {
+            MethodInfo method = typeof(SimpleImproveComp).GetMethod(
+                name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            Assert.That(method, Is.Not.Null, "SimpleImproveComp has no " + name + " to read.");
+            return method;
+        }
+
+        /// <summary>
+        /// Names a called method with its parameter types, so that two overloads read differently.
+        /// </summary>
+        /// <param name="method">The method to name.</param>
+        /// <returns>The declaring type, the method name and its parameter type names.</returns>
+        /// <remarks>
+        /// The declaring type is named by its generic definition and the parameters by their short
+        /// names, so that nothing in the result spells out an assembly version and the list does not
+        /// need editing on every RimWorld patch release.
+        /// </remarks>
+        private static string Signature(MethodBase method)
+        {
+            System.Type type = method.DeclaringType;
+
+            if (type != null && type.IsGenericType)
+            {
+                type = type.GetGenericTypeDefinition();
+            }
+
+            string parameters = string.Join(", ", method.GetParameters().Select(p => p.ParameterType.Name));
+            return (type == null ? method.Name : type.FullName + "." + method.Name) + "(" + parameters + ")";
+        }
+
+        [Test]
         public void TheComponentIsNotSealed()
         {
             // ThingWithComps.GetComp<T> short-circuits to null for a sealed type parameter that its

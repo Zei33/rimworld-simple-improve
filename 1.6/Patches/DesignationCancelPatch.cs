@@ -11,7 +11,7 @@ namespace SimpleImprove.Patches
     /// </summary>
     /// <remarks>
     /// This is the cleanup for a building that keeps standing and only loses its mark, which is what
-    /// the mod's own cancel gizmo and designator do and what vanilla's <c>Designator_Cancel</c> does.
+    /// the mod's own cancel options do and what vanilla's <c>Designator_Cancel</c> does.
     /// It is also reached, with the building already despawned, from every destroy, every uninstall,
     /// every minify and every map removal, because all four remove designations after the despawn.
     /// It deliberately returns nothing to the map in those cases: <see cref="Core.StoredMaterials"/>

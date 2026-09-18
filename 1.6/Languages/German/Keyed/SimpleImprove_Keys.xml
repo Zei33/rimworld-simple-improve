@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>Zur Verbesserung markieren</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>Gegenstände markieren, damit geschickte Arbeiter ihre Qualität verbessern</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>Verbesserung abbrechen</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>Dieses Gebäude ist zur Verbesserung markiert, kann aber nicht mehr verbessert werden. Hebt die Markierung auf und gibt bereits gelieferte Materialien zurück.</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>Verbesserungsaufträge abbrechen und gelagerte Materialien zurückgeben</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>Gegenstand kann nicht verbessert werden</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>Bereits zur Verbesserung markiert</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>Gegenstand hat keine Qualität</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>Bereits bei maximaler Qualität</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>Gegenstand kann nicht gebaut werden</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>Verbesserung fehlgeschlagen! ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>Verbessert zu {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Warnung: Kein für die Verbesserung eingeteilter Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Warnung: Kein für die Verbesserung eingeteilter Kolonist kann diesen {0} verbessern (benötigt Konstruktion {1}, oder {2} mit Inspiration/Produktionsrolle).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Warnung: Kein für die Verbesserung eingeteilter Kolonist kann {0} Qualität erreichen (benötigt Konstruktion {1}, oder {2} mit Inspiration).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Warnung: Kein für die Verbesserung eingeteilter Kolonist kann {0} Qualität erreichen (benötigt Konstruktion {1}, oder {2} mit Inspiration/Produktionsrolle).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Legendäre Verbesserungen erfordern besondere Umstände wie Inspirationen oder ideologische Spezialistenrollen.</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>Verbessern</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>Verbessern (Beliebig)</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>Verbessern ({0})</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0} ({1})</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>Diesen Gegenstand zur Qualitätsverbesserung markieren</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>Diese Gegenstände zur Qualitätsverbesserung markieren ({0} betroffen)</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Beliebige Verbesserung</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>Jemand anderes arbeitet bereits daran.</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>Dies ersetzt deine eigenen Fähigkeitsanforderungen durch die der Vorlage und kann nicht rückgängig gemacht werden. Fortfahren?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Gelagerte Materialien (nicht erforderlich):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Mindestfähigkeit für {0}: {1}</SimpleImprove_MinimumSkillFor>

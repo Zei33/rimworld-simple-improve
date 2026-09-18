@@ -325,8 +325,8 @@ namespace SimpleImprove.Core
         /// </para>
         /// <para>
         /// Colonists rather than <c>ImproveWorkers.PotentialOnMap</c>, which is deliberate and the
-        /// opposite of the choice the two call sites make when they decide whether to warn at all.
-        /// They include colony mechs, because a mech can do the work. This does not, because a mech
+        /// opposite of the choice its caller makes when deciding whether to warn at all. The caller
+        /// includes colony mechs, because a mech can do the work. This does not, because a mech
         /// can hold neither bonus. <c>PawnComponentsUtility</c> creates <c>pawn.ideo</c> only inside
         /// <c>if (pawn.RaceProps.Humanlike)</c>, so <c>Pawn.Ideo</c> is null for a mechanoid and it
         /// can hold no role. And an inspiration cannot start on one:
@@ -344,7 +344,8 @@ namespace SimpleImprove.Core
         /// invented a role bonus of 1 here when Ideology was active, on the grounds that it was
         /// typical, which was a guess about a colony it had not looked at, and reading
         /// <c>ModsConfig</c> to make it was also what kept this whole method out of the test
-        /// harness. Neither call site passes a null map.
+        /// harness. The one caller, <c>SimpleImproveComp.CheckAndShowTargetQualitySkillWarning</c>,
+        /// never passes a null map.
         /// </para>
         /// </remarks>
         public int GetBestCaseSkillRequirement(QualityCategory quality, Map map = null)

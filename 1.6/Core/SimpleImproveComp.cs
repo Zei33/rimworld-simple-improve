@@ -23,6 +23,20 @@ namespace SimpleImprove.Core
         
         public QualityCategory HighestCurrentQuality => Comps.Max(c => c.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal);
         public QualityCategory LowestCurrentQuality => Comps.Min(c => c.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal);
+
+        /// <summary>
+        /// Gets whether the group's gizmo says how many buildings it covers.
+        /// </summary>
+        /// <value><c>true</c> for two buildings or more; <c>false</c> for one.</value>
+        /// <remarks>
+        /// The label and the tooltip both read this, so they cannot disagree about where the count
+        /// starts: the label gains its count and the tooltip switches to the group sentence at the
+        /// same size. It is a property on the group rather than a comparison at each call site
+        /// because the call sites need a spawned selection and cannot be run by the test suite,
+        /// while this can, and a comparison moved from two to three would otherwise describe a pair
+        /// of buildings as one.
+        /// </remarks>
+        public bool ShowsCount => Comps.Count > 1;
     }
 
     /// <summary>
@@ -95,9 +109,9 @@ namespace SimpleImprove.Core
                 {
                     // Clear materials, target and designation when unmarking. The drop goes through
                     // ReturnStoredMaterialsWhileSpawned rather than being spelled out here, because
-                    // the map can be null: both quality float menus build their options as closures
-                    // over a captured component and revalidate nothing when clicked, and the game
-                    // ticks while the menu is open.
+                    // the map can be null: the group quality float menu builds its options as
+                    // closures over captured components and revalidates nothing when clicked, and
+                    // the game ticks while the menu is open.
                     ReturnStoredMaterialsWhileSpawned();
                     targetQuality = null;
                     parent.Map?.designationManager.TryRemoveDesignationOn(parent, SimpleImproveDefOf.Designation_Improve);
@@ -108,14 +122,33 @@ namespace SimpleImprove.Core
                     // used to swallow a null map and then set the flag anyway, leaving the component
                     // marked with no designation; since the work giver became designation-driven,
                     // that building is invisible to it, so the mark silently did nothing. The null
-                    // map is reachable for the same reason the unmark path documents above: both
-                    // float menus capture this component in a closure and revalidate nothing when
-                    // clicked, while the game ticks.
+                    // map is reachable for the same reason the unmark path documents above: the
+                    // group float menu captures this component in a closure and revalidates nothing
+                    // when clicked, while the game ticks.
                     //
                     // The guard is on this branch only. Unmarking off-map must still clear the flag
                     // and the target, or a building minified while its menu was open would come back
                     // marked with materials it cannot use.
                     if (parent.Map == null)
+                    {
+                        return;
+                    }
+
+                    // Refuse a mark with nothing ahead of it: a Legendary building marked for any
+                    // improvement, or a target the building already has. The work giver refuses
+                    // such a mark too, so it would sit there doing nothing, and before the giver
+                    // refused it the colony delivered and destroyed the full cost on every cycle.
+                    // The group float menu reached it by racing the game: it captures its
+                    // components when it opens, the game keeps ticking, and a pawn could finish the
+                    // building at Legendary before the player clicked "Any improvement".
+                    //
+                    // This is the one place every transition from unmarked to marked passes, so it
+                    // holds for every caller, including a third party writing the public property.
+                    // The target has to be written before the flag, as TryMarkFor does, because it
+                    // is part of what is being judged. Re-aiming a building that is already marked
+                    // never reaches this branch, which is why TryMarkFor asks the same question
+                    // itself rather than relying on this one.
+                    if (!IsOutstandingFor(targetQuality))
                     {
                         return;
                     }
@@ -222,10 +255,122 @@ namespace SimpleImprove.Core
         /// If null, any improvement is acceptable (original behavior).
         /// </summary>
         /// <value>The target quality category, or null for any improvement.</value>
+        /// <remarks>
+        /// The setter checks nothing, and the mod itself never writes through it: the group menu
+        /// marks and re-aims through <see cref="TryMarkFor"/>, which refuses a target the building
+        /// is already at or past. A caller writing this directly on a building that is already
+        /// marked re-aims it with no such check. Nothing is destroyed if the new target is behind
+        /// the building, because the work giver and both job drivers ask
+        /// <see cref="HasOutstandingImprovement"/> and leave such a mark alone, but the mark then
+        /// does nothing until it is re-aimed or cancelled.
+        /// </remarks>
         public QualityCategory? TargetQuality
         {
             get => targetQuality;
             set => targetQuality = value;
+        }
+
+        /// <summary>
+        /// Gets whether this building is marked and the mark still has work ahead of it.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> when the building is marked for improvement and is below the quality the mark
+        /// aims at; <c>false</c> when it is unmarked, or marked with nothing left to do.
+        /// </value>
+        /// <remarks>
+        /// <para>
+        /// This, not <see cref="IsMarkedForImprovement"/>, is the question anything deciding whether
+        /// to do improvement work must ask. The flag says a mark exists; it does not say the mark
+        /// can still be satisfied. The work giver and both job drivers used to read the flag alone,
+        /// so a building marked for any improvement and then raised to Legendary by something else
+        /// was hauled for and worked on every cycle, and <see cref="CompleteImprovement"/> can only
+        /// fail at Legendary, destroying the delivered materials each time and leaving the mark in
+        /// place for the next cycle.
+        /// </para>
+        /// <para>
+        /// The work giver refuses on this and the job drivers stop on it, and all three read the
+        /// same property, so a job the giver hands out cannot fail its first tick in the driver and
+        /// <c>HasJobOnThing</c> still answers from the same decision as <c>JobOnThing</c>.
+        /// </para>
+        /// <para>
+        /// A mark this refuses is left in place on purpose rather than cleared. The work giver is
+        /// where it is noticed, and a scan validator must not mutate anything: clearing the mark
+        /// removes a designation, returns the staged materials onto the map and ends other pawns'
+        /// jobs through the <c>Notify_Removing</c> prefix. The player clears it instead, and that
+        /// path returns the materials: vanilla's Cancel works on any marked building, a Legendary
+        /// one gets the cancel button <see cref="CompGetGizmosExtra"/> shows when improvement can no
+        /// longer be offered, and one whose target is merely passed keeps its ordinary improve menu,
+        /// which leads with Cancel improvement and can re-aim it higher.
+        /// </para>
+        /// </remarks>
+        public bool HasOutstandingImprovement => isMarkedForImprovement && IsOutstandingFor(targetQuality);
+
+        /// <summary>
+        /// Determines whether a mark aimed at a target would still have work ahead of it on this
+        /// building.
+        /// </summary>
+        /// <param name="target">The quality the mark aims at, or <c>null</c> for any improvement.</param>
+        /// <returns>
+        /// <c>true</c> when the building carries a quality and that quality is below
+        /// <paramref name="target"/>, or below Legendary for a <c>null</c> target.
+        /// </returns>
+        /// <remarks>
+        /// A building with no <c>CompQuality</c> has nothing to improve and is refused.
+        /// <see cref="ImprovableDefs"/> declares this component only on defs that carry one, so that
+        /// is a guard against another mod stripping comps rather than a state vanilla produces;
+        /// without it <see cref="CompleteImprovement"/> would log an error and return on every
+        /// cycle while the mark stayed in place.
+        /// </remarks>
+        internal bool IsOutstandingFor(QualityCategory? target)
+        {
+            CompQuality compQuality = parent.TryGetComp<CompQuality>();
+            return compQuality != null && ImproveTarget.IsOutstanding(compQuality.Quality, target);
+        }
+
+        /// <summary>
+        /// Marks this building for improvement towards a target, or re-aims its existing mark, if
+        /// that target is still ahead of it.
+        /// </summary>
+        /// <param name="target">The quality to aim at, or <c>null</c> for any improvement.</param>
+        /// <returns>
+        /// <c>true</c> when the building ends up marked and aimed at <paramref name="target"/>;
+        /// <c>false</c> when nothing was changed.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// The one way the group float menu marks anything, and the check has to live here as well
+        /// as in the <see cref="IsMarkedForImprovement"/> setter. The setter only judges a building
+        /// going from unmarked to marked; re-aiming one that is already marked never reaches that
+        /// branch, and an already marked building sits in a group whose menu offers every quality
+        /// above the group's lowest, so without this a Masterwork building could be re-aimed at
+        /// Good. The "any improvement" option used to skip the quality test entirely, which is how
+        /// a building that reached Legendary while the menu was open got marked again.
+        /// </para>
+        /// <para>
+        /// The target is written before the flag because the setter judges the target it finds.
+        /// If the setter then refuses, which it does when the building has no map to carry a
+        /// designation, the target is put back to <c>null</c>: the building was unmarked, and an
+        /// unmarked building has no target. Leaving it would re-aim the building at a stale quality
+        /// the next time anything marked it without choosing one.
+        /// </para>
+        /// </remarks>
+        internal bool TryMarkFor(QualityCategory? target)
+        {
+            if (!IsOutstandingFor(target))
+            {
+                return false;
+            }
+
+            targetQuality = target;
+            IsMarkedForImprovement = true;
+
+            if (!isMarkedForImprovement)
+            {
+                targetQuality = null;
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -479,14 +624,17 @@ namespace SimpleImprove.Core
         /// </summary>
         /// <param name="currentQuality">The current quality level of the item.</param>
         /// <returns>True if improvement should continue, false if it should stop.</returns>
+        /// <remarks>
+        /// With a target set this is <see cref="ImproveTarget.IsOutstanding"/> itself, and it has to
+        /// be. The work giver refuses any mark that is not outstanding, so if the rule for carrying
+        /// on after a success ever kept a mark the giver would refuse, the loop would strand the
+        /// building on its own. Asking the same function is what makes that impossible rather than
+        /// merely true today. With no target the mark is finished by any success, although more
+        /// improvement is still possible: "any improvement" means one.
+        /// </remarks>
         private bool ShouldContinueImproving(QualityCategory currentQuality)
         {
-            // If no target is set, stop after any improvement (original behavior)
-            if (TargetQuality == null)
-                return false;
-                
-            // If current quality is below target, continue improving
-            return currentQuality < TargetQuality.Value;
+            return TargetQuality.HasValue && ImproveTarget.IsOutstanding(currentQuality, TargetQuality);
         }
         
         /// <summary>
@@ -570,7 +718,7 @@ namespace SimpleImprove.Core
         /// <para>
         /// One of the two owners of returning materials, the other being
         /// <see cref="PostDeSpawn"/>. This one is for the building that stays where it is and only
-        /// loses its mark: the cancel gizmo, the cancel designator and vanilla's own
+        /// loses its mark: the mod's own cancel options and vanilla's
         /// <c>Designator_Cancel</c>, none of which despawn anything.
         /// <see cref="StoredMaterials.OnUnmark"/> carries when it fires and why the map has to be
         /// tested.
@@ -1021,12 +1169,19 @@ namespace SimpleImprove.Core
             if (!CanBeOfferedImprovement())
             {
                 // The building cannot be offered improvement any more, but it may still be carrying a
-                // mark from when it could. Yielding nothing at all was issue #23: the designation
-                // overlay stayed on the building, a pawn would still work on it, and selecting it
-                // offered no button to explain or remove the mark. The player was not stuck, since
-                // Designation_Improve does not override designateCancelable and so Architect, Orders,
-                // Cancel clears it, but that means knowing a vanilla tool clears a mark whose own
-                // button has disappeared.
+                // mark from when it could. Issue #23 said that yielding nothing here left no button
+                // to remove the mark, and that was never true. Designation_Improve leaves
+                // designateCancelable at its default of true, so vanilla's reverse Designator_Cancel
+                // draws its own "Cancel" on the gizmo bar of every marked building, this one
+                // included, and has in every version of this mod. What this button adds is the
+                // explanation: the Improve button has gone, and this says why. Its C hotkey never
+                // fires, because vanilla's Cancel is ordered first (-20 against 0) and a hotkey binds
+                // only to the first gizmo drawn with it. That is harmless: C then reaches vanilla's
+                // Cancel, which clears the same mark through the Notify_Removing prefix.
+                //
+                // Nobody works on such a building any more either. The work giver and both job
+                // drivers ask HasOutstandingImprovement, which is false for a mark with nothing
+                // ahead of it, so the mark only waits here to be cancelled.
                 if (isMarkedForImprovement)
                 {
                     yield return CreateStrandedCancelGizmo();
@@ -1068,9 +1223,20 @@ namespace SimpleImprove.Core
         /// </para>
         /// <para>
         /// The faction test is reachable only through dev tools or another mod: no vanilla path turns
-        /// a spawned player building into a non-player one. The Legendary test is genuinely
-        /// reachable, because the mod's own loop clears the mark when IT reaches Legendary, so it
-        /// needs quality raised there by something else while marked.
+        /// a spawned player building into a non-player one. The quality test is reachable the same
+        /// two ways and no others. The mod's own loop clears the mark when it reaches Legendary,
+        /// vanilla sets an existing building's quality only from the dev tools' Set Quality action,
+        /// and the one in-game route, clicking "Any improvement" in a group menu left open while a
+        /// pawn finished the building at Legendary, is closed: marking goes through
+        /// <see cref="TryMarkFor"/> and the <see cref="IsMarkedForImprovement"/> setter, and both
+        /// refuse a mark with nothing ahead of it.
+        /// </para>
+        /// <para>
+        /// The quality test is <see cref="ImproveTarget.CanBeOffered"/> rather than a comparison
+        /// against Legendary, so that offering improvement and accepting a mark are the same
+        /// question. If they drifted, the menu would offer "Any improvement" on a building the
+        /// marking path then silently refused. It takes the building's quality and nothing else, so
+        /// there is no target argument here that could drift either.
         /// </para>
         /// </remarks>
         private bool CanBeOfferedImprovement()
@@ -1085,8 +1251,8 @@ namespace SimpleImprove.Core
                 return false;
             }
 
-            var compQuality = parent.TryGetComp<CompQuality>();
-            return compQuality != null && compQuality.Quality != QualityCategory.Legendary;
+            CompQuality quality = parent.TryGetComp<CompQuality>();
+            return quality != null && ImproveTarget.CanBeOffered(quality.Quality);
         }
 
         /// <summary>
@@ -1106,14 +1272,18 @@ namespace SimpleImprove.Core
         /// merges gizmos itself: <c>Command.GroupsWith</c> returns true when the hotkey, label, icon
         /// reference and group key all match, and <c>GizmoGridDrawer</c> then draws one button and
         /// fires every member's action on click, because <c>alsoClickIfOtherInGroupClicked</c>
-        /// defaults true. Selecting six stranded buildings therefore shows one cancel button that
-        /// clears all six, with no representative to pick. That is why the icon is a shared static
-        /// and the label takes no count: giving it a per-building count would split the merge.
+        /// defaults true. Selecting six stranded buildings therefore shows one "Cancel improvement"
+        /// button that clears all six, beside vanilla's own "Cancel", which merges the same way, and
+        /// there is no representative to pick. The label is what that depends on: a per-building
+        /// count or name in it would split the merge into one button per building. The icon is a
+        /// shared static too, for the reasons <see cref="ImproveSelection.CancelIcon"/> gives, but a
+        /// fetch per button would return the same texture today, so the merge does not rest on it.
         /// </para>
         /// <para>
-        /// Setting the property rather than the field is deliberate. The setter is what removes the
-        /// designation and returns the staged materials through the <c>Notify_Removing</c> prefix,
-        /// which is the whole point of offering the button.
+        /// Setting the property rather than the field is deliberate. The setter returns the staged
+        /// materials itself and then removes the designation, and removing it runs the
+        /// <c>Notify_Removing</c> prefix, which ends any improve or haul job still aimed at the
+        /// building. Setting the field alone would leave the designation and the materials behind.
         /// </para>
         /// </remarks>
         private Command_Action CreateStrandedCancelGizmo()
@@ -1151,22 +1321,39 @@ namespace SimpleImprove.Core
         /// </summary>
         /// <param name="group">The improvement group.</param>
         /// <returns>The label text for the gizmo.</returns>
+        /// <remarks>
+        /// The count goes through <c>SimpleImprove_GizmoLabelCount</c> rather than being appended in
+        /// code. It used to be a literal <c>" (N)"</c> joined after <c>Translate()</c>, which carries
+        /// no word to translate but did fix the punctuation, so Chinese and Japanese, whose labels
+        /// close in fullwidth parentheses, got an ASCII pair after them with a space in between. The
+        /// key lets each language choose. It must not carry anything that varies per building other
+        /// than the count, because only the group's representative draws this gizmo and nothing
+        /// merges it; the stranded cancel button, which does rely on vanilla merging identical
+        /// labels, is a different gizmo.
+        /// </remarks>
         private string GetGroupGizmoLabel(ImproveGroup group)
         {
-            var count = group.Comps.Count;
-            var countText = count > 1 ? $" ({count})" : "";
+            TaggedString label;
 
             if (!group.IsMarked)
             {
-                return "SimpleImprove_GizmoLabel".Translate() + countText;
+                label = "SimpleImprove_GizmoLabel".Translate();
             }
-            
-            if (group.TargetQuality.HasValue)
+            else if (group.TargetQuality.HasValue)
             {
-                return "SimpleImprove_GizmoLabelWithTarget".Translate(group.TargetQuality.Value.GetLabel()) + countText;
+                label = "SimpleImprove_GizmoLabelWithTarget".Translate(group.TargetQuality.Value.GetLabel());
             }
-            
-            return "SimpleImprove_GizmoLabelAny".Translate() + countText;
+            else
+            {
+                label = "SimpleImprove_GizmoLabelAny".Translate();
+            }
+
+            if (!group.ShowsCount)
+            {
+                return label;
+            }
+
+            return "SimpleImprove_GizmoLabelCount".Translate(label, group.Comps.Count);
         }
 
         /// <summary>
@@ -1174,15 +1361,26 @@ namespace SimpleImprove.Core
         /// </summary>
         /// <param name="group">The improvement group.</param>
         /// <returns>The description text for the gizmo.</returns>
+        /// <remarks>
+        /// The group case is one whole translated sentence with the count as <c>{0}</c>. It used to
+        /// be the single-building sentence with the literal English " (N items)" appended after
+        /// <c>Translate()</c>, so the word "items" showed in every language. A whole sentence also
+        /// lets Chinese and Japanese use fullwidth parentheses with no space before them, which a
+        /// suffix joined in code could not. The count wording starts from vanilla's
+        /// <c>CountToDesignate</c> ("{0} affected"), the game's own phrase for how many things an
+        /// order applies to, in a form that does not change with the number: this branch runs only
+        /// for two or more, and Russian and Polish would otherwise need different noun forms for 2
+        /// to 4 and for 5 upwards. Russian writes it as a label and a count, <c>выделено: {0}</c>,
+        /// where vanilla's cursor label has <c>{0} выделено</c>.
+        /// </remarks>
         private string GetGroupGizmoDesc(ImproveGroup group)
         {
-            var count = group.Comps.Count;
-            if (count == 1)
+            if (!group.ShowsCount)
             {
                 return "SimpleImprove_GizmoTooltip".Translate();
             }
-            
-            return "SimpleImprove_GizmoTooltip".Translate() + $" ({count} items)";
+
+            return "SimpleImprove_GizmoTooltipGroup".Translate(group.Comps.Count);
         }
 
         /// <summary>
@@ -1194,25 +1392,6 @@ namespace SimpleImprove.Core
         {
             // Use a base key and add variation based on group type
             return 2003114091 + group.GroupKey.GetHashCode();
-        }
-        
-        /// <summary>
-        /// Gets the label for the improve gizmo based on current state.
-        /// </summary>
-        /// <returns>The label text for the gizmo.</returns>
-        private string GetImproveGizmoLabel()
-        {
-            if (!isMarkedForImprovement)
-            {
-                return "SimpleImprove_GizmoLabel".Translate();
-            }
-            
-            if (TargetQuality.HasValue)
-            {
-                return "SimpleImprove_GizmoLabelWithTarget".Translate(TargetQuality.Value.GetLabel());
-            }
-            
-            return "SimpleImprove_GizmoLabelAny".Translate();
         }
         
         /// <summary>
@@ -1281,6 +1460,13 @@ namespace SimpleImprove.Core
         /// <param name="group">The group being modified.</param>
         /// <param name="allGroups">All groups for context.</param>
         /// <param name="targetQuality">The target quality to apply.</param>
+        /// <remarks>
+        /// Every building goes through <see cref="TryMarkFor"/>, which skips one the target is not
+        /// ahead of. This runs from a float menu option many frames after the menu captured its
+        /// components, with the game ticking in between, so the quality it judges has to be read at
+        /// the click rather than trusted from when the menu opened. The "any improvement" option
+        /// used to skip that test altogether.
+        /// </remarks>
         private void ApplyQualityTargetToGroup(ImproveGroup group, List<ImproveGroup> allGroups, QualityCategory? targetQuality)
         {
             // Show warning if Legendary quality is selected
@@ -1304,14 +1490,7 @@ namespace SimpleImprove.Core
                 {
                     foreach (var comp in g.Comps)
                     {
-                        var currentQuality = comp.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
-                        
-                        // Only mark buildings that can achieve the target quality
-                        if (targetQuality == null || currentQuality < targetQuality.Value)
-                        {
-                            comp.TargetQuality = targetQuality;
-                            comp.IsMarkedForImprovement = true;
-                        }
+                        comp.TryMarkFor(targetQuality);
                     }
                 }
             }
@@ -1320,91 +1499,8 @@ namespace SimpleImprove.Core
                 // Apply only to the specific group
                 foreach (var comp in group.Comps)
                 {
-                    var currentQuality = comp.parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
-                    
-                    // Only mark buildings that can achieve the target quality
-                    if (targetQuality == null || currentQuality < targetQuality.Value)
-                    {
-                        comp.TargetQuality = targetQuality;
-                        comp.IsMarkedForImprovement = true;
-                    }
+                    comp.TryMarkFor(targetQuality);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Shows the float menu for selecting quality targets (legacy single-building method).
-        /// </summary>
-        private void ShowQualityTargetFloatMenu()
-        {
-            var options = new List<FloatMenuOption>();
-            
-            var currentQuality = parent.TryGetComp<CompQuality>()?.Quality ?? QualityCategory.Normal;
-            
-            // Add "Cancel improvement" option if already marked
-            if (isMarkedForImprovement)
-            {
-                options.Add(new FloatMenuOption("SimpleImprove_CancelImprovement".Translate(), () =>
-                {
-                    IsMarkedForImprovement = false;
-                }));
-            }
-            
-            // Add "Any improvement" option
-            var anyLabel = "SimpleImprove_TargetAny".Translate();
-            if (TargetQuality == null && isMarkedForImprovement)
-            {
-                anyLabel += " ✓";
-            }
-            options.Add(new FloatMenuOption(anyLabel, () =>
-            {
-                TargetQuality = null;
-                IsMarkedForImprovement = true;
-            }));
-            
-            // Add specific quality targets (only those higher than current)
-            var qualityTargets = new[]
-            {
-                QualityCategory.Poor,
-                QualityCategory.Normal, 
-                QualityCategory.Good,
-                QualityCategory.Excellent,
-                QualityCategory.Masterwork,
-                QualityCategory.Legendary
-            };
-            
-            foreach (var quality in qualityTargets)
-            {
-                if (quality <= currentQuality) continue; // Can't target lower quality
-                
-                var label = quality.GetLabel().CapitalizeFirst();
-                if (TargetQuality == quality && isMarkedForImprovement)
-                {
-                    label += " ✓";
-                }
-                
-                options.Add(new FloatMenuOption(label, () =>
-                {
-                    // Show warning if Legendary quality is selected
-                    if (quality == QualityCategory.Legendary)
-                    {
-                        Messages.Message("SimpleImprove_LegendaryWarning".Translate(), MessageTypeDefOf.CautionInput);
-                    }
-                    
-                    TargetQuality = quality;
-                    IsMarkedForImprovement = true;
-                }));
-            }
-            
-            if (options.Count > (isMarkedForImprovement ? 2 : 1)) // More than just "Any" option
-            {
-                Find.WindowStack.Add(new FloatMenu(options));
-            }
-            else if (!isMarkedForImprovement)
-            {
-                // No valid targets, just mark for any improvement
-                TargetQuality = null;
-                IsMarkedForImprovement = true;
             }
         }
 

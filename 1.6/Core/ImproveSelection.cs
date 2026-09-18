@@ -231,8 +231,12 @@ namespace SimpleImprove.Core
                     continue;
                 }
 
+                // The same question the gizmo asks, through the one function that holds it equal to
+                // what the marking path asks of "any improvement". A building this admits is one the
+                // menu will offer "Any improvement" on, so the two have to agree or that option
+                // would silently do nothing.
                 CompQuality quality = thing.TryGetComp<CompQuality>();
-                if (quality == null || quality.Quality == QualityCategory.Legendary)
+                if (quality == null || !ImproveTarget.CanBeOffered(quality.Quality))
                 {
                     continue;
                 }

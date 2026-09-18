@@ -124,7 +124,7 @@ namespace SimpleImprove.Core
         /// <see cref="OnDeSpawn"/> covers everything that leaves the map, but a plain cancel does not
         /// leave the map. Vanilla's <c>Designator_Cancel</c> on a marked building goes straight to
         /// <c>RemoveAllDesignationsOn</c> with no despawn anywhere in the path, and so do the mod's
-        /// own cancel gizmo and cancel designator. Nothing else would return the materials in those
+        /// own cancel options. Nothing else would return the materials in those
         /// cases, so this stays.
         /// </para>
         /// <para>
@@ -140,8 +140,8 @@ namespace SimpleImprove.Core
         /// </para>
         /// <para>
         /// The <c>IsMarkedForImprovement</c> setter needs the same guard for a reason of its own.
-        /// Both quality float menus build their options as closures over a captured component and
-        /// revalidate nothing when clicked, and the game ticks while a float menu is open, so a
+        /// The group quality float menu builds its options as closures over captured components and
+        /// revalidates nothing when clicked, and the game ticks while a float menu is open, so a
         /// building destroyed between opening the menu and clicking an option reaches the setter with
         /// no map.
         /// </para>

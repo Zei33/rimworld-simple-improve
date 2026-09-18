@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>Designate for improvement</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>Mark items to have their quality improved by skilled workers</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>Cancel improvement</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>This building is marked for improvement but can no longer be improved. Cancel the mark and return any materials that were delivered.</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>Cancel improvement orders and return any stored materials</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>Item cannot be improved</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>Already marked for improvement</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>Item has no quality</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>Already at maximum quality</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>Item cannot be constructed</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>Improvement failed! ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>Improved to {0}!</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>Warning: No colonist assigned to improvement can improve this {0} (requires Construction {1}, or {2} with inspiration).</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>Warning: No colonist assigned to improvement can improve this {0} (requires Construction {1}, or {2} with inspiration/production role).</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>Warning: No colonist assigned to improvement can achieve {0} quality (requires Construction {1}, or {2} with inspiration).</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>Warning: No colonist assigned to improvement can achieve {0} quality (requires Construction {1}, or {2} with inspiration/production role).</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>Legendary improvements require special circumstances like inspirations or ideological specialist roles.</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>Improve</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>Improve (Any)</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>Improve ({0})</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0} ({1})</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>Mark this item for quality improvement</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>Mark these items for quality improvement ({0} affected)</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>Any improvement</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>Someone else is already working on this.</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>This will replace your custom skill requirements with the preset's, and cannot be undone. Continue?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Stored materials (not required):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Minimum skill for {0}: {1}</SimpleImprove_MinimumSkillFor>

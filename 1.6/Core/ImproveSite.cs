@@ -31,11 +31,22 @@ namespace SimpleImprove.Core
     /// <para>
     /// Nothing here is reimplemented. With <c>checkSkills: false</c> and a completed building, exactly
     /// five of <c>CanConstruct</c>'s checks are reachable, and all five are public vanilla methods
-    /// called below in vanilla's own order. The skill block is the one this mod bypasses on purpose,
-    /// and the whole trailing <c>t.def.IsBlueprint || t.def.IsFrame</c> block, the attachment test and
-    /// the two history events, is dead code for a building that already exists. So this is the same
-    /// five questions asked of the same five methods, just not routed through the one function other
-    /// mods patch on the assumption that its argument is something being built.
+    /// called below in vanilla's own order: four about access in <see cref="CanAccess"/>, and the
+    /// fifth, the ideoligion's permission, in <see cref="IdeoligionAllows"/>. The skill block is the
+    /// one this mod bypasses on purpose, and the whole trailing <c>t.def.IsBlueprint || t.def.IsFrame</c>
+    /// block, the attachment test and the two history events, is dead code for a building that already
+    /// exists. So this is the same five questions asked of the same five methods, just not routed
+    /// through the one function other mods patch on the assumption that its argument is something
+    /// being built.
+    /// </para>
+    /// <para>
+    /// The five are split in two because the work giver needs to ask them at two different points.
+    /// Permission has to come before any materials are hauled, or a colonist whose ideoligion forbids
+    /// the building carries the whole cost to something it can never work on. Access has to come
+    /// after, because the four access checks write no reason of their own: for a building the pawn
+    /// cannot reach or work at, the readings players see ("No path", "Missing") come from the haul
+    /// branch answering first. The job driver asks all five together through
+    /// <see cref="CanWorkOn"/>, in vanilla's order.
     /// </para>
     /// <para>
     /// What it gives up is real and was the actual decision: a third-party postfix that adds a
@@ -60,7 +71,8 @@ namespace SimpleImprove.Core
     public static class ImproveSite
     {
         /// <summary>
-        /// Determines whether a worker can start or continue improvement work on a building.
+        /// Determines whether a worker can start or continue improvement work on a building: every
+        /// access check and the ideoligion's permission, in vanilla's order.
         /// </summary>
         /// <param name="target">The building being improved. Must be spawned.</param>
         /// <param name="worker">The pawn that would do the work.</param>
@@ -68,18 +80,45 @@ namespace SimpleImprove.Core
         /// <returns><c>true</c> when nothing about the building or the pawn's access to it refuses the work.</returns>
         /// <remarks>
         /// <para>
-        /// The order is vanilla's and is kept deliberately, because it is visible to the player. Only
-        /// the Ideology branch sets a <c>JobFailReason</c>, so the order decides whether a building
-        /// that is both blocked and forbidden reports "only members of X can build" or reports
-        /// nothing. Reordering to put the two cheap tests first would be faster and would change that.
+        /// This is the job driver's re-check, run on every tick of the work. It asks exactly what the
+        /// work giver asks, both halves and nothing else, so that it cannot abandon on the first tick
+        /// a job the giver has just handed out, and cannot keep a pawn working on something the giver
+        /// would now refuse. The work giver does not call it: it asks the same two halves itself,
+        /// permission before the haul and access after it, which is the one place the order is
+        /// visible to a player.
         /// </para>
         /// <para>
-        /// Only the Ideology branch sets a reason, so the other four set none here either. That is
-        /// vanilla's behaviour rather than an omission, and matching it is what keeps this change
-        /// invisible to every player who does not have a mod patching <c>CanConstruct</c>.
+        /// Access comes first here because that is vanilla's order, and here the order is not visible
+        /// to anyone: nothing reads a fail reason set inside a job driver's fail condition.
         /// </para>
         /// </remarks>
         public static bool CanWorkOn(Thing target, Pawn worker, bool forced)
+        {
+            return CanAccess(target, worker, forced) && IdeoligionAllows(target, worker);
+        }
+
+        /// <summary>
+        /// Determines whether a worker can get to a building and work on it where it stands.
+        /// </summary>
+        /// <param name="target">The building being improved. Must be spawned.</param>
+        /// <param name="worker">The pawn that would do the work.</param>
+        /// <param name="forced">Whether the player is prioritising this by hand.</param>
+        /// <returns><c>true</c> when nothing blocks, hides, holds or burns the building for this pawn.</returns>
+        /// <remarks>
+        /// <para>
+        /// The first four of <c>CanConstruct</c>'s five reachable checks, in vanilla's order, and none
+        /// of them sets a <c>JobFailReason</c>. That is vanilla's behaviour rather than an omission,
+        /// and matching it is what keeps this change invisible to every player who does not have a
+        /// mod patching <c>CanConstruct</c>.
+        /// </para>
+        /// <para>
+        /// Because none of them sets a reason, where the work giver asks them decides what the player
+        /// is told. It asks them after the haul branch and after the work type test, so a building
+        /// the pawn cannot reach still reads "No path" (the haul job is returned, and the float menu
+        /// provider finds the building unreachable) or "Missing" rather than nothing at all.
+        /// </para>
+        /// </remarks>
+        public static bool CanAccess(Thing target, Pawn worker, bool forced)
         {
             // Not a defensive habit: without it the very next call throws inside vanilla.
             // FirstBlockingThing reaches BlocksConstruction for every other thing sharing a cell with
@@ -97,6 +136,10 @@ namespace SimpleImprove.Core
             // those covers a third party declaring SimpleImproveComp on such a def in XML and marking
             // it through the public setter, which is the one route left. Refusing here is cheaper
             // than relying on three guards in other files staying correct.
+            //
+            // IdeoligionAllows needs no such guard, which is what lets the work giver ask it first.
+            // MembersCanBuild opens `thing.def.entityDefToBuild ?? thing.def` and never touches a
+            // blueprint.
             if (target.def.blueprintDef == null)
             {
                 return false;
@@ -132,9 +175,37 @@ namespace SimpleImprove.Core
                 return false;
             }
 
-            // Kept rather than dropped, and it is the one restriction here that is about permission
-            // rather than access. Ideo is null for anything not humanlike, so a colony mech reaches
-            // this with no ideoligion at all and the guard is load bearing rather than tidy:
+            return true;
+        }
+
+        /// <summary>
+        /// Determines whether the worker's ideoligion lets its members work on a building, naming the
+        /// ideoligions that would when it does not.
+        /// </summary>
+        /// <param name="target">The building being improved.</param>
+        /// <param name="worker">The pawn that would do the work.</param>
+        /// <returns><c>true</c> when the worker has no ideoligion or its ideoligion allows the building.</returns>
+        /// <remarks>
+        /// <para>
+        /// The one check of the five that is about permission rather than access, and the only one
+        /// that sets a <c>JobFailReason</c>. It is kept rather than dropped because it is the one
+        /// restriction a player's ideoligion imposes, and it is asked on its own because it is the
+        /// one refusal that can never clear: a blocker moves and a path opens, but a pawn whose
+        /// ideoligion forbids a pew will never improve that pew. The work giver therefore asks it
+        /// before anything is hauled, which is also where vanilla's own delivery givers ask it,
+        /// inside the <c>CanConstruct</c> call they make before offering a delivery.
+        /// </para>
+        /// <para>
+        /// Asking it first does change one thing a player can see, and it is the better answer. A
+        /// building that is both forbidden and blocked, or both forbidden and out of reach, used to
+        /// report nothing, or "No path", or offered a haul; it now reports which ideoligions could
+        /// build it. The permanent reason wins over the passing one.
+        /// </para>
+        /// </remarks>
+        public static bool IdeoligionAllows(Thing target, Pawn worker)
+        {
+            // Ideo is null for anything not humanlike, so a colony mech reaches this with no
+            // ideoligion at all and the guard is load bearing rather than tidy:
             // PawnComponentsUtility builds the tracker only inside `if (pawn.RaceProps.Humanlike)`,
             // and every mechanoid ships ToolUser.
             //

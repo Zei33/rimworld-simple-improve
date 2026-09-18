@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   
-  <!-- Designator Labels and Descriptions -->
-  <SimpleImprove_DesignateForImprovement>改良指定</SimpleImprove_DesignateForImprovement>
-  <SimpleImprove_DesignateForImprovementDesc>熟練労働者による品質改良のためにアイテムをマークする</SimpleImprove_DesignateForImprovementDesc>
+  <!-- Cancel Labels and Descriptions -->
   <SimpleImprove_CancelImprovement>改良をキャンセル</SimpleImprove_CancelImprovement>
   <SimpleImprove_CancelImprovementStranded>この建物は改良用に指定されていますが、もう改良できません。指定を解除し、搬入済みの資材を返却します。</SimpleImprove_CancelImprovementStranded>
-  <SimpleImprove_CancelImprovementDesc>改良命令をキャンセルし、保管された材料を返却する</SimpleImprove_CancelImprovementDesc>
-  
-  <!-- Acceptance Report Messages -->
-  <SimpleImprove_CannotImprove>アイテムは改良できません</SimpleImprove_CannotImprove>
-  <SimpleImprove_AlreadyMarked>すでに改良対象として指定されています</SimpleImprove_AlreadyMarked>
-  <SimpleImprove_NoQuality>アイテムに品質がありません</SimpleImprove_NoQuality>
-  <SimpleImprove_MaxQuality>すでに最高品質です</SimpleImprove_MaxQuality>
-  <SimpleImprove_CannotConstruct>アイテムは建設できません</SimpleImprove_CannotConstruct>
   
   <!-- Success and Failure Messages -->
   <SimpleImprove_ImprovementFailed>改良失敗！ ({0})</SimpleImprove_ImprovementFailed>
   <SimpleImprove_ImprovedTo>{0}に改良されました！</SimpleImprove_ImprovedTo>
   
   <!-- Skill Warning Messages -->
-  <SimpleImprove_SkillWarning>警告：改良作業を割り当てられた入植者の中に、この{0}を改良できる者がいません（建設スキル{1}、またはインスピレーション時{2}が必要）。</SimpleImprove_SkillWarning>
-  <SimpleImprove_SkillWarningIdeology>警告：改良作業を割り当てられた入植者の中に、この{0}を改良できる者がいません（建設スキル{1}、またはインスピレーション/生産専門役職時{2}が必要）。</SimpleImprove_SkillWarningIdeology>
   <SimpleImprove_TargetQualitySkillWarning>警告：改良作業を割り当てられた入植者の中に、{0}品質を達成できる者がいません（建設スキル{1}、またはインスピレーション時{2}が必要）。</SimpleImprove_TargetQualitySkillWarning>
   <SimpleImprove_TargetQualitySkillWarningIdeology>警告：改良作業を割り当てられた入植者の中に、{0}品質を達成できる者がいません（建設スキル{1}、またはインスピレーション/生産専門役職時{2}が必要）。</SimpleImprove_TargetQualitySkillWarningIdeology>
   <SimpleImprove_LegendaryWarning>伝説品質の改良にはインスピレーションやイデオロギー専門役職などの特別な状況が必要です。</SimpleImprove_LegendaryWarning>
@@ -30,7 +18,9 @@
   <SimpleImprove_GizmoLabel>改良</SimpleImprove_GizmoLabel>
   <SimpleImprove_GizmoLabelAny>改良（任意）</SimpleImprove_GizmoLabelAny>
   <SimpleImprove_GizmoLabelWithTarget>改良（{0}）</SimpleImprove_GizmoLabelWithTarget>
+  <SimpleImprove_GizmoLabelCount>{0}（{1}）</SimpleImprove_GizmoLabelCount>
   <SimpleImprove_GizmoTooltip>このアイテムの品質改良をマークする</SimpleImprove_GizmoTooltip>
+  <SimpleImprove_GizmoTooltipGroup>これらのアイテムの品質改良をマークする（{0}個が影響を受ける）</SimpleImprove_GizmoTooltipGroup>
   
   <!-- Target Quality Options -->
   <SimpleImprove_TargetAny>任意の改良</SimpleImprove_TargetAny>
@@ -70,7 +60,6 @@
   <SimpleImprove_LabelColon>：</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
-  <SimpleImprove_TargetReserved>すでに他の入植者が作業しています。</SimpleImprove_TargetReserved>
   <SimpleImprove_PresetOverwritesCustom>カスタムのスキル要件がプリセットの値で上書きされます。元に戻すことはできません。続行しますか？</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>保管中の資材（不要）：</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>{0}に必要な最低スキル：{1}</SimpleImprove_MinimumSkillFor>

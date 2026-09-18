@@ -74,11 +74,15 @@ namespace SimpleImprove.Jobs
             // Fail conditions
             this.FailOnDestroyedOrNull(TargetIndex.A);
             this.FailOnDestroyedNullOrForbidden(TargetIndex.B);
+            // The same property the work giver refuses on, so a delivery stops when the mark has
+            // no work left in it rather than only when it is cancelled. Materials delivered to such
+            // a building are kept rather than destroyed, but carrying them there is wasted labour
+            // and they sit out of reach until the player cancels the mark.
             this.FailOn(() => {
                 var container = Container;
                 if (container == null) return true;
                 var improveComp = container.TryGetComp<SimpleImproveComp>();
-                return improveComp == null || !improveComp.IsMarkedForImprovement;
+                return improveComp == null || !improveComp.HasOutstandingImprovement;
             });
 
             // Core toils

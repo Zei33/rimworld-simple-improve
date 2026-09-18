@@ -33,7 +33,7 @@ namespace SimpleImprove.Tests
         /// <summary>
         /// Initializes an empty result, for a method with no body to read.
         /// </summary>
-        public WalkResult() : this(new List<MethodBase>(), new HashSet<ushort>())
+        public WalkResult() : this(new List<MethodBase>(), new HashSet<ushort>(), new List<string>())
         {
         }
 
@@ -42,10 +42,12 @@ namespace SimpleImprove.Tests
         /// </summary>
         /// <param name="calls">The methods called, in IL order.</param>
         /// <param name="opcodes">The distinct opcodes encountered.</param>
-        public WalkResult(IList<MethodBase> calls, ISet<ushort> opcodes)
+        /// <param name="strings">The string literals loaded, in IL order.</param>
+        public WalkResult(IList<MethodBase> calls, ISet<ushort> opcodes, IList<string> strings)
         {
             Calls = calls;
             Opcodes = opcodes;
+            Strings = strings;
         }
 
         /// <summary>
@@ -63,6 +65,18 @@ namespace SimpleImprove.Tests
         /// anything, silently, if that decision changes.
         /// </remarks>
         public ISet<ushort> Opcodes { get; }
+
+        /// <summary>
+        /// Gets the string literals the body loads, in the order they appear, including repeats.
+        /// </summary>
+        /// <remarks>
+        /// Every <c>ldstr</c> operand. A <c>const string</c> is inlined at each use, so it appears here
+        /// under every method that reads it rather than under its declaring type. What this cannot
+        /// contain is a comment, which is the point of reading it: a check over source text cannot
+        /// tell a key that is used from a comment that quotes it, and the compiler has already
+        /// thrown the comments away.
+        /// </remarks>
+        public IList<string> Strings { get; }
     }
 
     /// <summary>
@@ -110,6 +124,7 @@ namespace SimpleImprove.Tests
         private const ushort NewObject = 0x73;
         private const ushort LoadFunction = 0xFE06;
         private const ushort LoadVirtualFunction = 0xFE07;
+        private const ushort LoadString = 0x72;
 
         /// <summary>
         /// The <c>switch</c> opcode, whose operand is the only variable-length one in the set.
@@ -177,6 +192,7 @@ namespace SimpleImprove.Tests
         {
             var calls = new List<MethodBase>();
             var opcodes = new HashSet<ushort>();
+            var strings = new List<string>();
 
             Type[] typeArguments = method.DeclaringType != null && method.DeclaringType.IsGenericType
                 ? method.DeclaringType.GetGenericArguments()
@@ -236,6 +252,17 @@ namespace SimpleImprove.Tests
                     calls.Add(Resolve(method, token, typeArguments, methodArguments, instructionStart));
                 }
 
+                if (opcode == LoadString)
+                {
+                    if (position + 4 > il.Length)
+                    {
+                        throw new ILWalkException(
+                            $"String token ran off the end of {Describe(method)} at {instructionStart}.");
+                    }
+
+                    strings.Add(ResolveString(method, BitConverter.ToInt32(il, position), instructionStart));
+                }
+
                 int operandLength = OperandLength(operandType, il, position, method, instructionStart);
                 CollectBranchTargets(operandType, il, position, operandLength, branchTargets);
                 position += operandLength;
@@ -259,7 +286,24 @@ namespace SimpleImprove.Tests
                 }
             }
 
-            return new WalkResult(calls, opcodes);
+            return new WalkResult(calls, opcodes, strings);
+        }
+
+        /// <summary>
+        /// Gets every string literal the mod's own compiled code loads, compiler-generated types
+        /// included.
+        /// </summary>
+        /// <returns>The distinct literals, in no particular order.</returns>
+        public static ISet<string> StringsAnywhereInTheMod()
+        {
+            var strings = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (MethodBase method in AllModMethods())
+            {
+                strings.UnionWith(Read(method).Strings);
+            }
+
+            return strings;
         }
 
         /// <summary>
@@ -358,6 +402,20 @@ namespace SimpleImprove.Tests
             {
                 throw new ILWalkException(
                     $"Could not resolve token 0x{token:X8} at offset {offset} in {Describe(method)}: "
+                    + exception.Message);
+            }
+        }
+
+        private static string ResolveString(MethodBase method, int token, int offset)
+        {
+            try
+            {
+                return method.Module.ResolveString(token);
+            }
+            catch (Exception exception)
+            {
+                throw new ILWalkException(
+                    $"Could not resolve string token 0x{token:X8} at offset {offset} in {Describe(method)}: "
                     + exception.Message);
             }
         }
