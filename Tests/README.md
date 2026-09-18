@@ -101,11 +101,14 @@ test failures rather than as compile errors, which is a distinction worth keepin
 `.Count` silently became a LINQ method group under the iterator mutation and had to be rewritten as
 `Has.Count` to fail properly.
 
-**Be precise about what that does not cover, because the nine above make it look wider than it is.**
-Three method bodies in this fix are unreachable, and mutations inside them were measured to pass the
-whole suite: dropping the `!` from `ShouldSkip` (97/97), replacing
-`PotentialWorkThingsGlobal`'s body with `ScanTargets(null)` (97/97), and deleting the entire
-`PostSpawnSetup` repair (97/97). The reflection tests hold the *declarations*, not the bodies. No test
+For the container, three more: reverting `GetDirectlyHeldThings` to the raw field, widening
+`ShouldScribeContainer` back to a non-null test, and making `GetChildHolders` allocate.
+
+**Be precise about what that does not cover, because the list above makes it look wider than it is.**
+Three method bodies in the work giver fix are unreachable, and mutations inside them were measured
+(against the suite as it stood at 97 tests) to pass it entire: dropping the `!` from `ShouldSkip`,
+replacing `PotentialWorkThingsGlobal`'s body with `ScanTargets(null)`, and deleting the
+`PostSpawnSetup` repair. The reflection tests hold the *declarations*, not the bodies. No test
 can reach them either: `Map` is unconstructible outside a running game and `DesignationManager` needs
 one, so `ShouldSkip`, `PotentialWorkThingsGlobal` and `PostSpawnSetup` cannot be executed here at all.
 What the split buys is that the decisions those three bodies delegate to are covered; what it does not

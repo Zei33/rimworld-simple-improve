@@ -315,7 +315,7 @@ export FrameworkPathOverride=/opt/homebrew/opt/mono/lib/mono/4.7.2-api
 dotnet build rimworld-simple-improve.sln -c Release   # clean, zero warnings
 ```
 
-Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 97 passing as of 2026-09-18, against the real
+Tests: `dotnet test Tests/SimpleImprove.Tests.csproj`, 99 passing as of 2026-09-18, against the real
 `Assembly-CSharp.dll`. Outside the sln so the solution build stays mod-only and warning-free, and
 `Compile Remove="Tests/**"` keeps the sources out of the shipped DLL. See `Tests/README.md`.
 
