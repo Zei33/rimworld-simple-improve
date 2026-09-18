@@ -466,9 +466,10 @@ a chair raised to Legendary mid-work stopped its worker with no "Improvement fai
 wood until "Cancel improvement" dropped it, and a stool marked for Good and raised to Excellent sat
 idle. Check 14 passed on three paused right-clicks of the cloth armchair. Check 16 passed in English
 and Russian. The dev-mode startup warning about `ImproveSelection` was gone. Check 15 was not run:
-it needs a non-classic ideoligion whose ritual seat is a pew or a kneel seat. Checks 6, 8 and 9
-were not re-run as numbered checks; check 13's driver half exercised check 8's "Cancel improvement"
-on a stranded building, and nothing on this build re-read check 9's merged button.
+it needs a non-classic ideoligion whose ritual seat is a pew or a kneel seat. Check 6 passed again:
+a forced improvement ran to completion on the rewritten job driver. Checks 8 and 9 were not re-run
+as numbered checks; check 13's driver half exercised check 8's "Cancel improvement" on a stranded
+building, and nothing on this build re-read check 9's merged button.
 
 Checks 4, 5, 6, 8, 9 and 10 were also rewritten on 2026-09-18, because working out an exact
 procedure for each showed that every one of the six, as first written, either predicted something
