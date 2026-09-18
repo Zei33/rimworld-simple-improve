@@ -28,6 +28,15 @@ Fixed
 - A building marked for improvement lost its mark when an Odyssey gravship carried it away.
 - The warning about nobody being skilled enough ignored a colonist who was both inspired and
   a production specialist, which is the best case it exists to find.
+- A building that stayed marked after it could no longer be improved was worked on forever,
+  losing its materials on every attempt. That could happen when another mod or dev mode
+  pushed it to Legendary, or when an inspired colonist finished it while the Improve menu
+  was open. It is left alone now until you cancel the mark, and anything already delivered
+  stays in it until you do.
+- Colonists whose ideoligion forbids a pew, kneel sheet, kneel pillow or slab bed were still
+  sent to haul materials to one. They are not any more, and right-clicking the building says
+  why.
+- The Improve button's tooltip counted in English whatever your language was set to.
 
 New
 
