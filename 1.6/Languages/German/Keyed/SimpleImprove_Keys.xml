@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>Jemand anderes arbeitet bereits daran.</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>Dies ersetzt deine eigenen Fähigkeitsanforderungen durch die der Vorlage und kann nicht rückgängig gemacht werden. Fortfahren?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Gelagerte Materialien (nicht erforderlich):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Mindestfähigkeit für {0}: {1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>Jede Fähigkeitsstufe wird akzeptiert (für beliebige Verbesserung markiert)</SimpleImprove_AnySkillAccepted>

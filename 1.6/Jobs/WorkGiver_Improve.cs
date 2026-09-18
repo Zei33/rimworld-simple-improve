@@ -292,6 +292,26 @@ namespace SimpleImprove.Jobs
                 return null;
             }
 
+            // The reservation is on the BUILDING, so it does not change from one material to the
+            // next. Testing it inside the material loop was both wasteful and, more to the point,
+            // the reason the player was told the wrong thing: a pawn that found the material but
+            // could not reserve the target fell out of the loop and got "MissingMaterials", which
+            // names a blocker that is not the blocker. It also gated the improve job separately at
+            // the bottom of this method, so the same question was asked in two places.
+            //
+            // Narrow in practice, because the forced path passes ignoreOtherReservations: true, so
+            // a player who right-clicks gets the job anyway. It is the background scan that was
+            // silently mislabelling, and the float menu that was repeating it.
+            if (!pawn.HasReserved(thing) && !pawn.CanReserve(thing, ignoreOtherReservations: forced))
+            {
+                if (forced)
+                {
+                    JobFailReason.Is("SimpleImprove_TargetReserved".Translate());
+                }
+
+                return null;
+            }
+
             // Check if materials are needed (only if materials are required by settings)
             if (SimpleImproveMod.Settings.RequireMaterials)
             {
@@ -311,10 +331,7 @@ namespace SimpleImprove.Jobs
                                 haulJob.count = material.count;
                                 haulJob.haulMode = HaulMode.ToContainer;
 
-                                if (pawn.HasReserved(thing) || pawn.CanReserve(thing, ignoreOtherReservations: forced))
-                                {
-                                    return haulJob;
-                                }
+                                return haulJob;
                             }
                         }
                     }
@@ -442,13 +459,7 @@ namespace SimpleImprove.Jobs
                     }
             }
 
-            var improveJob = JobMaker.MakeJob(SimpleImproveDefOf.Job_Improve, thing);
-            if (pawn.HasReserved(thing) || pawn.CanReserve(thing, ignoreOtherReservations: forced))
-            {
-                return improveJob;
-            }
-
-            return null;
+            return JobMaker.MakeJob(SimpleImproveDefOf.Job_Improve, thing);
         }
 
         /// <summary>

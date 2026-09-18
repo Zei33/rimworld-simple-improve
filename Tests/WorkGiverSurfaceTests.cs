@@ -265,6 +265,38 @@ namespace SimpleImprove.Tests
                 + "silently depends on.");
         }
 
+        [Test]
+        public void TheTargetReservationIsTestedOnceAndBeforeTheMaterialSearch()
+        {
+            // The reservation is on the BUILDING, so it does not change from one material to the
+            // next. It used to sit inside the material loop, which made it both repeated work and
+            // the reason the player was told the wrong thing: a pawn that found the material but
+            // could not reserve the target fell out of the loop and was given "MissingMaterials",
+            // naming a blocker that was not the blocker. The same question was also asked a second
+            // time at the bottom of the method to gate the improve job.
+            //
+            // IL order is not execution order, so this pins that the reservation call appears
+            // before the material search rather than that it runs first, which is as much as
+            // reading a body can say. What it does catch is the call being moved back inside the
+            // loop, or a second copy reappearing.
+            List<string> calls = CallNamesIn(typeof(WorkGiver_Improve), "BuildJob");
+
+            int reserve = calls.FindIndex(call => call.EndsWith(".CanReserve"));
+            int search = calls.IndexOf("SimpleImprove.Jobs.WorkGiver_Improve.FindClosestMaterial");
+
+            Assert.That(reserve, Is.GreaterThanOrEqualTo(0),
+                "BuildJob no longer reserves the building at all. Calls: " + string.Join(", ", calls));
+            Assert.That(search, Is.GreaterThanOrEqualTo(0),
+                "BuildJob no longer searches for material.");
+            Assert.That(reserve, Is.LessThan(search),
+                "The target reservation moved back below the material search, so a pawn blocked by "
+                + "a reservation is told the materials are missing.");
+
+            Assert.That(
+                calls.Count(call => call.EndsWith(".CanReserve")), Is.EqualTo(1),
+                "The building is reserved-tested more than once in one decision.");
+        }
+
         private static List<string> CallNamesIn(Type declaringType, string methodName)
         {
             MethodInfo method = declaringType.GetMethod(

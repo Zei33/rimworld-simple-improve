@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>：</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>すでに他の入植者が作業しています。</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>カスタムのスキル要件がプリセットの値で上書きされます。元に戻すことはできません。続行しますか？</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>保管中の資材（不要）：</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>{0}に必要な最低スキル：{1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>任意のスキルレベルで可（任意の改良として指定）</SimpleImprove_AnySkillAccepted>

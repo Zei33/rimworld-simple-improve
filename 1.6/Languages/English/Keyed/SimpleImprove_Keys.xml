@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>Someone else is already working on this.</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>This will replace your custom skill requirements with the preset's, and cannot be undone. Continue?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Stored materials (not required):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Minimum skill for {0}: {1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>Any skill level accepted (marked for any improvement)</SimpleImprove_AnySkillAccepted>

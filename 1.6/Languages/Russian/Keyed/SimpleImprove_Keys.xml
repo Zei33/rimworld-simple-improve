@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>С этим уже работает кто-то другой.</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>Ваши собственные требования к навыку будут заменены значениями из набора, и отменить это нельзя. Продолжить?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Хранящиеся материалы (не требуются):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Минимальный навык для {0}: {1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>Принимается любой уровень навыка (отмечено для любого улучшения)</SimpleImprove_AnySkillAccepted>

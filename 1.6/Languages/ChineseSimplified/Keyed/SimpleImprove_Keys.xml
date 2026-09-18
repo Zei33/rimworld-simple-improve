@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>：</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>已有其他人在处理这个建筑。</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>这将用预设值覆盖你自定义的技能要求，且无法撤销。是否继续？</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>已存材料（非必需）：</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>{0} 所需最低技能：{1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>接受任意技能等级（已标记为任意改良）</SimpleImprove_AnySkillAccepted>

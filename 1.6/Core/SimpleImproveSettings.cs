@@ -742,6 +742,42 @@ namespace SimpleImprove.Core
         /// <summary>
         /// Draws the preset buttons on the right column.
         /// </summary>
+        /// <summary>
+        /// Applies a preset, asking first when doing so would discard a hand-tuned table.
+        /// </summary>
+        /// <param name="preset">The preset the player pressed.</param>
+        /// <remarks>
+        /// <para>
+        /// A preset button rewrites all seven skill thresholds at once. When the current preset is
+        /// Custom, those seven numbers are ones the player typed, and there is no undo anywhere in
+        /// this window, so the old behaviour destroyed them on a single click with no warning.
+        /// </para>
+        /// <para>
+        /// The confirmation is only raised from Custom. Moving between two named presets discards
+        /// nothing the player cannot get back by pressing the previous button, so asking there
+        /// would be noise, and a confirmation that fires when nothing is at stake is how people
+        /// learn to click through the one that matters.
+        /// </para>
+        /// <para>
+        /// <c>Dialog_MessageBox.CreateConfirmation</c> with <c>destructive: true</c> is vanilla's
+        /// own shape for this, and it defaults the focus to the cancel button, which is what makes
+        /// it a guard rather than a speed bump.
+        /// </para>
+        /// </remarks>
+        private void RequestPreset(QualityStandardsPreset preset)
+        {
+            if (currentPreset != QualityStandardsPreset.Custom)
+            {
+                ApplyPreset(preset);
+                return;
+            }
+
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                "SimpleImprove_PresetOverwritesCustom".Translate(),
+                () => ApplyPreset(preset),
+                destructive: true));
+        }
+
         private float DrawPresetButtons(Rect columnRect, float rowHeight, float rowGap)
         {
             float currentY = columnRect.y;
@@ -754,31 +790,31 @@ namespace SimpleImprove.Core
             // Preset buttons
             if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetVeryEasy".Translate()))
             {
-                ApplyPreset(QualityStandardsPreset.Apprentice);
+                RequestPreset(QualityStandardsPreset.Apprentice);
             }
             currentY += rowHeight + rowGap;
 
             if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetEasy".Translate()))
             {
-                ApplyPreset(QualityStandardsPreset.Novice);
+                RequestPreset(QualityStandardsPreset.Novice);
             }
             currentY += rowHeight + rowGap;
 
             if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetNormal".Translate()))
             {
-                ApplyPreset(QualityStandardsPreset.Default);
+                RequestPreset(QualityStandardsPreset.Default);
             }
             currentY += rowHeight + rowGap;
 
             if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetHard".Translate()))
             {
-                ApplyPreset(QualityStandardsPreset.Master);
+                RequestPreset(QualityStandardsPreset.Master);
             }
             currentY += rowHeight + rowGap;
 
             if (Widgets.ButtonText(new Rect(columnRect.x, currentY, columnRect.width, rowHeight), "SimpleImprove_PresetExpert".Translate()))
             {
-                ApplyPreset(QualityStandardsPreset.Artisan);
+                RequestPreset(QualityStandardsPreset.Artisan);
             }
 
 			return currentY;

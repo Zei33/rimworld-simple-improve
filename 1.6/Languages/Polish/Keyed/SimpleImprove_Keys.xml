@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>Ktoś inny już nad tym pracuje.</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>Spowoduje to zastąpienie własnych wymagań umiejętności wartościami z zestawu i nie można tego cofnąć. Kontynuować?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Przechowywane materiały (niewymagane):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Minimalna umiejętność dla {0}: {1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>Akceptowany każdy poziom umiejętności (oznaczono do dowolnego ulepszenia)</SimpleImprove_AnySkillAccepted>

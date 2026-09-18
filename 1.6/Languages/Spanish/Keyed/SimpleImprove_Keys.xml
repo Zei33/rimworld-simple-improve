@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon>:</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>Otra persona ya está trabajando en esto.</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>Esto sustituirá tus requisitos de habilidad personalizados por los del ajuste predefinido y no se puede deshacer. ¿Continuar?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Materiales almacenados (no necesarios):</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Habilidad mínima para {0}: {1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>Se acepta cualquier nivel de habilidad (marcado para mejora cualquiera)</SimpleImprove_AnySkillAccepted>

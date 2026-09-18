@@ -70,6 +70,8 @@
   <SimpleImprove_LabelColon> :</SimpleImprove_LabelColon>
   
   <!-- Inspect pane and work giver messages -->
+  <SimpleImprove_TargetReserved>Quelqu'un d'autre s'en occupe déjà.</SimpleImprove_TargetReserved>
+  <SimpleImprove_PresetOverwritesCustom>Cela remplacera vos exigences de compétence personnalisées par celles du préréglage, sans possibilité d'annuler. Continuer ?</SimpleImprove_PresetOverwritesCustom>
   <SimpleImprove_StoredMaterialsNotRequired>Matériaux stockés (non requis) :</SimpleImprove_StoredMaterialsNotRequired>
   <SimpleImprove_MinimumSkillFor>Compétence minimale pour {0} : {1}</SimpleImprove_MinimumSkillFor>
   <SimpleImprove_AnySkillAccepted>Tout niveau de compétence accepté (marqué pour une amélioration quelconque)</SimpleImprove_AnySkillAccepted>
