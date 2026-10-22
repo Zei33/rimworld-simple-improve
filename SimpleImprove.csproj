@@ -17,8 +17,11 @@
     <FrameworkPathOverride>/opt/homebrew/opt/mono/lib/mono/4.7.2-api</FrameworkPathOverride>
   </PropertyGroup>
 
+  <!-- The net472 game assemblies to compile against. On a 1.6 install that is the game's own
+       Managed folder. The 1.7 beta runs on .NET 10 and ships none of them, so with 1.7
+       installed, set RimWorldManaged to a kept copy of the 1.6 set instead. -->
   <PropertyGroup>
-    <RimWorldManaged>$(RimWorldDir)/Contents/Resources/Data/Managed</RimWorldManaged>
+    <RimWorldManaged Condition="'$(RimWorldManaged)' == ''">$(RimWorldDir)/Contents/Resources/Data/Managed</RimWorldManaged>
   </PropertyGroup>
 
   <!-- Tests/ compiles the mod's sources into its own assembly. Without this the default glob would
