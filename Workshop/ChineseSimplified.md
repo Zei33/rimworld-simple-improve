@@ -1,4 +1,4 @@
-简单改良 [1.6] (Simple Improve)
+简单改良 [1.6/1.7] (Simple Improve)
 
 [h1]简单改良[/h1]
 

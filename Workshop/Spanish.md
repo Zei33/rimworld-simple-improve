@@ -1,4 +1,4 @@
-Mejora Simple [1.6] (Simple Improve)
+Mejora Simple [1.6/1.7] (Simple Improve)
 
 [h1]Mejora Simple[/h1]
 

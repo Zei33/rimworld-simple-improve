@@ -1,4 +1,4 @@
-Prosta Poprawa [1.6] (Simple Improve)
+Prosta Poprawa [1.6/1.7] (Simple Improve)
 
 [h1]Prosta Poprawa[/h1]
 

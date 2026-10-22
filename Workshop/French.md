@@ -1,4 +1,4 @@
-Amélioration Simple [1.6] (Simple Improve)
+Amélioration Simple [1.6/1.7] (Simple Improve)
 
 [h1]Amélioration Simple[/h1]
 

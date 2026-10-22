@@ -1,4 +1,4 @@
-Melhoria Simples [1.6] (Simple Improve)
+Melhoria Simples [1.6/1.7] (Simple Improve)
 
 [h1]Melhoria Simples[/h1]
 

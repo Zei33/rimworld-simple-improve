@@ -1,4 +1,4 @@
-Simple Improve [1.6]
+Simple Improve [1.6/1.7]
 
 [h1]Simple Improve[/h1]
 
